@@ -58,6 +58,8 @@ Replace:
 - `YOUR_USERNAME` with your database username
 - `YOUR_PASSWORD` with your database password
 
+These are currently located in our discord server/backend sent from ludvig
+
 ## 5. Run the application
 
 Open the file:
