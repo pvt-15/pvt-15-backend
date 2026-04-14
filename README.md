@@ -76,8 +76,6 @@ When the application is running, open this in your browser:
 
     http://localhost:8080
 
-If you have created an endpoint such as `/hello`, test:
-
     http://localhost:8080/hello
 
 ## Common issues
