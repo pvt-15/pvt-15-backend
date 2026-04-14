@@ -38,16 +38,7 @@ When the project is open:
 
 This makes IntelliJ download and load all dependencies from `pom.xml`.
 
-## 4. Make sure IntelliJ uses Java 21
-
-In IntelliJ:
-
-1. Go to **File -> Project Structure**
-2. Under **Project**, set **Project SDK** to **Java 21**
-
-If Java 21 is missing, install it and add it in IntelliJ.
-
-## 5. Set environment variables
+## 4. Set environment variables
 
 The application needs database credentials to start.
 
@@ -67,7 +58,7 @@ Replace:
 - `YOUR_USERNAME` with your database username
 - `YOUR_PASSWORD` with your database password
 
-## 6. Run the application
+## 5. Run the application
 
 Open the file:
 
@@ -77,7 +68,7 @@ Then press the green **Run** button next to the `main` method.
 
 If everything works, IntelliJ should show that Spring Boot has started.
 
-## 7. Verify that it works
+## 6. Verify that it works
 
 When the application is running, open this in your browser:
 
