@@ -19,6 +19,7 @@ public class User {
     private int totalPoints;
     private Level level;
 
+    // Constructors
     public User() {
     }
 
@@ -27,6 +28,7 @@ public class User {
         this.email = email;
     }
 
+    // Getters
     public Integer getId() {
         return id;
     }
@@ -39,6 +41,19 @@ public class User {
         return email;
     }
 
+    public String getPasswordHash() {
+        return passwordHash;
+    }
+
+    public int getTotalPoints() {
+        return totalPoints;
+    }
+
+    public Level getLevel() {
+        return level;
+    }
+
+    // Setters
     public void setId(Integer id) {
         this.id = id;
     }
@@ -49,5 +64,17 @@ public class User {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public void setPasswordHash(String passwordHash) {
+        this.passwordHash = passwordHash;
+    }
+
+    public void setTotalPoints(int totalPoints) {
+        this.totalPoints = totalPoints;
+    }
+
+    public void setLevel(Level level) {
+        this.level = level;
     }
 }

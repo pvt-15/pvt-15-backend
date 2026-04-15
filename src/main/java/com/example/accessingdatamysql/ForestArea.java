@@ -18,6 +18,7 @@ public class ForestArea {
     private int difficulty;
     private int ageRecommendation;
 
+    // Constructors
     public ForestArea(String name,
                       String description,
                       String location,
