@@ -17,3 +17,5 @@ public class AccessingDataMysqlApplication extends SpringBootServletInitializer 
 		SpringApplication.run(AccessingDataMysqlApplication.class, args);
 	}
 }
+
+//test
