@@ -13,5 +13,5 @@ public class Challenge {
     private String title;
     private String description;
     private int points;
-    private int
+    private int hello;
 }
