@@ -1,5 +1,8 @@
-package com.example.accessingdatamysql;
+package com.example.accessingdatamysql.controller;
 
+import com.example.accessingdatamysql.model.enums.Level;
+import com.example.accessingdatamysql.model.User;
+import com.example.accessingdatamysql.repository.UserRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

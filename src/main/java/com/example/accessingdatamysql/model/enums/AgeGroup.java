@@ -1,4 +1,4 @@
-package com.example.accessingdatamysql;
+package com.example.accessingdatamysql.model.enums;
 
 public enum AgeGroup {
     GROUP_ONE(2, 3),

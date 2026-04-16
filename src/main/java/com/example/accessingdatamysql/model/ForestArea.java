@@ -1,4 +1,4 @@
-package com.example.accessingdatamysql;
+package com.example.accessingdatamysql.model;
 
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;

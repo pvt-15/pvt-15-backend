@@ -1,10 +1,8 @@
-package com.example.accessingdatamysql;
+package com.example.accessingdatamysql.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-
+import com.example.accessingdatamysql.model.enums.Level;
+import com.example.accessingdatamysql.model.enums.Provider;
+import jakarta.persistence.*;
 
 @Entity
 public class User {
@@ -16,27 +14,32 @@ public class User {
     private String name;
     private String email;
     private String passwordHash;
+
+    @Enumerated(EnumType.STRING)
     private Provider provider;
+
     private int totalPoints;
+
+    @Enumerated(EnumType.STRING)
     private Level level;
 
-    // Constructors
     public User() {
     }
 
     public User(String name,
                 String email,
                 String passwordHash,
+                Provider provider,
                 int totalPoints,
-                Level level){
+                Level level) {
         this.name = name;
         this.email = email;
         this.passwordHash = passwordHash;
+        this.provider = provider;
         this.totalPoints = totalPoints;
         this.level = level;
     }
 
-    // Getters
     public Integer getId() {
         return id;
     }
@@ -53,6 +56,10 @@ public class User {
         return passwordHash;
     }
 
+    public Provider getProvider() {
+        return provider;
+    }
+
     public int getTotalPoints() {
         return totalPoints;
     }
@@ -61,7 +68,6 @@ public class User {
         return level;
     }
 
-    // Setters
     public void setId(Integer id) {
         this.id = id;
     }
@@ -76,6 +82,10 @@ public class User {
 
     public void setPasswordHash(String passwordHash) {
         this.passwordHash = passwordHash;
+    }
+
+    public void setProvider(Provider provider) {
+        this.provider = provider;
     }
 
     public void setTotalPoints(int totalPoints) {

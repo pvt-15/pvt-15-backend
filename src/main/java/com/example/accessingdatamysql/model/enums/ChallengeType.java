@@ -1,4 +1,4 @@
-package com.example.accessingdatamysql;
+package com.example.accessingdatamysql.model.enums;
 
 public enum ChallengeType {
     TYPE_ONE(1, "one"),
