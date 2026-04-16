@@ -16,6 +16,7 @@ public class User {
     private String name;
     private String email;
     private String passwordHash;
+    private Provider provider;
     private int totalPoints;
     private Level level;
 
