@@ -8,7 +8,7 @@ Before starting, make sure you have:
 
 - IntelliJ IDEA installed
 - Git installed
-- Java 21 installed
+- Java 17 installed
 
 ## 1. Clone the repository
 
