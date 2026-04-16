@@ -23,9 +23,16 @@ public class User {
     public User() {
     }
 
-    public User(String name, String email){
+    public User(String name,
+                String email,
+                String passwordHash,
+                int totalPoints,
+                Level level){
         this.name = name;
         this.email = email;
+        this.passwordHash = passwordHash;
+        this.totalPoints = totalPoints;
+        this.level = level;
     }
 
     // Getters
