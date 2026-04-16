@@ -29,7 +29,10 @@ public class MainController {
 
     @PostMapping
     public String addNewUser(@RequestParam String name,
-                             @RequestParam String email){
+                             @RequestParam String email,
+                             @RequestParam String passwordHash,
+                             @RequestParam int totalPoints,
+                             @RequestParam Level level){
         userRepository.save(new User(name, email, "password", 100, Level.LEVEL_1));
         return "saved";
     }
