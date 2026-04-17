@@ -5,7 +5,6 @@ import com.example.accessingdatamysql.model.enums.Provider;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "app_user")
 public class User {
 
     @Id
@@ -13,11 +12,15 @@ public class User {
     private Integer id;
 
     private String name;
+
+    @Column(unique = true, nullable = false)
     private String email;
+
     private String passwordHash;
 
     @Enumerated(EnumType.STRING)
     private Provider provider;
+
     private String providerUserId;
 
     private int totalPoints;
@@ -28,18 +31,11 @@ public class User {
     public User() {
     }
 
-    public User(String name,
-                String email,
-                String passwordHash,
-                Provider provider,
-                String providerUserId,
-                int totalPoints,
-                Level level) {
+    public User(String name, String email, String passwordHash, Provider provider, int totalPoints, Level level) {
         this.name = name;
         this.email = email;
         this.passwordHash = passwordHash;
         this.provider = provider;
-        this.providerUserId = providerUserId;
         this.totalPoints = totalPoints;
         this.level = level;
     }
@@ -62,6 +58,10 @@ public class User {
 
     public Provider getProvider() {
         return provider;
+    }
+
+    public String getProviderUserId() {
+        return providerUserId;
     }
 
     public int getTotalPoints() {
@@ -90,6 +90,10 @@ public class User {
 
     public void setProvider(Provider provider) {
         this.provider = provider;
+    }
+
+    public void setProviderUserId(String providerUserId) {
+        this.providerUserId = providerUserId;
     }
 
     public void setTotalPoints(int totalPoints) {

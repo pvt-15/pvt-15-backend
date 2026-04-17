@@ -21,6 +21,7 @@ public class AuthResponse {
         this.name = name;
         this.email = email;
         this.message = message;
+        this.token = token;
     }
 
     public Integer getUserId() {
