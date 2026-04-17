@@ -1,0 +1,53 @@
+package com.example.accessingdatamysql.dto;
+
+import com.example.accessingdatamysql.model.User;
+import com.example.accessingdatamysql.model.enums.Level;
+import com.example.accessingdatamysql.model.enums.Provider;
+
+public class UserResponse {
+
+    private Integer id;
+    private String name;
+    private String email;
+    private Provider provider;
+    private int totalPoints;
+    private Level level;
+
+    public UserResponse(Integer id,
+                        String name,
+                        String email,
+                        Provider provider,
+                        int totalPoints,
+                        Level level){
+        this.id = id;
+        this.name = name;
+        this.email = email;
+        this.provider = provider;
+        this.totalPoints = totalPoints;
+        this.level = level;
+    }
+
+    public Integer getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public Provider getProvider() {
+        return provider;
+    }
+
+    public int getTotalPoints() {
+        return totalPoints;
+    }
+
+    public Level getLevel() {
+        return level;
+    }
+}

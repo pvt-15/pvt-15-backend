@@ -5,6 +5,7 @@ import com.example.accessingdatamysql.model.enums.Provider;
 import jakarta.persistence.*;
 
 @Entity
+@Table(name = "app_user")
 public class User {
 
     @Id
