@@ -18,16 +18,15 @@ public class SecurityConfig{
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception{
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/ping").permitAll()
                         .requestMatchers("/auth/register", "/auth/login", "/auth/google").permitAll()
-                        .requestMatchers("/users").permitAll()
+                        .requestMatchers("/users/**").permitAll()
                         .anyRequest().authenticated())
                 .httpBasic(AbstractHttpConfigurer::disable)
-                .formLogin(AbstractHttpConfigurer::disable)
-                .logout(Customizer.withDefaults());
+                .formLogin(AbstractHttpConfigurer::disable);
         return http.build();
     }
 }
