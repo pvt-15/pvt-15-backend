@@ -2,6 +2,7 @@ package com.example.accessingdatamysql.controller;
 
 import com.example.accessingdatamysql.model.enums.Level;
 import com.example.accessingdatamysql.model.User;
+import com.example.accessingdatamysql.model.enums.Provider;
 import com.example.accessingdatamysql.repository.UserRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -35,8 +36,9 @@ public class MainController {
                              @RequestParam String email,
                              @RequestParam String passwordHash,
                              @RequestParam int totalPoints,
-                             @RequestParam Level level){
-        userRepository.save(new User(name, email, passwordHash, totalPoints, level));
+                             @RequestParam Level level,
+                             @RequestParam Provider provider){
+        userRepository.save(new User(name, email, passwordHash, provider, totalPoints, level));
         return "saved";
     }
 
