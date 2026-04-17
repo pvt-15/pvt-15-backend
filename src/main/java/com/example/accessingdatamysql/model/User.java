@@ -18,6 +18,7 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     private Provider provider;
+    private String providerUserId;
 
     private int totalPoints;
 
@@ -31,12 +32,14 @@ public class User {
                 String email,
                 String passwordHash,
                 Provider provider,
+                String providerUserId,
                 int totalPoints,
                 Level level) {
         this.name = name;
         this.email = email;
         this.passwordHash = passwordHash;
         this.provider = provider;
+        this.providerUserId = providerUserId;
         this.totalPoints = totalPoints;
         this.level = level;
     }

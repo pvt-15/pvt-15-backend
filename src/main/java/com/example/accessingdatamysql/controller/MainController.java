@@ -43,10 +43,11 @@ public class MainController {
     public String addNewUser(@RequestParam String name,
                              @RequestParam String email,
                              @RequestParam String passwordHash,
+                             @RequestParam Provider provider,
+                             @RequestParam String providerUserId,
                              @RequestParam int totalPoints,
-                             @RequestParam Level level,
-                             @RequestParam Provider provider){
-        userRepository.save(new User(name, email, passwordHash, provider, totalPoints, level));
+                             @RequestParam Level level){
+        userRepository.save(new User(name, email, passwordHash, provider, providerUserId, totalPoints, level));
         return "saved";
     }
 
