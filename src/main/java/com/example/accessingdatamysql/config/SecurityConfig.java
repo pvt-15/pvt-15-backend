@@ -23,6 +23,7 @@ public class SecurityConfig{
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/ping").permitAll()
                         .requestMatchers("/auth/register", "/auth/login", "/auth/google").permitAll()
+                        .requestMatchers("/users").permitAll()
                         .anyRequest().authenticated())
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
