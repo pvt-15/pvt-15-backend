@@ -22,7 +22,7 @@ public class SecurityConfig{
         http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/ping").permitAll()
-                        .requestMatchers("/auth/register", "/auth/login", "auth/google").permitAll()
+                        .requestMatchers("/auth/register", "/auth/login", "/auth/google").permitAll()
                         .anyRequest().authenticated())
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
