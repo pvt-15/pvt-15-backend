@@ -55,7 +55,7 @@ public class GoogleTokenVerifierService {
 
             return new GoogleUserInfo(providerUserId, email, name);
         }catch(GeneralSecurityException | IOException e){
-            throw new IllegalArgumentException()
+            throw new IllegalArgumentException("Could not verify Google ID token", e);
         }
     }
 }
