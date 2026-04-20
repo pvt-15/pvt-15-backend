@@ -8,6 +8,7 @@ import com.example.accessingdatamysql.model.enums.Level;
 import com.example.accessingdatamysql.model.enums.PictureCategory;
 import com.example.accessingdatamysql.picture.repository.PictureRepository;
 import com.example.accessingdatamysql.user.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -18,6 +19,7 @@ import java.util.List;
 public class PictureService {
 
     private static final String USER_NOT_FOUND = "User not found";
+    private static final String REQUEST_BODY_REQUIRED = "Request body is required";
 
     private final PictureRepository pictureRepository;
     private final UserRepository userRepository;
@@ -28,8 +30,12 @@ public class PictureService {
         this.userRepository = userRepository;
     }
 
+    @Transactional
     public PictureResponse createPicture(Integer userId,
                                          CreatePictureRequest request){
+        if(request == null){
+            throw new IllegalArgumentException(REQUEST_BODY_REQUIRED);
+        }
         User user = userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND));
 
         Picture picture = new Picture();
@@ -48,6 +54,7 @@ public class PictureService {
         user.setTotalPoints(user.getTotalPoints() + points);
         user.setLevel(calculateLevel(user.getTotalPoints()));
 
+        userRepository.save(user);
         Picture saved = pictureRepository.save(picture);
 
         return toResponse(saved);
@@ -83,6 +90,9 @@ public class PictureService {
     }
 
     private PictureCategory parseCategory(String category){
+        if(category == null || category.isBlank()){
+            return PictureCategory.UNKNOWN;
+        }
         try{
             return PictureCategory.valueOf(category.toUpperCase());
         }catch(Exception e){
