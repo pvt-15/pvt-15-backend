@@ -35,7 +35,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/users/**").permitAll()
 
                         .requestMatchers(HttpMethod.GET, "/auth/me").authenticated()
-                        .requestMatchers("/observations/**").authenticated()
+                        .requestMatchers("/pictures/**").authenticated()
 
                         .anyRequest().authenticated()
                 )
