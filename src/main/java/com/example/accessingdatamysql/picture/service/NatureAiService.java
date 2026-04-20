@@ -103,6 +103,8 @@ public class NatureAiService{
             String description = labelNode.path("description").asText("");
             double score = labelNode.path("score").asDouble(0.0);
 
+            System.out.println("Vision label: " + description + " score: " + score);
+
             if(!description.isBlank()){
                 allLabels.add(description);
             }
