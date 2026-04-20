@@ -1,5 +1,6 @@
 package com.example.accessingdatamysql.picture.service;
 
+import com.example.accessingdatamysql.picture.dto.AiIdentificationResult;
 import com.example.accessingdatamysql.picture.dto.CreatePictureRequest;
 import com.example.accessingdatamysql.picture.dto.PictureResponse;
 import com.example.accessingdatamysql.model.Picture;
@@ -20,14 +21,18 @@ public class PictureService {
 
     private static final String USER_NOT_FOUND = "User not found";
     private static final String REQUEST_BODY_REQUIRED = "Request body is required";
+    private static final String IMAGE_URL_REQUIRED = "Image URL is required";
 
     private final PictureRepository pictureRepository;
     private final UserRepository userRepository;
+    private final NatureAiService natureAiService;
 
     public PictureService(PictureRepository pictureRepository,
-                          UserRepository userRepository){
+                          UserRepository userRepository,
+                          NatureAiService natureAiService){
         this.pictureRepository = pictureRepository;
         this.userRepository = userRepository;
+        this.natureAiService = natureAiService;
     }
 
     @Transactional
@@ -36,18 +41,23 @@ public class PictureService {
         if(request == null){
             throw new IllegalArgumentException(REQUEST_BODY_REQUIRED);
         }
+        if(request.getImageUrl() == null || request.getImageUrl().isBlank()){
+            throw new IllegalArgumentException(IMAGE_URL_REQUIRED);
+        }
         User user = userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND));
 
+        AiIdentificationResult aiResult = natureAiService.identifyImage(request.getImageUrl());
+
         Picture picture = new Picture();
-        picture.setLabel(request.getLabel());
-        picture.setCategory(parseCategory(request.getCategory()));
-        picture.setAiConfidence(request.getAiConfidence());
+        picture.setLabel(aiResult.getLabel());
+        picture.setCategory(parseCategory(aiResult.getCategory()));
+        picture.setAiConfidence(aiResult.getAiConfidence());
         picture.setImageUrl(request.getImageUrl());
         picture.setTakenAt(LocalDateTime.now());
         picture.setUser(user);
 
         //TODO CHANGE CALCULATION OF POINTS
-        int points = calculatePoints(request.getAiConfidence());
+        int points = calculatePoints(aiResult.getAiConfidence());
         picture.setPointsAwarded(points);
 
         //TODO CHANGE HOW WE CALCULATE LEVEL

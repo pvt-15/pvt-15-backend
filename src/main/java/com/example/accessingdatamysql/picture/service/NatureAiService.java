@@ -1,14 +1,18 @@
 package com.example.accessingdatamysql.picture.service;
 
-import com.example.accessingdatamysql.picture.dto.CreatePictureRequest;
+import com.example.accessingdatamysql.picture.dto.AiIdentificationResult;
+import org.springframework.stereotype.Service;
 
-public class NatureAiService {
-    public CreatePictureRequest identify(){
-        CreatePictureRequest request = new CreatePictureRequest();
-        request.setLabel("Daisy");
-        request.setCategory("FLOWER");
-        request.setAiConfidence(0.87);
-        request.setImageUrl(null);
-        return request;
+
+@Service
+public class NatureAiService{
+
+    private static final String IMAGE_URL_REQUIRED = "Image URL is required";
+
+    public AiIdentificationResult identifyImage(String imageUrl){
+        if(imageUrl == null || imageUrl.isBlank()){
+            throw new IllegalArgumentException(IMAGE_URL_REQUIRED);
+        }
+        return new AiIdentificationResult("dog", "ANIMAL", 0.75);
     }
 }
