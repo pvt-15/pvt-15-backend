@@ -130,9 +130,36 @@ public class NatureAiService{
         return label.trim();
     }
 
-    private String mapCategory(List<String> labels, String bestLabel){
-        String allText = String.join(" ", labels).toLowerCase(Locale.ROOT) + " " +
-                bestLabel.toLowerCase(Locale.ROOT);
+    private String mapCategory(List<String> labels, String bestLabel) {
+        String best = bestLabel == null ? "" : bestLabel.toLowerCase(Locale.ROOT);
+
+        // 1. Prioritera huvudlabeln först
+        if (containsAny(best, "bird", "sparrow", "eagle", "owl", "duck", "parrot", "pigeon")) {
+            return "BIRD";
+        }
+
+        if (containsAny(best, "insect", "butterfly", "bee", "beetle", "ant", "dragonfly", "spider")) {
+            return "INSECT";
+        }
+
+        if (containsAny(best, "flower", "rose", "daisy", "sunflower", "tulip", "blossom")) {
+            return "FLOWER";
+        }
+
+        if (containsAny(best, "tree", "oak", "pine", "maple", "birch")) {
+            return "TREE";
+        }
+
+        if (containsAny(best, "animal", "dog", "cat", "fox", "deer", "rabbit", "squirrel", "mammal", "horse", "cow")) {
+            return "ANIMAL";
+        }
+
+        if (containsAny(best, "plant", "leaf", "grass", "fern", "shrub", "herb")) {
+            return "PLANT";
+        }
+
+        // 2. Om huvudlabeln inte räcker, titta på resten av labels
+        String allText = String.join(" ", labels).toLowerCase(Locale.ROOT);
 
         if (containsAny(allText, "bird", "sparrow", "eagle", "owl", "duck", "parrot", "pigeon")) {
             return "BIRD";
@@ -146,16 +173,16 @@ public class NatureAiService{
             return "FLOWER";
         }
 
-        if (containsAny(allText, "tree", "oak", "pine", "maple", "birch", "forest")) {
+        if (containsAny(allText, "tree", "oak", "pine", "maple", "birch")) {
             return "TREE";
+        }
+
+        if (containsAny(allText, "animal", "dog", "cat", "fox", "deer", "rabbit", "squirrel", "mammal", "horse", "cow")) {
+            return "ANIMAL";
         }
 
         if (containsAny(allText, "plant", "leaf", "grass", "fern", "shrub", "herb")) {
             return "PLANT";
-        }
-
-        if (containsAny(allText, "animal", "dog", "cat", "fox", "deer", "rabbit", "squirrel", "mammal")) {
-            return "ANIMAL";
         }
 
         return "UNKNOWN";
