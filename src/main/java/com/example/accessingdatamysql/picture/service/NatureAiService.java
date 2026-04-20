@@ -64,8 +64,10 @@ public class NatureAiService{
                 + ": " + response.body());
             }
             return parseVisionResponse(response.body());
-        }catch(IOException | InterruptedException e){
+        } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
+            throw new IllegalStateException(VISION_API_REQUEST_FAILED, e);
+        } catch (IOException e) {
             throw new IllegalStateException(VISION_API_REQUEST_FAILED, e);
         }
     }
