@@ -1,6 +1,7 @@
 package com.example.accessingdatamysql.picture.service;
 
 import com.example.accessingdatamysql.picture.dto.AiIdentificationResult;
+import org.checkerframework.checker.units.qual.A;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import tools.jackson.databind.JsonNode;
@@ -13,9 +14,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 
 
 @Service
@@ -25,6 +24,7 @@ public class NatureAiService{
     private static final String VISION_API_KEY_MISSING = "Vision API key is missing";
     private static final String VISION_ENDPOINT = "https://vision.googleapis.com/v1/images:annotate?key=";
     private static final String VISION_API_REQUEST_FAILED = "Vision API request failed";
+    private static final String VISION_API_ERROR = "Vision API returned an error: ";
 
     private final HttpClient httpClient;
     private final ObjectMapper objectMapper;
@@ -89,37 +89,41 @@ public class NatureAiService{
 
     private AiIdentificationResult parseVisionResponse(String responseBody) throws IOException{
         JsonNode root = objectMapper.readTree(responseBody);
+
+        JsonNode errorNode = root.path("responses").path(0).path("error");
+        if(!errorNode.isMissingNode() && !errorNode.isEmpty()){
+            throw new IllegalStateException(VISION_API_ERROR + errorNode.toString());
+        }
+
         JsonNode labels = root.path("responses").path(0).path("labelAnnotations");
 
         if(!labels.isArray() || labels.isEmpty()){
             return new AiIdentificationResult("Unknown Species", "UNKNOWN", 0.0);
         }
 
-        String bestLabel = "Unknown Species";
-        double bestScore = 0.0;
-        List<String> allLabels = new ArrayList<>();
+        List<VisionLabel> visionLabels = new ArrayList<>();
 
         for(JsonNode labelNode : labels){
-            String description = labelNode.path("description").asText("");
+            String description = labelNode.path("description").asText("").trim();
             double score = labelNode.path("score").asDouble(0.0);
 
-            System.out.println("Vision label: " + description + " score: " + score);
-
             if(!description.isBlank()){
-                allLabels.add(description);
-            }
-
-            if(score > bestScore){
-                bestScore = score;
-                bestLabel = description;
+                System.out.println("Vision label: " + description + " score: " + score);
+                visionLabels.add(new VisionLabel(description, score));
             }
         }
-        String category = mapCategory(allLabels, bestLabel);
+
+        if(visionLabels.isEmpty()){
+            return new AiIdentificationResult("Unknown Species", "UNKNOWN", 0.0);
+        }
+
+        VisionLabel selectedLabel = chooseBestRelevantLabel(visionLabels);
+        String category = mapCategory(visionLabels, selectedLabel);
 
         return new AiIdentificationResult(
-                normalizeLabel(bestLabel),
+                normalizeLabel(selectedLabel.description()),
                 category,
-                bestScore
+                selectedLabel.score()
         );
     }
 
@@ -130,70 +134,76 @@ public class NatureAiService{
         return label.trim();
     }
 
-    private String mapCategory(List<String> labels, String bestLabel) {
-        String best = bestLabel == null ? "" : bestLabel.toLowerCase(Locale.ROOT);
+    private String mapCategory(List<VisionLabel> labels, VisionLabel selectedLabel) {
+        DetectedCategory selectedCategory = classifyLabel(selectedLabel.description());
 
-        // 1. Prioritera huvudlabeln först
-        if (containsAny(best, "bird", "sparrow", "eagle", "owl", "duck", "parrot", "pigeon")) {
-            return "BIRD";
+        if(selectedCategory != DetectedCategory.UNKNOWN){
+            return selectedCategory.name();
         }
 
-        if (containsAny(best, "insect", "butterfly", "bee", "beetle", "ant", "dragonfly", "spider")) {
-            return "INSECT";
+        Map<DetectedCategory, Double> categoryScores = new EnumMap<>(DetectedCategory.class);
+        for(DetectedCategory category : DetectedCategory.values()){
+            categoryScores.put(category, 0.0);
         }
 
-        if (containsAny(best, "flower", "rose", "daisy", "sunflower", "tulip", "blossom")) {
-            return "FLOWER";
+        for(VisionLabel label : labels){
+            String normalized = normalizeKeyword(label.description());
+            DetectedCategory category = classifyLabel(normalized);
+
+            if(category == DetectedCategory.UNKNOWN){
+                continue;
+            }
+
+            double weight = label.score;
+
+            if(isSpecificLabel(normalized)){
+                weight *= 1.35;
+            }else{
+                weight *= 0.85;
+            }
+
+            switch(category){
+                case ANIMAL, BIRD, INSECT, FLOWER -> weight *= 1.20;
+                case TREE -> weight *= 1.00;
+                case PLANT -> weight *= 0.70;
+                default -> { }
+            }
+            categoryScores.put(category, categoryScores.get(category) + weight);
         }
-
-        if (containsAny(best, "tree", "oak", "pine", "maple", "birch")) {
-            return "TREE";
-        }
-
-        if (containsAny(best, "animal", "dog", "cat", "fox", "deer", "rabbit", "squirrel", "mammal", "horse", "cow")) {
-            return "ANIMAL";
-        }
-
-        if (containsAny(best, "plant", "leaf", "grass", "fern", "shrub", "herb")) {
-            return "PLANT";
-        }
-
-        // 2. Om huvudlabeln inte räcker, titta på resten av labels
-        String allText = String.join(" ", labels).toLowerCase(Locale.ROOT);
-
-        if (containsAny(allText, "bird", "sparrow", "eagle", "owl", "duck", "parrot", "pigeon")) {
-            return "BIRD";
-        }
-
-        if (containsAny(allText, "insect", "butterfly", "bee", "beetle", "ant", "dragonfly", "spider")) {
-            return "INSECT";
-        }
-
-        if (containsAny(allText, "flower", "rose", "daisy", "sunflower", "tulip", "blossom")) {
-            return "FLOWER";
-        }
-
-        if (containsAny(allText, "tree", "oak", "pine", "maple", "birch")) {
-            return "TREE";
-        }
-
-        if (containsAny(allText, "animal", "dog", "cat", "fox", "deer", "rabbit", "squirrel", "mammal", "horse", "cow")) {
-            return "ANIMAL";
-        }
-
-        if (containsAny(allText, "plant", "leaf", "grass", "fern", "shrub", "herb")) {
-            return "PLANT";
-        }
-
-        return "UNKNOWN";
+        return categoryScores.entrySet().stream()
+                .filter(entry -> entry.getKey() != DetectedCategory.UNKNOWN)
+                .max(Map.Entry.comparingByValue())
+                .map(entry -> entry.getKey().name())
+                .orElse("UNKNOWN");
     }
 
-    private boolean containsAny(String text, String... candidates){
-        for(String candidate : candidates){
-            if(text.contains((candidate.toLowerCase(Locale.ROOT)))){
-                return true;
+    private VisionLabel chooseBestRelevantLabel(List<VisionLabel> labels){
+        VisionLabel bestSpecific = null;
+        double bestSpecificScore = -1.0;
+
+        VisionLabel bestInterestingGeneric = null;
+        double bestInterestingGenericScore = -1.0;
+
+        for(VisionLabel label : labels){
+            String normalized = normalizeKeywoard(label.description());
+
+            if(isNoiseLabel(normalized)){
+                continue;
             }
         }
-        return false;
+    }
+
+    private record VisionLabel(String description, double score){
+
+    }
+
+    private enum DetectedCategory{
+        ANIMAL,
+        BIRD,
+        INSECT,
+        FLOWER,
+        TREE,
+        PLANT,
+        UNKNOWN
     }
 }
