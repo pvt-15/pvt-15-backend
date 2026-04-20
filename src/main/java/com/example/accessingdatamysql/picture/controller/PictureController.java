@@ -1,8 +1,8 @@
-package com.example.accessingdatamysql.controller;
+package com.example.accessingdatamysql.picture.controller;
 
-import com.example.accessingdatamysql.dto.CreatePictureRequest;
-import com.example.accessingdatamysql.dto.PictureResponse;
-import com.example.accessingdatamysql.service.PictureService;
+import com.example.accessingdatamysql.picture.dto.CreatePictureRequest;
+import com.example.accessingdatamysql.picture.dto.PictureResponse;
+import com.example.accessingdatamysql.picture.service.PictureService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;

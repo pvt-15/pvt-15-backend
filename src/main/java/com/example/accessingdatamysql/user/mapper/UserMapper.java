@@ -1,6 +1,6 @@
-package com.example.accessingdatamysql.mapper;
+package com.example.accessingdatamysql.user.mapper;
 
-import com.example.accessingdatamysql.dto.UserResponse;
+import com.example.accessingdatamysql.user.dto.UserResponse;
 import com.example.accessingdatamysql.model.User;
 import org.springframework.stereotype.Component;
 

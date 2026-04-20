@@ -1,4 +1,4 @@
-package com.example.accessingdatamysql.repository;
+package com.example.accessingdatamysql.picture.repository;
 
 import com.example.accessingdatamysql.model.Picture;
 import com.example.accessingdatamysql.model.User;

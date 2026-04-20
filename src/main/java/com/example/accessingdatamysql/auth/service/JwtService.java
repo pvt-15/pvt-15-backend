@@ -1,4 +1,4 @@
-package com.example.accessingdatamysql.service;
+package com.example.accessingdatamysql.auth.service;
 
 import com.example.accessingdatamysql.model.User;
 import org.springframework.beans.factory.annotation.Value;

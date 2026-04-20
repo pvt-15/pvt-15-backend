@@ -1,4 +1,4 @@
-package com.example.accessingdatamysql.dto;
+package com.example.accessingdatamysql.picture.dto;
 
 public class CreatePictureRequest {
 

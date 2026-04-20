@@ -1,13 +1,13 @@
-package com.example.accessingdatamysql.controller;
+package com.example.accessingdatamysql.auth.controller;
 
-import com.example.accessingdatamysql.dto.AuthResponse;
-import com.example.accessingdatamysql.dto.GoogleLoginRequest;
-import com.example.accessingdatamysql.dto.LoginRequest;
-import com.example.accessingdatamysql.dto.RegisterRequest;
-import com.example.accessingdatamysql.mapper.UserMapper;
+import com.example.accessingdatamysql.auth.dto.AuthResponse;
+import com.example.accessingdatamysql.auth.dto.GoogleLoginRequest;
+import com.example.accessingdatamysql.auth.dto.LoginRequest;
+import com.example.accessingdatamysql.auth.dto.RegisterRequest;
+import com.example.accessingdatamysql.user.mapper.UserMapper;
 import com.example.accessingdatamysql.model.User;
-import com.example.accessingdatamysql.repository.UserRepository;
-import com.example.accessingdatamysql.service.AuthService;
+import com.example.accessingdatamysql.user.repository.UserRepository;
+import com.example.accessingdatamysql.auth.service.AuthService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;

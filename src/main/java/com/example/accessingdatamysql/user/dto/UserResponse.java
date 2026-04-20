@@ -1,4 +1,4 @@
-package com.example.accessingdatamysql.dto;
+package com.example.accessingdatamysql.user.dto;
 
 import com.example.accessingdatamysql.model.enums.Level;
 import com.example.accessingdatamysql.model.enums.Provider;

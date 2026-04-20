@@ -1,10 +1,10 @@
-package com.example.accessingdatamysql.service;
+package com.example.accessingdatamysql.auth.service;
 
-import com.example.accessingdatamysql.dto.*;
+import com.example.accessingdatamysql.auth.dto.*;
 import com.example.accessingdatamysql.model.User;
 import com.example.accessingdatamysql.model.enums.Level;
 import com.example.accessingdatamysql.model.enums.Provider;
-import com.example.accessingdatamysql.repository.UserRepository;
+import com.example.accessingdatamysql.user.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 

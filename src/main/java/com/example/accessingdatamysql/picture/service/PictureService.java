@@ -1,14 +1,13 @@
-package com.example.accessingdatamysql.service;
+package com.example.accessingdatamysql.picture.service;
 
-import com.example.accessingdatamysql.dto.CreatePictureRequest;
-import com.example.accessingdatamysql.dto.PictureResponse;
+import com.example.accessingdatamysql.picture.dto.CreatePictureRequest;
+import com.example.accessingdatamysql.picture.dto.PictureResponse;
 import com.example.accessingdatamysql.model.Picture;
 import com.example.accessingdatamysql.model.User;
 import com.example.accessingdatamysql.model.enums.Level;
 import com.example.accessingdatamysql.model.enums.PictureCategory;
-import com.example.accessingdatamysql.repository.PictureRepository;
-import com.example.accessingdatamysql.repository.UserRepository;
-import org.springframework.security.core.parameters.P;
+import com.example.accessingdatamysql.picture.repository.PictureRepository;
+import com.example.accessingdatamysql.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;

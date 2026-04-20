@@ -1,4 +1,4 @@
-package com.example.accessingdatamysql.dto;
+package com.example.accessingdatamysql.auth.dto;
 
 public class GoogleLoginRequest {
 

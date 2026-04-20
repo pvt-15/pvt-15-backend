@@ -1,6 +1,6 @@
-package com.example.accessingdatamysql.service;
+package com.example.accessingdatamysql.picture.service;
 
-import com.example.accessingdatamysql.dto.CreatePictureRequest;
+import com.example.accessingdatamysql.picture.dto.CreatePictureRequest;
 
 public class NatureAiService {
     public CreatePictureRequest identify(){
