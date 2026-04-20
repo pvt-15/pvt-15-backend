@@ -1,6 +1,7 @@
 package com.example.accessingdatamysql.controller;
 
 import com.example.accessingdatamysql.dto.UserResponse;
+import com.example.accessingdatamysql.mapper.UserMapper;
 import com.example.accessingdatamysql.model.enums.Level;
 import com.example.accessingdatamysql.model.User;
 import com.example.accessingdatamysql.model.enums.Provider;
@@ -17,9 +18,11 @@ import java.util.Optional;
 public class MainController {
 
     private final UserRepository userRepository;
+    private final UserMapper userMapper;
 
-    public MainController(UserRepository userRepository) {
+    public MainController(UserRepository userRepository, UserMapper userMapper) {
         this.userRepository = userRepository;
+        this.userMapper = userMapper;
     }
 
     @GetMapping
@@ -27,16 +30,17 @@ public class MainController {
         List<UserResponse> users = new ArrayList<>();
 
         for(User user : userRepository.findAll()){
-            users.add(toUserResponse(user));
+            users.add(userMapper.toUserResponse(user));
         }
         return users;
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<User> getUserById(@PathVariable Integer id){
+    public ResponseEntity<UserResponse> getUserById(@PathVariable Integer id){
         Optional<User> user = userRepository.findById(id);
 
-        return user.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+        return user.map(userMapper::toUserResponse).map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @PostMapping
@@ -54,15 +58,5 @@ public class MainController {
     public ResponseEntity<Void> deleteUserById(@PathVariable Integer id){
         userRepository.deleteById(id);
         return ResponseEntity.noContent().build();
-    }
-
-    private UserResponse toUserResponse(User user){
-        return new UserResponse(
-                user.getId(),
-                user.getName(),
-                user.getEmail(),
-                user.getProvider(),
-                user.getTotalPoints(),
-                user.getLevel());
     }
 }
