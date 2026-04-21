@@ -38,8 +38,10 @@ public class NatureAiService{
             if(isUsefulPlantResult(plantNetResult)){
                 return plantNetResult;
             }
-        }catch(Exception e){
-            // log.warn("PlantNet failed, falling back to vision", e);
+            System.out.println("PlantNet returned non-useful result, falling back to Vision. Result=" + plantNetResult.getLabel());
+        } catch (Exception e) {
+            System.out.println("PlantNet failed, falling back to Vision: " + e.getMessage());
+            e.printStackTrace();
         }
         return visionService.identifyImage(imageUrl, TargetType.PLANT);
     }
