@@ -118,7 +118,7 @@ public class VisionService {
 
         VisionLabel selectedLabel = chooseBestLabel(visionLabels, targetType);
         return new AiIdentificationResult(
-                normalizeLabel(selectedLabel.description()),
+                "VISION: " + normalizeLabel(selectedLabel.description()),
                 mapCategory(selectedLabel.description(), targetType),
                 selectedLabel.score()
         );

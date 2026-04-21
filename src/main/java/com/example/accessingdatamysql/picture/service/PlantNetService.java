@@ -162,7 +162,7 @@ public class PlantNetService {
         String label = commonName.isBlank() ? scientificName : commonName;
         String category = mapPlantCategory(label, scientificName, familyName, predictedOrgan);
 
-        return new AiIdentificationResult(label, category, confidence);
+        return new AiIdentificationResult("PLANTNET: " + label, category, confidence);
     }
 
     private String mapPlantCategory(String label, String scientificName, String familyName, String predictedOrgan) {
