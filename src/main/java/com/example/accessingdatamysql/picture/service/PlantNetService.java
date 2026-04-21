@@ -101,7 +101,6 @@ public class PlantNetService {
         ByteArrayOutputStream output = new ByteArrayOutputStream();
 
         writeFormField(output, boundary, "organs", "auto");
-        writeFormField(output, boundary, "lang", "en");
         writeFileField(output, boundary, "images", downloadedImage.fileName(), downloadedImage.contentType(), downloadedImage.bytes());
 
         output.write(("--" + boundary + "--\r\n").getBytes(StandardCharsets.UTF_8));
