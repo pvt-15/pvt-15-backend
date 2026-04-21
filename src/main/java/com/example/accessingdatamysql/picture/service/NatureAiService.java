@@ -32,25 +32,17 @@ public class NatureAiService{
         return visionService.identifyImage(imageUrl, TargetType.ANIMAL);
     }
 
-    private AiIdentificationResult identifyPlant(String imageUrl){
-        try{
+    private AiIdentificationResult identifyPlant(String imageUrl) {
+        try {
             AiIdentificationResult plantNetResult = plantNetService.identifyPlant(imageUrl);
-            if(isUsefulPlantResult(plantNetResult)){
+            if (isUsefulPlantResult(plantNetResult)) {
                 return plantNetResult;
             }
-            return new AiIdentificationResult(
-                    "PLANTNET NON-USEFUL",
-                    "UNKNOWN",
-                    0.0
-            );
         } catch (Exception e) {
-            return new AiIdentificationResult(
-                    "PLANTNET ERROR: " + e.getMessage(),
-                    "UNKNOWN",
-                    0.0
-            );
+            e.printStackTrace();
         }
-        // return visionService.identifyImage(imageUrl, TargetType.PLANT);
+
+        return visionService.identifyImage(imageUrl, TargetType.PLANT);
     }
 
     private boolean isUsefulPlantResult(AiIdentificationResult result){
