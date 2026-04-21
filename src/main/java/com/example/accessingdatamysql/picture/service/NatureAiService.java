@@ -38,12 +38,19 @@ public class NatureAiService{
             if(isUsefulPlantResult(plantNetResult)){
                 return plantNetResult;
             }
-            System.out.println("PlantNet returned non-useful result, falling back to Vision. Result=" + plantNetResult.getLabel());
+            return new AiIdentificationResult(
+                    "PLANTNET NON-USEFUL",
+                    "UNKNOWN",
+                    0.0
+            );
         } catch (Exception e) {
-            System.out.println("PlantNet failed, falling back to Vision: " + e.getMessage());
-            e.printStackTrace();
+            return new AiIdentificationResult(
+                    "PLANTNET ERROR: " + e.getMessage(),
+                    "UNKNOWN",
+                    0.0
+            );
         }
-        return visionService.identifyImage(imageUrl, TargetType.PLANT);
+        // return visionService.identifyImage(imageUrl, TargetType.PLANT);
     }
 
     private boolean isUsefulPlantResult(AiIdentificationResult result){
