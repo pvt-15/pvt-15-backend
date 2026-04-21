@@ -38,8 +38,8 @@ public class NatureAiService{
             if(isUsefulPlantResult(plantNetResult)){
                 return plantNetResult;
             }
-        }catch(Exception ignored){
-            // Vision fallback
+        }catch(Exception e){
+            // log.warn("PlantNet failed, falling back to vision", e);
         }
         return visionService.identifyImage(imageUrl, TargetType.PLANT);
     }

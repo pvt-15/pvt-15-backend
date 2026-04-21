@@ -79,7 +79,7 @@ public class PlantNetService {
                 .map(this::normalizeContentType)
                 .orElseGet(() -> inferContentTypeFromUrl(imageUrl));
 
-        if(!contentType.equals("image/jpeg") && !contentType.equals("image/pgn")){
+        if(!contentType.equals("image/jpeg") && !contentType.equals("image/png")){
             contentType = inferContentTypeFromUrl(imageUrl);
         }
         String filename = extractFilename(imageUrl, contentType);
