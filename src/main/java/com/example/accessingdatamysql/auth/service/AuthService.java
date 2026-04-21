@@ -44,7 +44,7 @@ public class AuthService {
         validateRegisterRequest(request);
         String normalizedEmail = normalizeEmail(request.getEmail());
 
-        if(userRepository.existsByEmail(normalizedEmail)) {
+        if (userRepository.existsByEmail(normalizedEmail)) {
             throw new IllegalArgumentException(USER_ALREADY_EXISTS);
         }
         User newUser = new User();
@@ -73,15 +73,15 @@ public class AuthService {
 
         Optional<User> optionalUser = userRepository.findByEmail(normalizedEmail);
 
-        if(optionalUser.isEmpty()) {
+        if (optionalUser.isEmpty()) {
             throw new IllegalArgumentException(INVALID_EMAIL_OR_PASSWORD);
         }
         User user = optionalUser.get();
 
-        if(user.getProvider() != Provider.LOCAL) {
+        if (user.getProvider() != Provider.LOCAL) {
             throw new IllegalArgumentException(NOT_LOCAL_LOGIN);
         }
-        if(user.getPasswordHash() == null ||
+        if (user.getPasswordHash() == null ||
                 !passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
             throw new IllegalArgumentException(INVALID_EMAIL_OR_PASSWORD);
         }
@@ -96,7 +96,7 @@ public class AuthService {
     }
 
     public AuthResponse loginWithGoogle(GoogleLoginRequest request) {
-        if(request == null || request.getToken() == null || request.getToken().isBlank()) {
+        if (request == null || request.getToken() == null || request.getToken().isBlank()) {
             throw new IllegalArgumentException(GOOGLE_TOKEN_REQUIRED);
         }
         GoogleUserInfo googleUserInfo = googleTokenVerifierService.verify(request.getToken());
@@ -107,12 +107,12 @@ public class AuthService {
                 googleUserInfo.getProviderUserId());
         User user;
 
-        if(existingGoogleUser.isPresent()){
+        if (existingGoogleUser.isPresent()) {
             user = existingGoogleUser.get();
-        }else{
+        } else {
             Optional<User> existingEmailUser = userRepository.findByEmail(normalizedEmail);
 
-            if(existingEmailUser.isPresent()){
+            if (existingEmailUser.isPresent()) {
                 throw new IllegalArgumentException(USER_ALREADY_EXISTS);
             }
             user = new User();
@@ -137,28 +137,28 @@ public class AuthService {
     }
 
     private void validateRegisterRequest(RegisterRequest request) {
-        if(request == null) {
+        if (request == null) {
             throw new IllegalArgumentException(REQUEST_BODY_REQUIRED);
         }
-        if(request.getName() == null || request.getName().isBlank()) {
+        if (request.getName() == null || request.getName().isBlank()) {
             throw new IllegalArgumentException(NAME_REQUIRED);
         }
-        if(request.getEmail() == null || request.getEmail().isBlank()) {
+        if (request.getEmail() == null || request.getEmail().isBlank()) {
             throw new IllegalArgumentException(EMAIL_REQUIRED);
         }
-        if(request.getPassword() == null || request.getPassword().isBlank()) {
+        if (request.getPassword() == null || request.getPassword().isBlank()) {
             throw new IllegalArgumentException(PASSWORD_REQUIRED);
         }
     }
 
     private void validateLoginRequest(LoginRequest request) {
-        if(request == null) {
+        if (request == null) {
             throw new IllegalArgumentException(REQUEST_BODY_REQUIRED);
         }
-        if(request.getEmail() == null || request.getEmail().isBlank()) {
+        if (request.getEmail() == null || request.getEmail().isBlank()) {
             throw new IllegalArgumentException(EMAIL_REQUIRED);
         }
-        if(request.getPassword() == null || request.getPassword().isBlank()) {
+        if (request.getPassword() == null || request.getPassword().isBlank()) {
             throw new IllegalArgumentException(PASSWORD_REQUIRED);
         }
     }
@@ -167,8 +167,8 @@ public class AuthService {
         return email.trim().toLowerCase();
     }
 
-    private String getGoogleName(GoogleUserInfo googleUserInfo){
-        if(googleUserInfo.getName() != null && !googleUserInfo.getName().isBlank()){
+    private String getGoogleName(GoogleUserInfo googleUserInfo) {
+        if (googleUserInfo.getName() != null && !googleUserInfo.getName().isBlank()) {
             return googleUserInfo.getName();
         }
         return googleUserInfo.getEmail();

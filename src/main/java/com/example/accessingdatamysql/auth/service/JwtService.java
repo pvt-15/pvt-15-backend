@@ -19,12 +19,12 @@ public class JwtService {
     private final long expirationHours;
 
     public JwtService(JwtEncoder jwtEncoder,
-                      @Value("${jwt.expiration-hours}") long expirationHours){
+                      @Value("${jwt.expiration-hours}") long expirationHours) {
         this.jwtEncoder = jwtEncoder;
         this.expirationHours = expirationHours;
     }
 
-    public String generateToken(User user){
+    public String generateToken(User user) {
         Instant now = Instant.now();
 
         JwtClaimsSet claims = JwtClaimsSet.builder()

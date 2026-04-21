@@ -16,7 +16,7 @@ public class PictureResponse {
                            double aiConfidence,
                            int pointsAwarded,
                            String imageUrl,
-                           String createdAt){
+                           String createdAt) {
         this.id = id;
         this.label = label;
         this.category = category;

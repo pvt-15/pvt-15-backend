@@ -19,7 +19,7 @@ public class UserResponse {
                         Provider provider,
                         String providerUserId,
                         int totalPoints,
-                        Level level){
+                        Level level) {
         this.id = id;
         this.name = name;
         this.email = email;

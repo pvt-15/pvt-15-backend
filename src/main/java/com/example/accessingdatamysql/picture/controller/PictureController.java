@@ -16,20 +16,20 @@ public class PictureController {
 
     private final PictureService pictureService;
 
-    public PictureController(PictureService pictureService){
+    public PictureController(PictureService pictureService) {
         this.pictureService = pictureService;
     }
 
     @PostMapping
     public ResponseEntity<PictureResponse> createPicture(@AuthenticationPrincipal Jwt jwt,
-                                                         @RequestBody CreatePictureRequest request){
+                                                         @RequestBody CreatePictureRequest request) {
         Integer userId = Integer.valueOf(jwt.getSubject());
         PictureResponse response = pictureService.createPicture(userId, request);
         return ResponseEntity.ok(response);
     }
 
     @GetMapping
-    public ResponseEntity<List<PictureResponse>> getMyPictures(@AuthenticationPrincipal Jwt jwt){
+    public ResponseEntity<List<PictureResponse>> getMyPictures(@AuthenticationPrincipal Jwt jwt) {
         Integer userId = Integer.valueOf(jwt.getSubject());
         return ResponseEntity.ok(pictureService.getMyPictures(userId));
     }

@@ -25,7 +25,7 @@ public class ForestArea {
                       int latitude,
                       int longitude,
                       int difficulty,
-                      int ageRecommendation){
+                      int ageRecommendation) {
         this.name = name;
         this.description = description;
         this.location = location;

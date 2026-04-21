@@ -20,28 +20,28 @@ public class JwtConfig {
 
     private final String jwtSecret;
 
-    public JwtConfig(@Value("${jwt.secret}") String jwtSecret){
+    public JwtConfig(@Value("${jwt.secret}") String jwtSecret) {
         this.jwtSecret = jwtSecret;
     }
 
     @Bean
-    public JwtEncoder jwtEncoder(){
+    public JwtEncoder jwtEncoder() {
         SecretKey secretKey = getSecretKey();
         return new NimbusJwtEncoder(new ImmutableSecret<>(secretKey));
     }
 
     @Bean
-    public JwtDecoder jwtDecoder(){
+    public JwtDecoder jwtDecoder() {
         return NimbusJwtDecoder
                 .withSecretKey(getSecretKey())
                 .macAlgorithm(MacAlgorithm.HS256)
                 .build();
     }
 
-    private SecretKey getSecretKey(){
+    private SecretKey getSecretKey() {
         byte[] secretBytes = jwtSecret.getBytes(StandardCharsets.UTF_8);
 
-        if(secretBytes.length < 32){
+        if (secretBytes.length < 32) {
             throw new IllegalArgumentException("JWT secret must be at least 32 bytes long");
         }
 

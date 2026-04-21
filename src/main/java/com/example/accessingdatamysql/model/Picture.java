@@ -29,7 +29,7 @@ public class Picture {
     @JoinColumn(name = "user", nullable = false)
     private User user;
 
-    public Picture(){
+    public Picture() {
 
     }
 

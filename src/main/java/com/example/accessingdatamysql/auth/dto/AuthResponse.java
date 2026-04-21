@@ -8,7 +8,7 @@ public class AuthResponse {
     private String message;
     private String token;
 
-    public AuthResponse(){
+    public AuthResponse() {
 
     }
 
@@ -16,7 +16,7 @@ public class AuthResponse {
                         String name,
                         String email,
                         String message,
-                        String token){
+                        String token) {
         this.userId = userId;
         this.name = name;
         this.email = email;

@@ -11,7 +11,7 @@ public enum ChallengeType {
     private final int code;
     private final String type;
 
-    ChallengeType(int code, String type){
+    ChallengeType(int code, String type) {
         this.code = code;
         this.type = type;
     }
@@ -25,7 +25,7 @@ public enum ChallengeType {
     }
 
     @Override
-    public String toString(){
+    public String toString() {
         return type;
     }
 }

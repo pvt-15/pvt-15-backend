@@ -4,11 +4,11 @@ public class GoogleLoginRequest {
 
     private String token;
 
-    public GoogleLoginRequest(){
+    public GoogleLoginRequest() {
 
     }
 
-    public GoogleLoginRequest(String token){
+    public GoogleLoginRequest(String token) {
         this.token = token;
     }
 

@@ -26,52 +26,52 @@ public class AuthController {
 
     public AuthController(AuthService authService,
                           UserRepository userRepository,
-                          UserMapper userMapper){
+                          UserMapper userMapper) {
         this.authService = authService;
         this.userRepository = userRepository;
         this.userMapper = userMapper;
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody RegisterRequest request){
-        try{
+    public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
+        try {
             AuthResponse response = authService.register(request);
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
-        }catch(IllegalArgumentException e){
+        } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest request){
-        try{
+    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
+        try {
             AuthResponse response = authService.login(request);
             return ResponseEntity.ok(response);
-        }catch (IllegalArgumentException e){
+        } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
         }
     }
 
     @PostMapping("/google")
-    public ResponseEntity<?> googleLogin(@RequestBody GoogleLoginRequest request){
-        try{
+    public ResponseEntity<?> googleLogin(@RequestBody GoogleLoginRequest request) {
+        try {
             AuthResponse response = authService.loginWithGoogle(request);
             return ResponseEntity.ok(response);
-        }catch(IllegalArgumentException e){
+        } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
         }
     }
 
     @GetMapping("/me")
-    public ResponseEntity<?> getCurrentUser(@AuthenticationPrincipal Jwt jwt){
-        try{
+    public ResponseEntity<?> getCurrentUser(@AuthenticationPrincipal Jwt jwt) {
+        try {
             Integer userId = Integer.valueOf(jwt.getSubject());
 
             Optional<User> user = userRepository.findById(userId);
 
             return user.map(userMapper::toUserResponse).map(ResponseEntity::ok)
                     .orElseGet(() -> ResponseEntity.notFound().build());
-        }catch(NumberFormatException e){
+        } catch (NumberFormatException e) {
             return ResponseEntity.badRequest().body(e);
         }
     }

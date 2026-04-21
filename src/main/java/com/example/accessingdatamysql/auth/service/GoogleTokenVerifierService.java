@@ -31,10 +31,10 @@ public class GoogleTokenVerifierService {
                 .build();
     }
 
-    public GoogleUserInfo verify(String idTokenString){
-        try{
+    public GoogleUserInfo verify(String idTokenString) {
+        try {
             GoogleIdToken idToken = verifier.verify(idTokenString);
-            if(idToken == null){
+            if (idToken == null) {
                 throw new IllegalArgumentException("Invalid Google ID token");
             }
 
@@ -45,16 +45,16 @@ public class GoogleTokenVerifierService {
             boolean emailVerified = payload.getEmailVerified();
             String name = (String) payload.get("name");
 
-            if(email == null || email.isBlank()){
+            if (email == null || email.isBlank()) {
                 throw new IllegalArgumentException("Google Account did not provide an email");
             }
 
-            if(!Boolean.TRUE.equals(emailVerified)){
+            if (!Boolean.TRUE.equals(emailVerified)) {
                 throw new IllegalArgumentException("Google email is not verified");
             }
 
             return new GoogleUserInfo(providerUserId, email, name);
-        }catch(GeneralSecurityException | IOException e){
+        } catch (GeneralSecurityException | IOException e) {
             throw new IllegalArgumentException("Could not verify Google ID token", e);
         }
     }

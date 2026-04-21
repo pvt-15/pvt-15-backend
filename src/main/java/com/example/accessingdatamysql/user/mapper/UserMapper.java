@@ -7,8 +7,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class UserMapper {
 
-    public UserResponse toUserResponse(User user){
-        if(user == null){
+    public UserResponse toUserResponse(User user) {
+        if (user == null) {
             return null;
         }
 

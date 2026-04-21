@@ -21,7 +21,7 @@ public class WalkSession {
                        int userId,
                        int forestAreaId,
                        int totalPointsEarned,
-                       Date date){
+                       Date date) {
         this.id = id;
         this.userId = userId;
         this.forestAreaId = forestAreaId;

@@ -6,13 +6,13 @@ public class AiIdentificationResult {
     private String category;
     private double aiConfidence;
 
-    public AiIdentificationResult(){
+    public AiIdentificationResult() {
 
     }
 
     public AiIdentificationResult(String label,
                                   String category,
-                                  double aiConfidence){
+                                  double aiConfidence) {
         this.label = label;
         this.category = category;
         this.aiConfidence = aiConfidence;

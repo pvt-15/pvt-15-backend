@@ -8,7 +8,7 @@ public enum AgeGroup {
     private int from;
     private int to;
 
-    AgeGroup(int from, int to){
+    AgeGroup(int from, int to) {
         this.from = from;
         this.to = to;
     }
@@ -21,7 +21,7 @@ public enum AgeGroup {
         return to;
     }
 
-    public String toString(){
+    public String toString() {
         return from + " - " + to;
     }
 }

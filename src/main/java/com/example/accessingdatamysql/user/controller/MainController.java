@@ -26,17 +26,17 @@ public class MainController {
     }
 
     @GetMapping
-    public List<UserResponse> getAllUsers(){
+    public List<UserResponse> getAllUsers() {
         List<UserResponse> users = new ArrayList<>();
 
-        for(User user : userRepository.findAll()){
+        for (User user : userRepository.findAll()) {
             users.add(userMapper.toUserResponse(user));
         }
         return users;
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<UserResponse> getUserById(@PathVariable Integer id){
+    public ResponseEntity<UserResponse> getUserById(@PathVariable Integer id) {
         Optional<User> user = userRepository.findById(id);
 
         return user.map(userMapper::toUserResponse).map(ResponseEntity::ok)
@@ -49,13 +49,13 @@ public class MainController {
                              @RequestParam String passwordHash,
                              @RequestParam Provider provider,
                              @RequestParam int totalPoints,
-                             @RequestParam Level level){
-        userRepository.save(new User(name, email, passwordHash, provider,totalPoints, level));
+                             @RequestParam Level level) {
+        userRepository.save(new User(name, email, passwordHash, provider, totalPoints, level));
         return "saved";
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUserById(@PathVariable Integer id){
+    public ResponseEntity<Void> deleteUserById(@PathVariable Integer id) {
         userRepository.deleteById(id);
         return ResponseEntity.noContent().build();
     }
