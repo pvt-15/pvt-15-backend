@@ -2,6 +2,7 @@ package com.example.accessingdatamysql.picture.controller;
 
 import com.example.accessingdatamysql.picture.dto.CreatePictureRequest;
 import com.example.accessingdatamysql.picture.dto.PictureResponse;
+import com.example.accessingdatamysql.picture.dto.PictureStatsResponse;
 import com.example.accessingdatamysql.picture.service.PictureService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -29,8 +30,34 @@ public class PictureController {
     }
 
     @GetMapping
-    public ResponseEntity<List<PictureResponse>> getMyPictures(@AuthenticationPrincipal Jwt jwt) {
+    public ResponseEntity<List<PictureResponse>> getMyPictures(@AuthenticationPrincipal Jwt jwt,
+                                                               @RequestParam(required = false) String category,
+                                                               @RequestParam(required = false) String sort) {
         Integer userId = Integer.valueOf(jwt.getSubject());
-        return ResponseEntity.ok(pictureService.getMyPictures(userId));
+        List<PictureResponse> pictures = pictureService.getMyPictures(userId, category, sort);
+        return ResponseEntity.ok(pictures);
+    }
+
+    @GetMapping("/stats")
+    public ResponseEntity<PictureStatsResponse> getPictureStats(@AuthenticationPrincipal Jwt jwt) {
+        Integer userId = Integer.valueOf(jwt.getSubject());
+        PictureStatsResponse stats = pictureService.getPictureStats(userId);
+        return ResponseEntity.ok(stats);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<PictureResponse> getPictureById(@AuthenticationPrincipal Jwt jwt,
+                                                          @PathVariable Integer id) {
+        Integer userId = Integer.valueOf(jwt.getSubject());
+        PictureResponse response = pictureService.getPictureById(userId, id);
+        return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deletePicture(@AuthenticationPrincipal Jwt jwt,
+                                              @PathVariable Integer id) {
+        Integer userId = Integer.valueOf(jwt.getSubject());
+        pictureService.deletePicture(userId, id);
+        return ResponseEntity.noContent().build();
     }
 }

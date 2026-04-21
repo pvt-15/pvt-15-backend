@@ -39,7 +39,7 @@ public class NatureAiService {
                 return result;
             }
         } catch (Exception ignored) {
-            // If PlantNet fails, we fall back to Vision.
+            // If PlantNet fails, we fall back to Vision
         }
         return visionService.identifyImage(imageUrl, TargetType.PLANT);
     }
