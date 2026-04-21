@@ -15,12 +15,12 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 
 @Service
 public class VisionService {
+
     private static final String IMAGE_URL_REQUIRED = "Image URL is required";
     private static final String VISION_API_KEY_MISSING = "Vision API key is missing";
     private static final String VISION_ENDPOINT = "https://vision.googleapis.com/v1/images:annotate?key=";
@@ -34,8 +34,8 @@ public class VisionService {
     public VisionService(@Value("${vision.api.key:}") String visionApiKey,
                          ObjectMapper objectMapper) {
         this.httpClient = HttpClient.newHttpClient();
-        this.visionApiKey = visionApiKey;
         this.objectMapper = objectMapper;
+        this.visionApiKey = visionApiKey;
     }
 
     public AiIdentificationResult identifyImage(String imageUrl, TargetType targetType) {
@@ -45,11 +45,13 @@ public class VisionService {
         if (visionApiKey == null || visionApiKey.isBlank()) {
             throw new IllegalStateException(VISION_API_KEY_MISSING);
         }
-
-        TargetType effectiveTarget = targetType == null ? TargetType.ANIMAL : targetType;
-
+        TargetType actualTargetType = targetType;
+        if (actualTargetType == null) {
+            actualTargetType = TargetType.ANIMAL;
+        }
         try {
             String requestBody = buildRequestBody(imageUrl);
+
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(VISION_ENDPOINT + visionApiKey))
                     .header("Content-Type", "application/json")
@@ -63,8 +65,7 @@ public class VisionService {
                         VISION_API_REQUEST_FAILED + " with status " + response.statusCode() + ": " + response.body()
                 );
             }
-
-            return parseVisionResponse(response.body(), effectiveTarget);
+            return parseVisionResponse(response.body(), actualTargetType);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new IllegalStateException(VISION_API_REQUEST_FAILED, e);
@@ -82,8 +83,8 @@ public class VisionService {
                 .putObject("source")
                 .put("imageUri", imageUrl);
 
-        ArrayNode features = request.putArray("features");
-        features.addObject()
+        request.putArray("features")
+                .addObject()
                 .put("type", "LABEL_DETECTION")
                 .put("maxResults", 10);
 
@@ -92,36 +93,108 @@ public class VisionService {
 
     private AiIdentificationResult parseVisionResponse(String responseBody, TargetType targetType) throws IOException {
         JsonNode root = objectMapper.readTree(responseBody);
-        JsonNode errorNode = root.path("responses").path(0).path("error");
+        JsonNode firstResponse = root.path("responses").path(0);
+        JsonNode errorNode = firstResponse.path("error");
 
         if (!errorNode.isMissingNode() && !errorNode.isEmpty()) {
             throw new IllegalStateException(VISION_API_ERROR + errorNode);
         }
-
-        JsonNode labels = root.path("responses").path(0).path("labelAnnotations");
-        if (!labels.isArray() || labels.isEmpty()) {
+        JsonNode labelAnnotations = firstResponse.path("labelAnnotations");
+        if (!labelAnnotations.isArray() || labelAnnotations.isEmpty()) {
             return unknownResult(targetType);
         }
-
-        List<VisionLabel> visionLabels = new ArrayList<>();
-        for (JsonNode labelNode : labels) {
+        List<VisionLabel> labels = new ArrayList<>();
+        for (JsonNode labelNode : labelAnnotations) {
             String description = labelNode.path("description").asText("").trim();
             double score = labelNode.path("score").asDouble(0.0);
+
             if (!description.isBlank()) {
-                visionLabels.add(new VisionLabel(description, score));
+                labels.add(new VisionLabel(description, score));
+            }
+        }
+        if (labels.isEmpty()) {
+            return unknownResult(targetType);
+        }
+        if (targetType == TargetType.PLANT) {
+            return choosePlantResult(labels);
+        }
+        return chooseAnimalResult(labels);
+    }
+
+    private AiIdentificationResult choosePlantResult(List<VisionLabel> labels) {
+        for (VisionLabel label : labels) {
+            String text = normalize(label.description());
+
+            if (isPlantNoise(text)) {
+                continue;
+            }
+            if (isSpecificTree(text)) {
+                return new AiIdentificationResult(cleanLabel(label.description()), "TREE", label.score());
+            }
+            if (isSpecificFlower(text)) {
+                return new AiIdentificationResult(cleanLabel(label.description()), "FLOWER", label.score());
             }
         }
 
-        if (visionLabels.isEmpty()) {
-            return unknownResult(targetType);
+        for (VisionLabel label : labels) {
+            String text = normalize(label.description());
+
+            if (isPlantNoise(text)) {
+                continue;
+            }
+            String category = mapPlantCategory(text);
+            if (!category.equals("UNKNOWN")) {
+                return new AiIdentificationResult(cleanLabel(label.description()), category, label.score());
+            }
         }
 
-        VisionLabel selectedLabel = chooseBestLabel(visionLabels, targetType);
-        return new AiIdentificationResult(
-                "VISION: " + normalizeLabel(selectedLabel.description()),
-                mapCategory(selectedLabel.description(), targetType),
-                selectedLabel.score()
-        );
+        for (VisionLabel label : labels) {
+            String text = normalize(label.description());
+            if (!isPlantNoise(text)) {
+                return new AiIdentificationResult(cleanLabel(label.description()), "PLANT", label.score());
+            }
+        }
+        return unknownResult(TargetType.PLANT);
+    }
+
+    private AiIdentificationResult chooseAnimalResult(List<VisionLabel> labels) {
+        for (VisionLabel label : labels) {
+            String text = normalize(label.description());
+
+            if (isAnimalNoise(text)) {
+                continue;
+            }
+            if (isSpecificBird(text)) {
+                return new AiIdentificationResult(cleanLabel(label.description()), "BIRD", label.score());
+            }
+            if (isSpecificInsect(text)) {
+                return new AiIdentificationResult(cleanLabel(label.description()), "INSECT", label.score());
+            }
+            if (isSpecificAnimal(text)) {
+                return new AiIdentificationResult(cleanLabel(label.description()), "ANIMAL", label.score());
+            }
+        }
+
+        for (VisionLabel label : labels) {
+            String text = normalize(label.description());
+
+            if (isAnimalNoise(text)) {
+                continue;
+            }
+            String category = mapAnimalCategory(text);
+            if (!category.equals("UNKNOWN")) {
+                return new AiIdentificationResult(cleanLabel(label.description()), category, label.score());
+            }
+        }
+
+        for (VisionLabel label : labels) {
+            String text = normalize(label.description());
+            if (!isAnimalNoise(text)) {
+                return new AiIdentificationResult(cleanLabel(label.description()), "ANIMAL", label.score());
+            }
+        }
+
+        return unknownResult(TargetType.ANIMAL);
     }
 
     private AiIdentificationResult unknownResult(TargetType targetType) {
@@ -131,161 +204,98 @@ public class VisionService {
         return new AiIdentificationResult("Unknown Animal", "UNKNOWN", 0.0);
     }
 
-    private VisionLabel chooseBestLabel(List<VisionLabel> labels, TargetType targetType) {
-        return labels.stream()
-                .filter(label -> !isNoiseLabel(label.description(), targetType))
-                .max(Comparator.comparingDouble(label -> scoreLabel(label.description(), label.score(), targetType)))
-                .orElseGet(() -> labels.stream()
-                        .max(Comparator.comparingDouble(VisionLabel::score))
-                        .orElse(new VisionLabel(targetType == TargetType.PLANT ? "Unknown Plant" : "Unknown Animal", 0.0)));
-    }
-
-    private double scoreLabel(String label, double baseScore, TargetType targetType) {
-        String normalized = normalizeKeyword(label);
-        double score = baseScore;
-
-        if (targetType == TargetType.ANIMAL) {
-            if (isSpecificBird(normalized)) {
-                score += 0.30;
-            } else if (isGenericBird(normalized)) {
-                score += 0.20;
-            }
-
-            if (isSpecificInsect(normalized)) {
-                score += 0.25;
-            } else if (containsAny(normalized, "insect")) {
-                score += 0.15;
-            }
-
-            if (isSpecificAnimal(normalized)) {
-                score += 0.20;
-            } else if (containsAny(normalized, "animal", "mammal", "wildlife", "fauna")) {
-                score += 0.05;
-            }
-        } else {
-            if (isSpecificTree(normalized)) {
-                score += 0.30;
-            } else if (containsAny(normalized, "tree", "conifer", "deciduous", "woody plant")) {
-                score += 0.18;
-            }
-
-            if (isSpecificFlower(normalized)) {
-                score += 0.28;
-            } else if (containsAny(normalized, "flower", "blossom", "petal", "wildflower")) {
-                score += 0.15;
-            }
-
-            if (containsAny(normalized, "plant", "flora", "shrub", "bush", "fern", "moss", "herb")) {
-                score += 0.08;
-            }
-        }
-
-        if (containsAny(normalized, "close up", "macro photography", "terrestrial plant")) {
-            score -= 0.03;
-        }
-
-        return score;
-    }
-
-    private String mapCategory(String label, TargetType targetType) {
-        return targetType == TargetType.PLANT ? mapPlantCategory(label) : mapAnimalCategory(label);
-    }
-
-    private String mapAnimalCategory(String label) {
-        String normalized = normalizeKeyword(label);
-
-        if (isSpecificBird(normalized) || isGenericBird(normalized)) {
-            return "BIRD";
-        }
-        if (isSpecificInsect(normalized) || containsAny(normalized,
-                "insect", "bee", "bumblebee", "butterfly", "moth", "ant", "beetle", "dragonfly", "ladybug", "ladybird", "grasshopper", "wasp")) {
-            return "INSECT";
-        }
-        if (containsAny(normalized,
-                "animal", "mammal", "wildlife", "fauna", "fox", "wolf", "deer", "moose", "elk", "roe deer",
-                "squirrel", "rabbit", "hare", "hedgehog", "badger", "boar", "otter", "seal", "dog", "cat",
-                "horse", "cow", "sheep", "goat", "frog", "toad", "snake", "lizard", "fish", "spider")) {
-            return "ANIMAL";
-        }
-        return "UNKNOWN";
-    }
-
-    private String mapPlantCategory(String label) {
-        String normalized = normalizeKeyword(label);
-
-        if (isSpecificTree(normalized) || containsAny(normalized,
+    private String mapPlantCategory(String text) {
+        if (isSpecificTree(text) || containsAny(text,
                 "tree", "conifer", "evergreen", "deciduous", "woody plant", "forest tree", "sapling")) {
             return "TREE";
         }
-        if (isSpecificFlower(normalized) || containsAny(normalized,
+        if (isSpecificFlower(text) || containsAny(text,
                 "flower", "wildflower", "blossom", "petal", "bloom", "inflorescence")) {
             return "FLOWER";
         }
-        if (containsAny(normalized,
+        if (containsAny(text,
                 "plant", "flora", "leaf", "branch", "foliage", "shrub", "bush", "fern", "moss", "grass", "herb")) {
             return "PLANT";
         }
         return "UNKNOWN";
     }
 
-    private boolean isNoiseLabel(String label, TargetType targetType) {
-        String normalized = normalizeKeyword(label);
-
-        if (targetType == TargetType.ANIMAL) {
-            return containsAny(normalized,
-                    "green", "grass", "field", "meadow", "pasture", "plant", "leaf", "tree", "landscape",
-                    "vegetation", "nature reserve", "outdoor", "sky", "branch", "woodland");
+    private String mapAnimalCategory(String text) {
+        if (isSpecificBird(text) || containsAny(text, "bird", "avian")) {
+            return "BIRD";
         }
-
-        return containsAny(normalized,
-                "sky", "cloud", "landscape", "outdoor", "photography", "close up", "macro photography",
-                "organism", "natural environment");
+        if (isSpecificInsect(text) || containsAny(text,
+                "insect", "bee", "bumblebee", "butterfly", "moth", "ant", "beetle",
+                "dragonfly", "ladybug", "ladybird", "grasshopper", "wasp")) {
+            return "INSECT";
+        }
+        if (isSpecificAnimal(text) || containsAny(text,
+                "animal", "mammal", "wildlife", "fauna", "fox", "wolf", "deer", "moose",
+                "elk", "roe deer", "squirrel", "rabbit", "hare", "hedgehog", "badger",
+                "boar", "otter", "seal", "dog", "cat", "horse", "cow", "sheep", "goat",
+                "frog", "toad", "snake", "lizard", "fish", "spider")) {
+            return "ANIMAL";
+        }
+        return "UNKNOWN";
     }
 
-    private boolean isGenericBird(String normalized) {
-        return containsAny(normalized, "bird", "avian");
+    private boolean isPlantNoise(String text) {
+        return containsAny(text,
+                "sky", "cloud", "landscape", "outdoor", "photography", "close up",
+                "macro photography", "organism", "natural environment");
     }
 
-    private boolean isSpecificBird(String normalized) {
-        return containsAny(normalized,
-                "duck", "swan", "goose", "gull", "pigeon", "dove", "crow", "raven", "magpie", "owl",
-                "eagle", "hawk", "falcon", "sparrow", "robin", "woodpecker", "heron", "crane", "stork",
-                "tit", "finch", "blackbird", "jay", "wren", "kingfisher");
+    private boolean isAnimalNoise(String text) {
+        return containsAny(text,
+                "green", "grass", "field", "meadow", "pasture", "plant", "leaf",
+                "tree", "landscape", "vegetation", "nature reserve", "outdoor",
+                "sky", "branch", "woodland");
     }
 
-    private boolean isSpecificInsect(String normalized) {
-        return containsAny(normalized,
-                "butterfly", "moth", "bee", "bumblebee", "wasp", "ant", "beetle", "dragonfly",
-                "damselfly", "ladybug", "ladybird", "grasshopper", "caterpillar");
+    private boolean isSpecificBird(String text) {
+        return containsAny(text,
+                "duck", "swan", "goose", "gull", "pigeon", "dove", "crow", "raven",
+                "magpie", "owl", "eagle", "hawk", "falcon", "sparrow", "robin",
+                "woodpecker", "heron", "crane", "stork", "tit", "finch", "blackbird",
+                "jay", "wren", "kingfisher");
     }
 
-    private boolean isSpecificAnimal(String normalized) {
-        return containsAny(normalized,
-                "fox", "wolf", "dog", "cat", "deer", "moose", "elk", "roe deer", "squirrel", "rabbit",
-                "hare", "hedgehog", "badger", "boar", "otter", "seal", "horse", "cow", "sheep", "goat",
-                "frog", "toad", "snake", "lizard", "fish", "spider", "rodent", "reptile", "amphibian");
+    private boolean isSpecificInsect(String text) {
+        return containsAny(text,
+                "butterfly", "moth", "bee", "bumblebee", "wasp", "ant", "beetle",
+                "dragonfly", "damselfly", "ladybug", "ladybird", "grasshopper", "caterpillar");
     }
 
-    private boolean isSpecificTree(String normalized) {
-        return containsAny(normalized,
-                "pine", "spruce", "fir", "birch", "oak", "maple", "ash", "alder", "willow", "rowan",
-                "linden", "lime tree", "hazel", "juniper", "cedar", "cypress", "elm", "beech");
+    private boolean isSpecificAnimal(String text) {
+        return containsAny(text,
+                "fox", "wolf", "dog", "cat", "deer", "moose", "elk", "roe deer",
+                "squirrel", "rabbit", "hare", "hedgehog", "badger", "boar", "otter",
+                "seal", "horse", "cow", "sheep", "goat", "frog", "toad", "snake",
+                "lizard", "fish", "spider", "rodent", "reptile", "amphibian");
     }
 
-    private boolean isSpecificFlower(String normalized) {
-        return containsAny(normalized,
-                "rose", "tulip", "daisy", "dandelion", "sunflower", "lily", "orchid", "violet", "anemone",
-                "crocus", "buttercup", "poppy", "bluebell", "snowdrop", "lavender");
+    private boolean isSpecificTree(String text) {
+        return containsAny(text,
+                "pine", "spruce", "fir", "birch", "oak", "maple", "ash", "alder",
+                "willow", "rowan", "linden", "lime tree", "hazel", "juniper",
+                "cedar", "cypress", "elm", "beech");
     }
 
-    private String normalizeLabel(String label) {
+    private boolean isSpecificFlower(String text) {
+        return containsAny(text,
+                "rose", "tulip", "daisy", "dandelion", "sunflower", "lily", "orchid",
+                "violet", "anemone", "crocus", "buttercup", "poppy", "bluebell",
+                "snowdrop", "lavender");
+    }
+
+    private String cleanLabel(String label) {
         if (label == null || label.isBlank()) {
             return "Unknown Species";
         }
         return label.trim();
     }
 
-    private String normalizeKeyword(String text) {
+    private String normalize(String text) {
         if (text == null) {
             return "";
         }
@@ -295,9 +305,9 @@ public class VisionService {
                 .replace('_', ' ');
     }
 
-    private boolean containsAny(String text, String... candidates) {
-        for (String candidate : candidates) {
-            if (text.contains(candidate.toLowerCase(Locale.ROOT))) {
+    private boolean containsAny(String text, String... words) {
+        for (String word : words) {
+            if (text.contains(word.toLowerCase(Locale.ROOT))) {
                 return true;
             }
         }

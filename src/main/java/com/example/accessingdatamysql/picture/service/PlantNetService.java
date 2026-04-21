@@ -18,6 +18,7 @@ import java.util.UUID;
 
 @Service
 public class PlantNetService {
+
     private static final String IMAGE_URL_REQUIRED = "Image URL is required";
     private static final String PLANTNET_API_KEY_MISSING = "PlantNet API key is missing";
     private static final String IMAGE_DOWNLOAD_FAILED = "Could not download image for PlantNet";
@@ -31,62 +32,63 @@ public class PlantNetService {
 
     public PlantNetService(@Value("${plantnet.api.key:}") String plantNetApiKey,
                            @Value("${plantnet.project:all}") String project,
-                           ObjectMapper objectMapper){
+                           ObjectMapper objectMapper) {
         this.httpClient = HttpClient.newHttpClient();
-        this.plantNetApiKey = plantNetApiKey;
         this.objectMapper = objectMapper;
-        this.project = project == null || project.isBlank() ? "all" : project;
+        this.plantNetApiKey = plantNetApiKey;
+        this.project = (project == null || project.isBlank()) ? "all" : project;
     }
 
-    public AiIdentificationResult identifyPlant(String imageUrl){
-        if(imageUrl == null || imageUrl.isBlank()){
+    public AiIdentificationResult identifyPlant(String imageUrl) {
+        if (imageUrl == null || imageUrl.isBlank()) {
             throw new IllegalArgumentException(IMAGE_URL_REQUIRED);
         }
-        if(plantNetApiKey == null || plantNetApiKey.isBlank()){
+        if (plantNetApiKey == null || plantNetApiKey.isBlank()) {
             throw new IllegalStateException(PLANTNET_API_KEY_MISSING);
         }
-
-        try{
+        try {
             DownloadedImage downloadedImage = downloadImage(imageUrl);
             HttpRequest request = buildPlantNetRequest(downloadedImage);
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
-            if(response.statusCode() < 200 || response.statusCode() >= 300){
+            if (response.statusCode() < 200 || response.statusCode() >= 300) {
                 throw new IllegalStateException(
                         PLANTNET_REQUEST_FAILED + " with status " + response.statusCode() + ": " + response.body()
                 );
             }
             return parsePlantNetResponse(response.body());
-        }catch(InterruptedException e){
+        } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new IllegalStateException(PLANTNET_REQUEST_FAILED, e);
-        }catch(IOException e){
+        } catch (IOException e) {
             throw new IllegalStateException(PLANTNET_REQUEST_FAILED, e);
         }
     }
-    private DownloadedImage downloadImage(String imageUrl) throws IOException, InterruptedException{
+
+    private DownloadedImage downloadImage(String imageUrl) throws IOException, InterruptedException {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(imageUrl))
                 .GET()
                 .build();
+
         HttpResponse<byte[]> response = httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
-        if(response.statusCode() < 200 || response.statusCode() >= 300){
+
+        if (response.statusCode() < 200 || response.statusCode() >= 300) {
             throw new IllegalStateException(IMAGE_DOWNLOAD_FAILED + " with status " + response.statusCode());
         }
-
         String contentType = response.headers()
                 .firstValue("Content-Type")
                 .map(this::normalizeContentType)
                 .orElseGet(() -> inferContentTypeFromUrl(imageUrl));
 
-        if(!contentType.equals("image/jpeg") && !contentType.equals("image/png")){
+        if (!contentType.equals("image/jpeg") && !contentType.equals("image/png")) {
             contentType = inferContentTypeFromUrl(imageUrl);
         }
         String filename = extractFilename(imageUrl, contentType);
         return new DownloadedImage(response.body(), contentType, filename);
     }
 
-    private HttpRequest buildPlantNetRequest(DownloadedImage downloadedImage) throws IOException{
+    private HttpRequest buildPlantNetRequest(DownloadedImage downloadedImage) throws IOException {
         String boundary = "Boundary-" + UUID.randomUUID();
         byte[] body = buildMultipartBody(boundary, downloadedImage);
 
@@ -97,19 +99,29 @@ public class PlantNetService {
                 .build();
     }
 
-    private byte[] buildMultipartBody(String boundary, DownloadedImage downloadedImage) throws IOException{
+    private byte[] buildMultipartBody(String boundary, DownloadedImage downloadedImage) throws IOException {
         ByteArrayOutputStream output = new ByteArrayOutputStream();
 
         writeFormField(output, boundary, "organs", "auto");
-        writeFileField(output, boundary, "images", downloadedImage.fileName(), downloadedImage.contentType(), downloadedImage.bytes());
-
+        writeFileField(
+                output,
+                boundary,
+                "images",
+                downloadedImage.filename(),
+                downloadedImage.contentType(),
+                downloadedImage.bytes()
+        );
         output.write(("--" + boundary + "--\r\n").getBytes(StandardCharsets.UTF_8));
         return output.toByteArray();
     }
 
-    private void writeFormField(ByteArrayOutputStream output, String boundary, String name, String value) throws IOException {
+    private void writeFormField(ByteArrayOutputStream output,
+                                String boundary,
+                                String name,
+                                String value) throws IOException {
         output.write(("--" + boundary + "\r\n").getBytes(StandardCharsets.UTF_8));
-        output.write(("Content-Disposition: form-data; name=\"" + name + "\"\r\n\r\n").getBytes(StandardCharsets.UTF_8));
+        output.write(("Content-Disposition: form-data; name=\"" + name + "\"\r\n\r\n")
+                .getBytes(StandardCharsets.UTF_8));
         output.write(value.getBytes(StandardCharsets.UTF_8));
         output.write("\r\n".getBytes(StandardCharsets.UTF_8));
     }
@@ -135,50 +147,58 @@ public class PlantNetService {
         if (!results.isArray() || results.isEmpty()) {
             return new AiIdentificationResult("Unknown Plant", "UNKNOWN", 0.0);
         }
-
         JsonNode bestResult = results.path(0);
+        JsonNode species = bestResult.path("species");
+
         double confidence = bestResult.path("score").asDouble(0.0);
 
-        JsonNode speciesNode = bestResult.path("species");
         String scientificName = firstNonBlank(
-                speciesNode.path("scientificNameWithoutAuthor").asText(null),
-                speciesNode.path("scientificName").asText(null),
+                species.path("scientificNameWithoutAuthor").asText(null),
+                species.path("scientificName").asText(null),
                 root.path("bestMatch").asText(null),
                 "Unknown Plant"
         );
 
-        String commonName = speciesNode.path("commonNames").isArray() && !speciesNode.path("commonNames").isEmpty()
-                ? speciesNode.path("commonNames").path(0).asText("").trim()
-                : "";
-
-        String predictedOrgan = root.path("predictedOrgans").isArray() && !root.path("predictedOrgans").isEmpty()
-                ? root.path("predictedOrgans").path(0).path("organ").asText("")
-                : "";
-
-        String familyName = speciesNode.path("family").path("scientificNameWithoutAuthor").asText("");
+        String commonName = "";
+        JsonNode commonNames = species.path("commonNames");
+        if (commonNames.isArray() && !commonNames.isEmpty()) {
+            commonName = commonNames.path(0).asText("").trim();
+        }
+        String predictedOrgan = "";
+        JsonNode predictedOrgans = root.path("predictedOrgans");
+        if (predictedOrgans.isArray() && !predictedOrgans.isEmpty()) {
+            predictedOrgan = predictedOrgans.path(0).path("organ").asText("");
+        }
+        String familyName = species.path("family").path("scientificNameWithoutAuthor").asText("");
         String label = commonName.isBlank() ? scientificName : commonName;
         String category = mapPlantCategory(label, scientificName, familyName, predictedOrgan);
 
-        return new AiIdentificationResult("PLANTNET: " + label, category, confidence);
+        return new AiIdentificationResult(label, category, confidence);
     }
 
-    private String mapPlantCategory(String label, String scientificName, String familyName, String predictedOrgan) {
+    private String mapPlantCategory(String label,
+                                    String scientificName,
+                                    String familyName,
+                                    String predictedOrgan) {
         String combined = normalize(label) + " " + normalize(scientificName) + " " + normalize(familyName);
+        String organ = normalize(predictedOrgan);
 
-        if (containsAny(normalize(predictedOrgan), "flower")) {
+        if (containsAny(organ, "flower")) {
             return "FLOWER";
         }
         if (containsAny(combined,
-                "pine", "pinus", "spruce", "picea", "fir", "abies", "birch", "betula", "oak", "quercus",
-                "maple", "acer", "ash", "fraxinus", "alder", "alnus", "willow", "salix", "rowan", "sorbus",
-                "juniper", "juniperus", "hazel", "corylus", "linden", "tilia", "elm", "ulmus", "beech", "fagus",
+                "pine", "pinus", "spruce", "picea", "fir", "abies", "birch", "betula",
+                "oak", "quercus", "maple", "acer", "ash", "fraxinus", "alder", "alnus",
+                "willow", "salix", "rowan", "sorbus", "juniper", "juniperus", "hazel",
+                "corylus", "linden", "tilia", "elm", "ulmus", "beech", "fagus",
                 "pinaceae", "fagaceae", "betulaceae", "salicaceae")) {
             return "TREE";
         }
         if (containsAny(combined,
-                "flower", "rose", "rosa", "tulip", "tulipa", "daisy", "bellis", "dandelion", "taraxacum",
-                "lily", "lilium", "orchid", "orchidaceae", "violet", "viola", "anemone", "anemone", "crocus",
-                "buttercup", "ranunculus", "poppy", "papaver", "bluebell", "hyacinthoides")) {
+                "flower", "rose", "rosa", "tulip", "tulipa", "daisy", "bellis",
+                "dandelion", "taraxacum", "lily", "lilium", "orchid", "orchidaceae",
+                "violet", "viola", "anemone", "crocus", "buttercup", "ranunculus",
+                "poppy", "papaver", "bluebell", "hyacinthoides")) {
             return "FLOWER";
         }
         return "PLANT";
@@ -187,6 +207,7 @@ public class PlantNetService {
     private String normalizeContentType(String contentType) {
         String normalized = contentType.toLowerCase(Locale.ROOT).trim();
         int semicolonIndex = normalized.indexOf(';');
+
         if (semicolonIndex >= 0) {
             normalized = normalized.substring(0, semicolonIndex).trim();
         }
@@ -210,19 +231,22 @@ public class PlantNetService {
         if (questionMark >= 0) {
             cleanUrl = cleanUrl.substring(0, questionMark);
         }
-
         int slashIndex = cleanUrl.lastIndexOf('/');
         String filename = slashIndex >= 0 ? cleanUrl.substring(slashIndex + 1) : cleanUrl;
+
         if (filename.isBlank()) {
-            filename = contentType.equals("image/png") ? "plant.png" : "plant.jpg";
+            if (contentType.equals("image/png")) {
+                return "plant.png";
+            }
+            return "plant.jpg";
         }
         return filename;
     }
 
-    private String firstNonBlank(String... candidates) {
-        for (String candidate : candidates) {
-            if (candidate != null && !candidate.isBlank()) {
-                return candidate.trim();
+    private String firstNonBlank(String... values) {
+        for (String value : values) {
+            if (value != null && !value.isBlank()) {
+                return value.trim();
             }
         }
         return "Unknown Plant";
@@ -238,15 +262,15 @@ public class PlantNetService {
                 .trim();
     }
 
-    private boolean containsAny(String text, String... candidates) {
-        for (String candidate : candidates) {
-            if (text.contains(candidate.toLowerCase(Locale.ROOT))) {
+    private boolean containsAny(String text, String... words) {
+        for (String word : words) {
+            if (text.contains(word.toLowerCase(Locale.ROOT))) {
                 return true;
             }
         }
         return false;
     }
 
-    private record DownloadedImage(byte[] bytes, String contentType, String fileName){
+    private record DownloadedImage(byte[] bytes, String contentType, String filename) {
     }
 }

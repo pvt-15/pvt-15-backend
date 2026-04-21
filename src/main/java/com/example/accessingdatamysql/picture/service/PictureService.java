@@ -19,6 +19,7 @@ import java.util.List;
 
 @Service
 public class PictureService {
+
     private static final String USER_NOT_FOUND = "User not found";
     private static final String REQUEST_BODY_REQUIRED = "Request body is required";
     private static final String IMAGE_URL_REQUIRED = "Image URL is required";
@@ -40,35 +41,39 @@ public class PictureService {
         if (request == null) {
             throw new IllegalArgumentException(REQUEST_BODY_REQUIRED);
         }
-        if (request.getImageUrl() == null || request.getImageUrl().isBlank()) {
+        String imageUrl = request.getImageUrl();
+
+        if (imageUrl == null || imageUrl.isBlank()) {
             throw new IllegalArgumentException(IMAGE_URL_REQUIRED);
         }
-
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND));
 
-        TargetType targetType = request.getTargetType() == null ? TargetType.ANIMAL : request.getTargetType();
-        AiIdentificationResult aiResult = natureAiService.identifyImage(request.getImageUrl(), targetType);
+        TargetType targetType = request.getTargetType();
+        if (targetType == null) {
+            targetType = TargetType.ANIMAL;
+        }
+        AiIdentificationResult aiResult = natureAiService.identifyImage(imageUrl, targetType);
 
         Picture picture = new Picture();
         picture.setLabel(aiResult.getLabel());
         picture.setCategory(parseCategory(aiResult.getCategory(), targetType));
         picture.setAiConfidence(aiResult.getAiConfidence());
-        picture.setImageUrl(request.getImageUrl());
+        picture.setImageUrl(imageUrl);
         picture.setTakenAt(LocalDateTime.now());
         picture.setUser(user);
 
-        //TODO CHANGE HOW WE CALCULATE POINTS
+        //TODO CHANGE POINTS CALCULATION
         int points = calculatePoints(aiResult.getAiConfidence());
         picture.setPointsAwarded(points);
 
-        //TODO CHANGE HOW WE SET LEVEL
+        //TODO CHANGE SETTING OF LEVELS
         user.setTotalPoints(user.getTotalPoints() + points);
         user.setLevel(calculateLevel(user.getTotalPoints()));
         userRepository.save(user);
 
-        Picture saved = pictureRepository.save(picture);
-        return toResponse(saved);
+        Picture savedPicture = pictureRepository.save(picture);
+        return toResponse(savedPicture);
     }
 
     public List<PictureResponse> getMyPictures(Integer userId) {
@@ -76,46 +81,64 @@ public class PictureService {
                 .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND));
 
         List<PictureResponse> responses = new ArrayList<>();
-        for (Picture picture : pictureRepository.findByUser(user)) {
+        List<Picture> pictures = pictureRepository.findByUser(user);
+
+        for (Picture picture : pictures) {
             responses.add(toResponse(picture));
         }
         return responses;
     }
 
     private int calculatePoints(double confidence) {
-        if (confidence >= 0.90) return 20;
-        if (confidence >= 0.75) return 15;
-        if (confidence >= 0.60) return 10;
+        if (confidence >= 0.90) {
+            return 20;
+        }
+        if (confidence >= 0.75) {
+            return 15;
+        }
+        if (confidence >= 0.60) {
+            return 10;
+        }
         return 0;
     }
 
     private Level calculateLevel(int totalPoints) {
-        if (totalPoints >= 300) return Level.LEVEL_3;
-        if (totalPoints >= 150) return Level.LEVEL_2;
+        if (totalPoints >= 300) {
+            return Level.LEVEL_3;
+        }
+        if (totalPoints >= 150) {
+            return Level.LEVEL_2;
+        }
         return Level.LEVEL_1;
     }
 
     private PictureCategory parseCategory(String category, TargetType targetType) {
         if (category == null || category.isBlank()) {
-            return targetType == TargetType.PLANT ? PictureCategory.PLANT : PictureCategory.ANIMAL;
+            return defaultCategory(targetType);
         }
-
         try {
             return PictureCategory.valueOf(category.toUpperCase());
-        } catch (Exception e) {
-            return targetType == TargetType.PLANT ? PictureCategory.PLANT : PictureCategory.ANIMAL;
+        } catch (IllegalArgumentException e) {
+            return defaultCategory(targetType);
         }
     }
 
-    private PictureResponse toResponse(Picture observation) {
+    private PictureCategory defaultCategory(TargetType targetType) {
+        if (targetType == TargetType.PLANT) {
+            return PictureCategory.PLANT;
+        }
+        return PictureCategory.ANIMAL;
+    }
+
+    private PictureResponse toResponse(Picture picture) {
         return new PictureResponse(
-                observation.getId(),
-                observation.getLabel(),
-                observation.getCategory().name(),
-                observation.getAiConfidence(),
-                observation.getPointsAwarded(),
-                observation.getImageUrl(),
-                observation.getTakenAt().toString()
+                picture.getId(),
+                picture.getLabel(),
+                picture.getCategory().name(),
+                picture.getAiConfidence(),
+                picture.getPointsAwarded(),
+                picture.getImageUrl(),
+                picture.getTakenAt().toString()
         );
     }
 }
