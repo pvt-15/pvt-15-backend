@@ -32,17 +32,28 @@ public class NatureAiService{
         return visionService.identifyImage(imageUrl, TargetType.ANIMAL);
     }
 
-    private AiIdentificationResult identifyPlant(String imageUrl){
-        try{
+    private AiIdentificationResult identifyPlant(String imageUrl) {
+        try {
+            System.out.println("### SKOGSJAKT DEBUG ### Trying PlantNet for: " + imageUrl);
+
             AiIdentificationResult plantNetResult = plantNetService.identifyPlant(imageUrl);
-            if(isUsefulPlantResult(plantNetResult)){
+
+            if (isUsefulPlantResult(plantNetResult)) {
+                System.out.println("### SKOGSJAKT DEBUG ### PlantNet success. Label="
+                        + plantNetResult.getLabel()
+                        + ", category=" + plantNetResult.getCategory()
+                        + ", confidence=" + plantNetResult.getAiConfidence());
                 return plantNetResult;
             }
-            System.out.println("PlantNet returned non-useful result, falling back to Vision. Result=" + plantNetResult.getLabel());
+
+            System.out.println("### SKOGSJAKT DEBUG ### PlantNet returned non-useful result. Label="
+                    + (plantNetResult != null ? plantNetResult.getLabel() : "null"));
         } catch (Exception e) {
-            System.out.println("PlantNet failed, falling back to Vision: " + e.getMessage());
+            System.out.println("### SKOGSJAKT DEBUG ### PlantNet failed: " + e.getMessage());
             e.printStackTrace();
         }
+
+        System.out.println("### SKOGSJAKT DEBUG ### Falling back to Vision for: " + imageUrl);
         return visionService.identifyImage(imageUrl, TargetType.PLANT);
     }
 
