@@ -1,5 +1,12 @@
 package com.example.accessingdatamysql.auth.dto;
 
+/**
+ * DataTransferObject which is returned after successful authentication
+ *
+ * <p>Used as an answer from backend for registration, local login, and
+ * Google-login. Contains basic userdata, a status message and a JWT-token
+ * which the client uses for later authenticated requests.</p>
+ */
 public class AuthResponse {
 
     private Integer userId;

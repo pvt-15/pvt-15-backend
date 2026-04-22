@@ -10,6 +10,31 @@ import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
+/**
+ * Service class for the applications authentication
+ *
+ * <p>AuthService is responsible for the main scenarios:</p>
+ * <ul>
+ *     <li>registration of new local users</li>
+ *     <li>login with email and password</li>
+ *     <li>login with Google ID-token</li>
+ * </ul>
+ *
+ * <p>If authentication is successful, {@link AuthResponse}-object is returned
+ * which contains userinfo and a JWT-token.</p>
+ *
+ * <p>Main responsibilities</p>
+ * <ul>
+ *     <li>validate incoming request-objects</li>
+ *     <li>normalize email for consistent database lookups</li>
+ *     <li>no doublets of accounts</li>
+ *     <li>differentiate between local/Google accounts</li>
+ *     <li>create users with correct standard values for registration</li>
+ * </ul>
+ *
+ * <p>Any error is signaled with {@link IllegalArgumentException}, which
+ * enables the control layer to translate these to appropriate HTTP-responses.</p>
+ */
 @Service
 public class AuthService {
 

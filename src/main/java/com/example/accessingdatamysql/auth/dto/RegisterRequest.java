@@ -1,5 +1,12 @@
 package com.example.accessingdatamysql.auth.dto;
 
+/**
+ * DataTransferObject which is used as request-body for
+ * registration of a new local user.
+ *
+ * <p>Contains the necessary information that is required
+ * to create a new user: name, email and password.</p>
+ */
 public class RegisterRequest {
 
     private String name;

@@ -1,5 +1,11 @@
 package com.example.accessingdatamysql.auth.dto;
 
+/**
+ * DataTransferObject that represents verified userinfo from Google
+ *
+ * <p>Object of this class is created after a Google ID-token is verified.
+ * Contains the Google unique userid for account, users email and name.</p>
+ */
 public class GoogleUserInfo {
 
     private String providerUserId;
