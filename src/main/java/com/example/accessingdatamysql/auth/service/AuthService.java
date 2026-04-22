@@ -55,6 +55,13 @@ public class AuthService {
     private final JwtService jwtService;
     private final GoogleTokenVerifierService googleTokenVerifierService;
 
+    /**
+     * Creates a new {@code AuthService}
+     * @param userRepository repository for searching and storing users
+     * @param passwordEncoder component used for hashing and verification of password
+     * @param jwtService service which generates JWT-token after successful authentication
+     * @param googleTokenVerifierService service which verifies Google ID-token
+     */
     public AuthService(UserRepository userRepository,
                        PasswordEncoder passwordEncoder,
                        JwtService jwtService,
@@ -65,6 +72,29 @@ public class AuthService {
         this.googleTokenVerifierService = googleTokenVerifierService;
     }
 
+    /**
+     * Registers a new local user
+     *
+     * <p>Method first validates that the request-object contains name, email
+     * and password. Then normalizes the email to reduce the risk of doublets.
+     * If the email is already in the system, registration is interrupted.</p>
+     *
+     * <p>If registration is successful, a new user is created with:</p>
+     * <ul>
+     *     <li>provider set to {@code LOCAL}</li>
+     *     <li>hashed password</li>
+     *     <li>{@code providerUserId = null}</li>
+     *     <li>{code totalPoints = 0}</li>
+     *     <li>start level set to {@code Level.LEVEL_1}</li>
+     * </ul>
+     *
+     * <p>Saved user is then used to create a JWT-token which is returned to client</p>
+     *
+     * @param request registration data used for creating new user
+     * @return authentication reply with userdata and JWT-token
+     * @throws IllegalArgumentException if request is missing, if mandatory fields are missing
+     *                                  or if email is already registered
+     */
     public AuthResponse register(RegisterRequest request) {
         validateRegisterRequest(request);
         String normalizedEmail = normalizeEmail(request.getEmail());
