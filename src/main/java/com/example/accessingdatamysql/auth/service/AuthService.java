@@ -92,7 +92,7 @@ public class AuthService {
      *
      * @param request registration data used for creating new user
      * @return authentication reply with userdata and JWT-token
-     * @throws IllegalArgumentException if request is missing, if mandatory fields are missing
+     * @throws IllegalArgumentException if request is invalid, if mandatory fields are missing
      *                                  or if email is already registered
      */
     public AuthResponse register(RegisterRequest request) {
@@ -122,6 +122,22 @@ public class AuthService {
                 token);
     }
 
+    /**
+     * Logs in a local user with email and password.
+     *
+     * <p>Method first validates the request-object and then normalizes email
+     * before user is fetched from database. If either the user can not be found,
+     * if the account is not local or if password does not match the pre-hashed value,
+     * an exception is thrown.</p>
+     *
+     * <p>If authentication is successful, userinfo and a JWT-token is returned.</p>
+     *
+     * @param request login data with email and password
+     * @return authentication reply with userdata and JWT-token
+     * @throws IllegalArgumentException if request is invalid, if user already exists,
+     *                                  if account uses non-local login, or if the
+     *                                  password is incorrect
+     */
     public AuthResponse login(LoginRequest request) {
         validateLoginRequest(request);
         String normalizedEmail = normalizeEmail(request.getEmail());
@@ -150,6 +166,36 @@ public class AuthService {
                 token);
     }
 
+    /**
+     * Logs in or creates a user through Google-authentication
+     *
+     * <p>Requires a Google ID-token. Token is verified through {@link GoogleTokenVerifierService},
+     * which returns a {@link GoogleUserInfo}-object with the users Google-identity.</p>
+     *
+     * <p>Two main flows:</p>
+     * <ol>
+     *     <li>Tries to find an existing user based on {@code Provider.GOOGLE} and
+     *     Googles unique user-ID.</li>
+     *     <li>If no such user exists, checks if the email is already in use. If so,
+     *     process is stopped to avoid multiple accounts with the same email.</li>
+     * </ol>
+     *
+     * <p>If user is created:</p>
+     * <ul>
+     *     <li>name from Google-profile, or password as fallback if name is missing</li>
+     *     <li>provider to {@code Google}</li>
+     *     <li>providerUserId to Googles unique user-ID</li>
+     *     <li>{@code totalPoints = 0}</li>
+     *     <li>start level set to {@code Level.LEVEL_1}</li>
+     * </ul>
+     *
+     * <p>If user already exists or if newly created, a JWT-token is returned to client.</p>
+     *
+     * @param request request-body containing Google ID-token
+     * @return authentication reply with userinfo and JWT-token
+     * @throws IllegalArgumentException if token is missing, if token is invalid,
+     *                                  or if email is already in use
+     */
     public AuthResponse loginWithGoogle(GoogleLoginRequest request) {
         if (request == null || request.getToken() == null || request.getToken().isBlank()) {
             throw new IllegalArgumentException(GOOGLE_TOKEN_REQUIRED);
@@ -191,6 +237,15 @@ public class AuthService {
                 token);
     }
 
+    /**
+     * Validates that a registration request contains all necessary fields.
+     *
+     * <p>Method checks that the request is not {@code null}, and that
+     * name, email and password exists and that they are not empty/whitespace.</p>
+     *
+     * @param request registration request which is to be validated
+     * @throws IllegalArgumentException if registration request, or any mandatory fields are missing
+     */
     private void validateRegisterRequest(RegisterRequest request) {
         if (request == null) {
             throw new IllegalArgumentException(REQUEST_BODY_REQUIRED);
@@ -206,6 +261,12 @@ public class AuthService {
         }
     }
 
+    /**
+     * Validates that a login request contains all necessary fields.
+     *
+     * <p></p>
+     * @param request
+     */
     private void validateLoginRequest(LoginRequest request) {
         if (request == null) {
             throw new IllegalArgumentException(REQUEST_BODY_REQUIRED);
