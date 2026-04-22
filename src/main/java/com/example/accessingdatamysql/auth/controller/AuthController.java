@@ -20,7 +20,7 @@ import java.util.Optional;
 /**
  * REST-controller for authentication and identification of the logged-in user
  *
- * The controller uses endpoints under <code>/auth</code> for handling off:
+ * <p>The controller uses endpoints under <code>/auth</code> for handling off:</p>
  * <ul>
  *     <li>register new user</li>
  *     <li>login with email/password</li>
@@ -31,6 +31,9 @@ import java.util.Optional;
  *  The controller is using {@link AuthService} for the authentication logic,
  *  whilst {@link UserRepository} and {@link UserMapper} is used to fetch and
  *  map userdata in the endpoint <code>/auth/me</code>
+ *
+ * <p>{@code ResponseEntity<?>} used for returns since sometimes return DTO,
+ * sometimes error message</p>
  */
 @RestController
 @RequestMapping("/auth")
@@ -165,7 +168,7 @@ public class AuthController {
             return user.map(userMapper::toUserResponse).map(ResponseEntity::ok)
                     .orElseGet(() -> ResponseEntity.notFound().build());
         } catch (NumberFormatException e) {
-            return ResponseEntity.badRequest().body(e);
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 }
