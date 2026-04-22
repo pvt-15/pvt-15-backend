@@ -264,8 +264,11 @@ public class AuthService {
     /**
      * Validates that a login request contains all necessary fields.
      *
-     * <p></p>
-     * @param request
+     * <p>Method checks that the request is not {@code null}, and that
+     * email and password exists and that they are not empty/whitespace.</p>
+     *
+     * @param request login request which is to be validated
+     * @throws IllegalArgumentException if login request, or any mandatory fields are missing
      */
     private void validateLoginRequest(LoginRequest request) {
         if (request == null) {
@@ -279,10 +282,22 @@ public class AuthService {
         }
     }
 
+    /**
+     * Normalizes an email before comparison or storage.
+     *
+     * @param email email that should be normalized
+     * @return normalized email
+     */
     private String normalizeEmail(String email) {
         return email.trim().toLowerCase();
     }
 
+    /**
+     * Returns a username for Google-users.
+     *
+     * @param googleUserInfo verified userinfo from Google
+     * @return name from Google, or email as fallback
+     */
     private String getGoogleName(GoogleUserInfo googleUserInfo) {
         if (googleUserInfo.getName() != null && !googleUserInfo.getName().isBlank()) {
             return googleUserInfo.getName();
