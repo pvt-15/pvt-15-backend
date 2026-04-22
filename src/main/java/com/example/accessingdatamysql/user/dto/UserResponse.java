@@ -3,6 +3,22 @@ package com.example.accessingdatamysql.user.dto;
 import com.example.accessingdatamysql.model.enums.Level;
 import com.example.accessingdatamysql.model.enums.Provider;
 
+/**
+ * DataTransferObject which represents userdata which is sent to the client.
+ *
+ * <p>UserResponse is used when the application wants to return userinfo without
+ * exposing the internal {@code User}. It contains both basic identification data and
+ * things like total points/level.</p>
+ *
+ * <ul>
+ *     <li>user-ID</li>
+ *     <li>name and email</li>
+ *     <li>provider</li>
+ *     <li>provider-specific user-ID, if applicable</li>
+ *     <li>current total points</li>
+ *     <li>current level</li>
+ * </ul>
+ */
 public class UserResponse {
 
     private Integer id;
