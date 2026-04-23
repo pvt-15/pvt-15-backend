@@ -1,16 +1,16 @@
-package com.example.accessingdatamysql.service;
+package com.example.accessingdatamysql.auth.service;
 
-import com.example.accessingdatamysql.auth.dto.AuthResponse;
-import com.example.accessingdatamysql.auth.dto.LoginRequest;
-import com.example.accessingdatamysql.auth.dto.RegisterRequest;
+import com.example.accessingdatamysql.auth.dto.*;
 import com.example.accessingdatamysql.auth.service.AuthService;
 import com.example.accessingdatamysql.auth.service.GoogleTokenVerifierService;
 import com.example.accessingdatamysql.auth.service.JwtService;
 import com.example.accessingdatamysql.model.User;
+import com.example.accessingdatamysql.model.enums.Level;
 import com.example.accessingdatamysql.model.enums.Provider;
 import com.example.accessingdatamysql.user.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -105,5 +105,52 @@ public class AuthServiceTest {
         assertEquals("user@example.com", response.getEmail());
         assertEquals("Login successful", response.getMessage());
         assertEquals("jwt-login-token", response.getToken());
+    }
+
+    @Test
+    void loginWithGoogle_shouldCreateGoogleUserWhenNoMatchExists() {
+        GoogleLoginRequest request = new GoogleLoginRequest();
+        request.setToken("google-id-token");
+
+        GoogleUserInfo googleUserInfo = new GoogleUserInfo(
+                "google-provider-id-123",
+                " GOOGLE@example.com ",
+                "Google User"
+        );
+
+        when(googleTokenVerifierService.verify("google-id-token")).thenReturn(googleUserInfo);
+        when(userRepository.findByProviderAndProviderUserId(
+                Provider.GOOGLE, "google-provider-id-123"))
+                .thenReturn(Optional.empty());
+        when(userRepository.findByEmail("google@example.com")).thenReturn(Optional.empty());
+
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
+            User savedUser = invocation.getArgument(0);
+            savedUser.setId(7);
+            return savedUser;
+        });
+
+        when(jwtService.generateToken(any(User.class))).thenReturn("jwt-google-token");
+
+        AuthResponse response = authService.loginWithGoogle(request);
+
+        assertNotNull(response);
+        assertEquals(7, response.getUserId());
+        assertEquals("Google User", response.getName());
+        assertEquals("google@example.com", response.getEmail());
+        assertEquals("Google login successful", response.getMessage());
+        assertEquals("jwt-google-token", response.getToken());
+
+        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).save(userCaptor.capture());
+
+        User savedUser = userCaptor.getValue();
+        assertEquals("Google User", savedUser.getName());
+        assertEquals("google@example.com", savedUser.getEmail());
+        assertNull(savedUser.getPasswordHash());
+        assertEquals(Provider.GOOGLE, savedUser.getProvider());
+        assertEquals("google-provider-id-123", savedUser.getProviderUserId());
+        assertEquals(0, savedUser.getTotalPoints());
+        assertEquals(Level.LEVEL_1, savedUser.getLevel());
     }
 }
