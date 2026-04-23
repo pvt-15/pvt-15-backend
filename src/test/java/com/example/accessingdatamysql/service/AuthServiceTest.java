@@ -1,11 +1,13 @@
 package com.example.accessingdatamysql.service;
 
 import com.example.accessingdatamysql.auth.dto.AuthResponse;
+import com.example.accessingdatamysql.auth.dto.LoginRequest;
 import com.example.accessingdatamysql.auth.dto.RegisterRequest;
 import com.example.accessingdatamysql.auth.service.AuthService;
 import com.example.accessingdatamysql.auth.service.GoogleTokenVerifierService;
 import com.example.accessingdatamysql.auth.service.JwtService;
 import com.example.accessingdatamysql.model.User;
+import com.example.accessingdatamysql.model.enums.Provider;
 import com.example.accessingdatamysql.user.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -15,6 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Objects;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -75,5 +78,32 @@ public class AuthServiceTest {
 
         verify(userRepository, never()).save(any(User.class));
         verify(jwtService, never()).generateToken(any(User.class));
+    }
+
+    @Test
+    void login_shouldReturnTokenForValidLocalUser() {
+        LoginRequest request = new LoginRequest();
+        request.setEmail("  USER@example.com ");
+        request.setPassword("secret123");
+
+        User user = new User();
+        user.setId(5);
+        user.setName("Test User");
+        user.setEmail("user@example.com");
+        user.setPasswordHash("hashed-password");
+        user.setProvider(Provider.LOCAL);
+
+        when(userRepository.findByEmail("user@example.com")).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("secret123", "hashed-password")).thenReturn(true);
+        when(jwtService.generateToken(user)).thenReturn("jwt-login-token");
+
+        AuthResponse response = authService.login(request);
+
+        assertNotNull(response);
+        assertEquals(5, response.getUserId());
+        assertEquals("Test User", response.getName());
+        assertEquals("user@example.com", response.getEmail());
+        assertEquals("Login successful", response.getMessage());
+        assertEquals("jwt-login-token", response.getToken());
     }
 }
