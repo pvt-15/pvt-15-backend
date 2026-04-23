@@ -24,6 +24,10 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+/**
+ * Unit tests for PictureService.
+ * Checks picture creation, point updates, level changes, deletion, and statistics
+ */
 @ExtendWith(MockitoExtension.class)
 class PictureServiceTest {
 

@@ -1,9 +1,6 @@
 package com.example.accessingdatamysql.auth.service;
 
 import com.example.accessingdatamysql.auth.dto.*;
-import com.example.accessingdatamysql.auth.service.AuthService;
-import com.example.accessingdatamysql.auth.service.GoogleTokenVerifierService;
-import com.example.accessingdatamysql.auth.service.JwtService;
 import com.example.accessingdatamysql.model.User;
 import com.example.accessingdatamysql.model.enums.Level;
 import com.example.accessingdatamysql.model.enums.Provider;
@@ -16,12 +13,15 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.util.Objects;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+/**
+ * Unit tests for AuthService.
+ * Main focuses are registration, local login and Google login.
+ */
 @ExtendWith(MockitoExtension.class)
 public class AuthServiceTest {
 
@@ -47,10 +47,12 @@ public class AuthServiceTest {
         request.setEmail("   TEST.NAME@example.com");
         request.setPassword("secret123");
 
+        // Email is normalized inside AuthService, mock must also use normalized email
         when(userRepository.existsByEmail("test.name@example.com")).thenReturn(false);
         when(passwordEncoder.encode("secret123")).thenReturn("hashed-password");
         when(jwtService.generateToken(any(User.class))).thenReturn("jwt-token");
 
+        // Simulate database save by assigning an ID to the created user
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
             User savedUser = invocation.getArgument(0);
             savedUser.setId(1);
@@ -119,6 +121,8 @@ public class AuthServiceTest {
         );
 
         when(googleTokenVerifierService.verify("google-id-token")).thenReturn(googleUserInfo);
+
+        // Google login should create a new user when neither provider ID nor email already exists
         when(userRepository.findByProviderAndProviderUserId(
                 Provider.GOOGLE, "google-provider-id-123"))
                 .thenReturn(Optional.empty());

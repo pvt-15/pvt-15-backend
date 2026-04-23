@@ -6,10 +6,14 @@ import org.springframework.security.oauth2.jwt.JwtEncoder;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * Unit tests for JwtConfig.
+ * Checks JWT bean creation and validation of the configured secret.
+ */
 public class JwtConfigTest {
 
     @Test
-    void jwtEncoderAndDecoder_shouldBeCreated_whenSecretIsLongEnough(){
+    void jwtEncoderAndDecoder_shouldBeCreatedWhenSecretIsLongEnough(){
         String validSecret = "12345678901234567890123456789012";
         JwtConfig jwtConfig = new JwtConfig(validSecret);
 
@@ -21,7 +25,7 @@ public class JwtConfigTest {
     }
 
     @Test
-    void jwtEncoder_shouldThrowException_whenSecretIsTooShort() {
+    void jwtEncoder_shouldThrowExceptionWhenSecretIsTooShort() {
         JwtConfig jwtConfig = new JwtConfig("too-short-secret");
 
         IllegalArgumentException exception = assertThrows(

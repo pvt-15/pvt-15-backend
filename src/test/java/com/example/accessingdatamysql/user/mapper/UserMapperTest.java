@@ -8,6 +8,10 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * Unit tests for UserMapper.
+ * Verifies that User entities are correctly mapped to {@link UserResponse} DTOs.
+ */
 public class UserMapperTest {
 
     private final UserMapper userMapper = new UserMapper();
@@ -36,7 +40,7 @@ public class UserMapperTest {
     }
 
     @Test
-    void toUserResponse_shouldReturnNull_whenUserIsNull() {
+    void toUserResponse_shouldReturnNullWhenUserIsNull() {
         UserResponse response = userMapper.toUserResponse(null);
         assertNull(response);
     }
