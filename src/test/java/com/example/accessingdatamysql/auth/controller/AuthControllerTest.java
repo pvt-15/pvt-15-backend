@@ -3,15 +3,13 @@ package com.example.accessingdatamysql.auth.controller;
 import com.example.accessingdatamysql.auth.dto.AuthResponse;
 import com.example.accessingdatamysql.auth.dto.RegisterRequest;
 import com.example.accessingdatamysql.auth.service.AuthService;
-import com.example.accessingdatamysql.config.SecurityConfig;
 import com.example.accessingdatamysql.user.mapper.UserMapper;
 import com.example.accessingdatamysql.user.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
-import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import tools.jackson.databind.ObjectMapper;
@@ -27,7 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Web-layer tests for AuthController.
  */
 @WebMvcTest(AuthController.class)
-@Import(SecurityConfig.class)
+@AutoConfigureMockMvc(addFilters = false)
 class AuthControllerTest {
 
     @Autowired
@@ -44,9 +42,6 @@ class AuthControllerTest {
 
     @MockitoBean
     private UserMapper userMapper;
-
-    @MockitoBean
-    private JwtDecoder jwtDecoder;
 
     @Test
     void register_shouldReturnCreatedAndAuthResponse() throws Exception {

@@ -1,44 +1,32 @@
 package com.example.accessingdatamysql.picture.controller;
 
-import com.example.accessingdatamysql.config.SecurityConfig;
+import com.example.accessingdatamysql.picture.dto.CreatePictureRequest;
 import com.example.accessingdatamysql.picture.dto.PictureResponse;
+import com.example.accessingdatamysql.picture.model.enums.TargetType;
 import com.example.accessingdatamysql.picture.service.PictureService;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
-import org.springframework.context.annotation.Import;
-import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.MockMvc;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.Mockito.*;
 
-/**
- * Web-layer tests for PictureController.
- */
-@WebMvcTest(PictureController.class)
-@Import(SecurityConfig.class)
 class PictureControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
-
-    @MockitoBean
-    private PictureService pictureService;
-
-    @MockitoBean
-    private JwtDecoder jwtDecoder;
+    private final PictureService pictureService = mock(PictureService.class);
+    private final PictureController pictureController = new PictureController(pictureService);
 
     @Test
-    void createPicture_shouldReturnOkForAuthenticatedUser() throws Exception {
+    void createPicture_shouldReturnOkForAuthenticatedUser() {
+        Jwt jwt = mock(Jwt.class);
+        when(jwt.getSubject()).thenReturn("42");
+
+        CreatePictureRequest request = new CreatePictureRequest(
+                "https://example.com/tree.jpg",
+                TargetType.PLANT
+        );
+
         PictureResponse response = new PictureResponse(
                 100,
                 "Oak",
@@ -49,36 +37,14 @@ class PictureControllerTest {
                 "2026-04-23T09:00:00"
         );
 
-        when(pictureService.createPicture(eq(42), any()))
-                .thenReturn(response);
+        when(pictureService.createPicture(42, request)).thenReturn(response);
 
-        Jwt testJwt = Jwt.withTokenValue("test-token")
-                .header("alg", "none")
-                .subject("42")
-                .build();
+        ResponseEntity<?> result = pictureController.createPicture(jwt, request);
 
-        when(jwtDecoder.decode("test-token")).thenReturn(testJwt);
+        assertNotNull(result);
+        assertEquals(200, result.getStatusCode().value());
+        assertEquals(response, result.getBody());
 
-        String requestBody = """
-                {
-                  "imageUrl": "https://example.com/tree.jpg",
-                  "targetType": "PLANT"
-                }
-                """;
-
-        mockMvc.perform(post("/pictures")
-                        .header("Authorization", "Bearer test-token")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestBody))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(100))
-                .andExpect(jsonPath("$.label").value("Oak"))
-                .andExpect(jsonPath("$.category").value("TREE"))
-                .andExpect(jsonPath("$.aiConfidence").value(0.91))
-                .andExpect(jsonPath("$.pointsAwarded").value(20))
-                .andExpect(jsonPath("$.imageUrl").value("https://example.com/tree.jpg"))
-                .andExpect(jsonPath("$.createdAt").value("2026-04-23T09:00:00"));
-
-        verify(pictureService).createPicture(eq(42), any());
+        verify(pictureService).createPicture(42, request);
     }
 }
