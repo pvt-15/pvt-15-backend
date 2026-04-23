@@ -45,7 +45,7 @@ public class AuthServiceTest {
         request.setPassword("secret123");
 
         when(userRepository.existsByEmail("test.name@example.com")).thenReturn(false);
-        when(Objects.requireNonNull(passwordEncoder.encode("secret123"))).thenReturn("hashed-password");
+        when(passwordEncoder.encode("secret123")).thenReturn("hashed-password");
         when(jwtService.generateToken(any(User.class))).thenReturn("jwt-token");
 
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
@@ -69,7 +69,7 @@ public class AuthServiceTest {
         request.setEmail("test.name@example.com");
         request.setPassword("secret123");
 
-        when(userRepository.existsByEmail("gustaf@example.com")).thenReturn(true);
+        when(userRepository.existsByEmail("test.name@example.com")).thenReturn(true);
 
         assertThrows(IllegalArgumentException.class, () -> authService.register(request));
 
