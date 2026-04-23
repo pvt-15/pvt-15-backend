@@ -1,11 +1,8 @@
 package com.example.accessingdatamysql.picture.controller;
 
 import com.example.accessingdatamysql.config.SecurityConfig;
-import com.example.accessingdatamysql.picture.dto.CreatePictureRequest;
 import com.example.accessingdatamysql.picture.dto.PictureResponse;
-import com.example.accessingdatamysql.picture.model.enums.TargetType;
 import com.example.accessingdatamysql.picture.service.PictureService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -20,13 +17,12 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Web layer tests for PictureController.
+ * Web-layer tests for PictureController.
  */
 @WebMvcTest(PictureController.class)
 @Import(SecurityConfig.class)
@@ -34,9 +30,6 @@ class PictureControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
-
-    @Autowired
-    private ObjectMapper objectMapper;
 
     @MockitoBean
     private PictureService pictureService;
@@ -46,11 +39,6 @@ class PictureControllerTest {
 
     @Test
     void createPicture_shouldReturnOkForAuthenticatedUser() throws Exception {
-        CreatePictureRequest request = new CreatePictureRequest(
-                "https://example.com/tree.jpg",
-                TargetType.PLANT
-        );
-
         PictureResponse response = new PictureResponse(
                 100,
                 "Oak",
@@ -61,7 +49,7 @@ class PictureControllerTest {
                 "2026-04-23T09:00:00"
         );
 
-        when(pictureService.createPicture(eq(42), any(CreatePictureRequest.class)))
+        when(pictureService.createPicture(eq(42), any()))
                 .thenReturn(response);
 
         Jwt testJwt = Jwt.withTokenValue("test-token")
@@ -69,10 +57,19 @@ class PictureControllerTest {
                 .subject("42")
                 .build();
 
+        when(jwtDecoder.decode("test-token")).thenReturn(testJwt);
+
+        String requestBody = """
+                {
+                  "imageUrl": "https://example.com/tree.jpg",
+                  "targetType": "PLANT"
+                }
+                """;
+
         mockMvc.perform(post("/pictures")
-                        .with(jwt().jwt(testJwt))
+                        .header("Authorization", "Bearer test-token")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+                        .content(requestBody))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(100))
                 .andExpect(jsonPath("$.label").value("Oak"))
@@ -82,6 +79,6 @@ class PictureControllerTest {
                 .andExpect(jsonPath("$.imageUrl").value("https://example.com/tree.jpg"))
                 .andExpect(jsonPath("$.createdAt").value("2026-04-23T09:00:00"));
 
-        verify(pictureService).createPicture(eq(42), any(CreatePictureRequest.class));
+        verify(pictureService).createPicture(eq(42), any());
     }
 }
