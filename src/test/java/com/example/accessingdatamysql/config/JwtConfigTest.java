@@ -29,6 +29,6 @@ public class JwtConfigTest {
                 jwtConfig::jwtEncoder
         );
 
-        assertEquals("JWT secret much be at least 32 bytes long", exception.getMessage());
+        assertEquals("JWT secret must be at least 32 bytes long", exception.getMessage());
     }
 }
