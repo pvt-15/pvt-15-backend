@@ -13,6 +13,7 @@ import com.example.accessingdatamysql.model.challenge.repository.UserChallengePr
 import com.example.accessingdatamysql.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -57,6 +58,42 @@ public class ChallengeService {
         for(ChallengeTask task : challenge.getTasks()){
             taskResponses.add(toTaskResponse(task));
         }
+
+        return new ChallengeDetailsResponse(
+                challenge.getId(),
+                challenge.getTitle(),
+                challenge.getDescription(),
+                challenge.getType().name(),
+                challenge.getDifficulty().name(),
+                challenge.getRewardPoints(),
+                challenge.isActive(),
+                challenge.getLocationName(),
+                challenge.getStartMonth(),
+                challenge.getEndMonth(),
+                status,
+                taskResponses
+        );
+    }
+
+    public ChallengeResponse startChallenge(Integer userId, Integer challengeId){
+        User user = getUserById(userId);
+        Challenge challenge = getChallengeByIdInternal(challengeId);
+
+        Optional<UserChallengeProgress> existing = userChallengeProgressRepository.findByUserAndChallenge(user, challenge);
+
+        if(existing.isPresent()){
+            return toChallengeResponse(challenge, existing.get().getStatus().name());
+        }
+
+        UserChallengeProgress progress = new UserChallengeProgress();
+        progress.setUser(user);
+        progress.setChallenge(challenge);
+        progress.setStatus(ChallengeStatus.IN_PROGRESS);
+        progress.setStartedAt(LocalDateTime.now());
+
+        userChallengeProgressRepository.save(progress);
+
+        return toChallengeResponse(challenge, ChallengeStatus.IN_PROGRESS.name());
     }
 
     private User getUserById(Integer userId) {
