@@ -1,8 +1,11 @@
 package com.example.accessingdatamysql.model.challenge.service;
 
 import com.example.accessingdatamysql.model.User;
+import com.example.accessingdatamysql.model.challenge.dto.ChallengeDetailsResponse;
 import com.example.accessingdatamysql.model.challenge.dto.ChallengeResponse;
+import com.example.accessingdatamysql.model.challenge.dto.ChallengeTaskResponse;
 import com.example.accessingdatamysql.model.challenge.entity.Challenge;
+import com.example.accessingdatamysql.model.challenge.entity.ChallengeTask;
 import com.example.accessingdatamysql.model.challenge.entity.UserChallengeProgress;
 import com.example.accessingdatamysql.model.challenge.enums.ChallengeStatus;
 import com.example.accessingdatamysql.model.challenge.repository.ChallengeRepository;
@@ -44,6 +47,18 @@ public class ChallengeService {
         return responses;
     }
 
+    public ChallengeDetailsResponse getChallengeById(Integer userId, Integer challengeId){
+        User user = getUserById(userId);
+        Challenge challenge = getChallengeByIdInternal(challengeId);
+
+        String status = getStatusForUser(user, challenge);
+
+        List<ChallengeTaskResponse> taskResponses = new ArrayList<>();
+        for(ChallengeTask task : challenge.getTasks()){
+            taskResponses.add(toTaskResponse(task));
+        }
+    }
+
     private User getUserById(Integer userId) {
         return userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND));
     }
@@ -55,6 +70,10 @@ public class ChallengeService {
             return progress.get().getStatus().name();
         }
         return ChallengeStatus.NOT_STARTED.name();
+    }
+
+    private Challenge getChallengeByIdInternal(Integer challengeId){
+        return challengeRepository.findById(challengeId).orElseThrow(() -> new IllegalArgumentException(CHALLENGE_NOT_FOUND));
     }
 
     private ChallengeResponse toChallengeResponse(Challenge challenge, String status) {
@@ -70,5 +89,25 @@ public class ChallengeService {
         );
     }
 
+    private ChallengeTaskResponse toTaskResponse(ChallengeTask challengeTask){
+        String requiredCategory = null;
+        if(challengeTask.getRequiredCategory() != null){
+            requiredCategory = challengeTask.getRequiredCategory().name();
+        }
 
+        String taskType = null;
+        if(challengeTask.getTaskType() != null){
+            taskType = challengeTask.getTaskType().name();
+        }
+
+        return new ChallengeTaskResponse(
+                challengeTask.getId(),
+                challengeTask.getTaskText(),
+                taskType,
+                challengeTask.getRequiredLabel(),
+                requiredCategory,
+                challengeTask.getRequiredCount(),
+                challengeTask.isMustBeUnique()
+        );
+    }
 }
