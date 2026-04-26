@@ -96,6 +96,18 @@ public class ChallengeService {
         return toChallengeResponse(challenge, ChallengeStatus.IN_PROGRESS.name());
     }
 
+    public List<ChallengeResponse> getMyChallenges(Integer userId){
+        User user = getUserById(userId);
+        List<UserChallengeProgress> progressList = userChallengeProgressRepository.findByUser(user);
+
+        List<ChallengeResponse> responses = new ArrayList<>();
+        for(UserChallengeProgress progress : progressList){
+            responses.add(toChallengeResponse(progress.getChallenge(), progress.getStatus().name()));
+        }
+
+        return responses;
+    }
+
     private User getUserById(Integer userId) {
         return userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND));
     }
