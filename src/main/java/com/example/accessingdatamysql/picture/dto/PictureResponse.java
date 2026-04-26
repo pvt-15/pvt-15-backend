@@ -1,5 +1,7 @@
 package com.example.accessingdatamysql.picture.dto;
 
+import com.example.accessingdatamysql.picture.enums.PictureMode;
+
 public class PictureResponse {
 
     private Integer id;
@@ -9,6 +11,7 @@ public class PictureResponse {
     private int pointsAwarded;
     private String imageUrl;
     private String createdAt;
+    private PictureMode pictureMode;
 
     public PictureResponse(Integer id,
                            String label,
@@ -16,7 +19,8 @@ public class PictureResponse {
                            double aiConfidence,
                            int pointsAwarded,
                            String imageUrl,
-                           String createdAt) {
+                           String createdAt,
+                           PictureMode pictureMode) {
         this.id = id;
         this.label = label;
         this.category = category;
@@ -24,6 +28,7 @@ public class PictureResponse {
         this.pointsAwarded = pointsAwarded;
         this.imageUrl = imageUrl;
         this.createdAt = createdAt;
+        this.pictureMode = pictureMode;
     }
 
     public Integer getId() {
@@ -54,6 +59,10 @@ public class PictureResponse {
         return createdAt;
     }
 
+    public PictureMode getPictureMode() {
+        return pictureMode;
+    }
+
     public void setId(Integer id) {
         this.id = id;
     }
@@ -80,5 +89,9 @@ public class PictureResponse {
 
     public void setCreatedAt(String createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public void setPictureMode(PictureMode pictureMode) {
+        this.pictureMode = pictureMode;
     }
 }
