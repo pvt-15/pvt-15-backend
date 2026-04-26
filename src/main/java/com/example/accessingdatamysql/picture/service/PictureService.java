@@ -67,7 +67,6 @@ public class PictureService {
         picture.setUser(user);
 
         //TODO CHANGE POINTS CALCULATION
-        int points = calculatePoints(aiResult.getAiConfidence());
         picture.setPointsAwarded(points);
 
         //TODO CHANGE SETTING OF LEVELS
@@ -199,19 +198,6 @@ public class PictureService {
         if (sort.equalsIgnoreCase("oldest")) {
             pictures.sort(Comparator.comparing(Picture::getTakenAt));
         }
-    }
-
-    private int calculatePoints(double confidence) {
-        if (confidence >= 0.90) {
-            return 20;
-        }
-        if (confidence >= 0.75) {
-            return 15;
-        }
-        if (confidence >= 0.60) {
-            return 10;
-        }
-        return 0;
     }
 
     private Level calculateLevel(int totalPoints) {
