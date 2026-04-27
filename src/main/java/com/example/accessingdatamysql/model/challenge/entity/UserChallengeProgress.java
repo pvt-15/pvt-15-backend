@@ -25,6 +25,8 @@ public class UserChallengeProgress {
     private LocalDateTime startedAt;
     private LocalDateTime completedAt;
 
+    private boolean rewardClaimed;
+
     public UserChallengeProgress() {
     }
 
@@ -74,5 +76,13 @@ public class UserChallengeProgress {
 
     public void setCompletedAt(LocalDateTime completedAt) {
         this.completedAt = completedAt;
+    }
+
+    public boolean isRewardClaimed() {
+        return rewardClaimed;
+    }
+
+    public void setRewardClaimed(boolean rewardClaimed) {
+        this.rewardClaimed = rewardClaimed;
     }
 }

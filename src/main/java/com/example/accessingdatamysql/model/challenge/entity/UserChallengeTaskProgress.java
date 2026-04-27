@@ -15,6 +15,9 @@ public class UserChallengeTaskProgress {
     @ManyToOne
     private ChallengeTask challengeTask;
 
+    @Column(length = 1000)
+    private String matchedLabels;
+
     private Integer currentCount;
     private boolean completed;
 
@@ -43,6 +46,14 @@ public class UserChallengeTaskProgress {
 
     public void setChallengeTask(ChallengeTask challengeTask) {
         this.challengeTask = challengeTask;
+    }
+
+    public String getMatchedLabels() {
+        return matchedLabels;
+    }
+
+    public void setMatchedLabels(String matchedLabels) {
+        this.matchedLabels = matchedLabels;
     }
 
     public Integer getCurrentCount() {

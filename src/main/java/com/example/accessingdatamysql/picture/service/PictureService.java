@@ -8,6 +8,7 @@ import com.example.accessingdatamysql.picture.dto.AiIdentificationResult;
 import com.example.accessingdatamysql.picture.dto.CreatePictureRequest;
 import com.example.accessingdatamysql.picture.dto.PictureResponse;
 import com.example.accessingdatamysql.picture.dto.PictureStatsResponse;
+import com.example.accessingdatamysql.picture.enums.PictureMode;
 import com.example.accessingdatamysql.picture.model.enums.TargetType;
 import com.example.accessingdatamysql.picture.repository.PictureRepository;
 import com.example.accessingdatamysql.user.repository.UserRepository;
@@ -30,13 +31,16 @@ public class PictureService {
     private final PictureRepository pictureRepository;
     private final UserRepository userRepository;
     private final NatureAiService natureAiService;
+    private final DiscoveryService discoveryService;
 
     public PictureService(PictureRepository pictureRepository,
                           UserRepository userRepository,
-                          NatureAiService natureAiService) {
+                          NatureAiService natureAiService,
+                          DiscoveryService discoveryService) {
         this.pictureRepository = pictureRepository;
         this.userRepository = userRepository;
         this.natureAiService = natureAiService;
+        this.discoveryService = discoveryService;
     }
 
     @Transactional
@@ -52,11 +56,18 @@ public class PictureService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND));
 
+        PictureMode pictureMode = request.getPictureMode();
+        if(pictureMode == null){
+            pictureMode = PictureMode.COLLECTION;
+        }
+
         TargetType targetType = request.getTargetType();
         if (targetType == null) {
             targetType = TargetType.ANIMAL;
         }
         AiIdentificationResult aiResult = natureAiService.identifyImage(imageUrl, targetType);
+
+        PictureCategory pictureCategory = parseCategory(aiResult.getCategory(), targetType);
 
         Picture picture = new Picture();
         picture.setLabel(aiResult.getLabel());
@@ -66,15 +77,29 @@ public class PictureService {
         picture.setTakenAt(LocalDateTime.now());
         picture.setUser(user);
 
-        //TODO CHANGE POINTS CALCULATION
-        picture.setPointsAwarded(points);
+        int picturePoints = 0;
 
-        //TODO CHANGE SETTING OF LEVELS
-        user.setTotalPoints(user.getTotalPoints() + points);
+        if(pictureMode == PictureMode.COLLECTION){
+            picturePoints = discoveryService.awardCollectionPoints(user, pictureCategory, aiResult.getLabel());
+        }
+
+        picture.setPointsAwarded(picturePoints);
+
+        Picture savedPicture = pictureRepository.save(picture);
+
+        if(picturePoints > 0){
+            user.setTotalPoints(user.getTotalPoints() + picturePoints);
+        }
+
+        if(pictureMode == PictureMode.CHALLENGE){
+            int challengeReward = challengeProgressService.updateProgressFromPicture(user, savedPicture);
+            if (challengeReward > 0) {
+                user.setTotalPoints(user.getTotalPoints() + challengeReward);
+            }
+        }
         user.setLevel(calculateLevel(user.getTotalPoints()));
         userRepository.save(user);
 
-        Picture savedPicture = pictureRepository.save(picture);
         return toResponse(savedPicture);
     }
 
