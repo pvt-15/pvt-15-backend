@@ -13,6 +13,7 @@ import com.example.accessingdatamysql.model.challenge.repository.ChallengeReposi
 import com.example.accessingdatamysql.model.challenge.repository.UserChallengeProgressRepository;
 import com.example.accessingdatamysql.model.challenge.repository.UserChallengeTaskProgressRepository;
 import com.example.accessingdatamysql.user.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -80,14 +81,25 @@ public class ChallengeService {
         );
     }
 
-    public ChallengeResponse startChallenge(Integer userId, Integer challengeId){
+    @Transactional
+    public ChallengeResponse startChallenge(Integer userId, Integer challengeId) {
         User user = getUserById(userId);
         Challenge challenge = getChallengeByIdInternal(challengeId);
 
-        Optional<UserChallengeProgress> existing = userChallengeProgressRepository.findByUserAndChallenge(user, challenge);
+        Optional<UserChallengeProgress> existing =
+                userChallengeProgressRepository.findByUserAndChallenge(user, challenge);
 
-        if(existing.isPresent()){
-            return toChallengeResponse(challenge, existing.get().getStatus().name());
+        if (existing.isPresent()) {
+            UserChallengeProgress progress = existing.get();
+
+            List<UserChallengeTaskProgress> existingTaskProgress =
+                    userChallengeTaskProgressRepository.findByUserChallengeProgress(progress);
+
+            if (existingTaskProgress.isEmpty()) {
+                createTaskProgress(challenge, progress);
+            }
+
+            return toChallengeResponse(challenge, progress.getStatus().name());
         }
 
         UserChallengeProgress progress = new UserChallengeProgress();
@@ -95,9 +107,16 @@ public class ChallengeService {
         progress.setChallenge(challenge);
         progress.setStatus(ChallengeStatus.IN_PROGRESS);
         progress.setStartedAt(LocalDateTime.now());
+        progress.setRewardClaimed(false);
 
         UserChallengeProgress savedProgress = userChallengeProgressRepository.save(progress);
 
+        createTaskProgress(challenge, savedProgress);
+
+        return toChallengeResponse(challenge, ChallengeStatus.IN_PROGRESS.name());
+    }
+
+    private void createTaskProgress(Challenge challenge, UserChallengeProgress savedProgress) {
         for (ChallengeTask task : challenge.getTasks()) {
             UserChallengeTaskProgress taskProgress = new UserChallengeTaskProgress();
             taskProgress.setUserChallengeProgress(savedProgress);
@@ -107,8 +126,6 @@ public class ChallengeService {
             taskProgress.setMatchedLabels("");
             userChallengeTaskProgressRepository.save(taskProgress);
         }
-
-        return toChallengeResponse(challenge, ChallengeStatus.IN_PROGRESS.name());
     }
 
     public List<ChallengeResponse> getMyChallenges(Integer userId){
