@@ -3,9 +3,14 @@ package com.example.accessingdatamysql.picture.service;
 import com.example.accessingdatamysql.model.User;
 import com.example.accessingdatamysql.model.enums.PictureCategory;
 import com.example.accessingdatamysql.picture.entity.UserDiscovery;
+import com.example.accessingdatamysql.picture.repository.UserDiscoveryRepository;
+import com.example.accessingdatamysql.picture.dto.DiscoveryCategoryStatsResponse;
+import com.example.accessingdatamysql.picture.dto.DiscoveryStatsResponse;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class DiscoveryService {
@@ -46,6 +51,33 @@ public class DiscoveryService {
         return points;
     }
 
+    public DiscoveryStatsResponse getDiscoveryStats(User user){
+        List<DiscoveryCategoryStatsResponse> categories =  new ArrayList<>();
+
+        categories.add(createCategoryStats(user, PictureCategory.FLOWER));
+        categories.add(createCategoryStats(user, PictureCategory.TREE));
+        categories.add(createCategoryStats(user, PictureCategory.PLANT));
+        categories.add(createCategoryStats(user, PictureCategory.ANIMAL));
+        categories.add(createCategoryStats(user, PictureCategory.BIRD));
+        categories.add(createCategoryStats(user, PictureCategory.INSECT));
+
+        return new DiscoveryStatsResponse(categories);
+    }
+
+    private DiscoveryCategoryStatsResponse createCategoryStats(User user, PictureCategory category){
+        long uniqueCount = userDiscoveryRepository.countByUserAndCategory(user, category);
+
+        long nextMileStone = ((uniqueCount / 10) * 10);
+        long remainingToNextMilestone = nextMileStone - uniqueCount;
+
+        return new DiscoveryCategoryStatsResponse(
+                category.name(),
+                uniqueCount,
+                nextMileStone,
+                remainingToNextMilestone
+        );
+    }
+
 
     private String normalize(String label) {
         if (label == null) {
@@ -54,5 +86,4 @@ public class DiscoveryService {
 
         return label.trim().toLowerCase();
     }
-
 }

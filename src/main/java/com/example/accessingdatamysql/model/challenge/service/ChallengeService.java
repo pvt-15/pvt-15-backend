@@ -7,9 +7,11 @@ import com.example.accessingdatamysql.model.challenge.dto.ChallengeTaskResponse;
 import com.example.accessingdatamysql.model.challenge.entity.Challenge;
 import com.example.accessingdatamysql.model.challenge.entity.ChallengeTask;
 import com.example.accessingdatamysql.model.challenge.entity.UserChallengeProgress;
+import com.example.accessingdatamysql.model.challenge.entity.UserChallengeTaskProgress;
 import com.example.accessingdatamysql.model.challenge.enums.ChallengeStatus;
 import com.example.accessingdatamysql.model.challenge.repository.ChallengeRepository;
 import com.example.accessingdatamysql.model.challenge.repository.UserChallengeProgressRepository;
+import com.example.accessingdatamysql.model.challenge.repository.UserChallengeTaskProgressRepository;
 import com.example.accessingdatamysql.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
@@ -27,13 +29,16 @@ public class ChallengeService {
     private final ChallengeRepository challengeRepository;
     private final UserRepository userRepository;
     private final UserChallengeProgressRepository userChallengeProgressRepository;
+    private final UserChallengeTaskProgressRepository userChallengeTaskProgressRepository;
 
     public ChallengeService(ChallengeRepository challengeRepository,
                             UserRepository userRepository,
-                            UserChallengeProgressRepository userChallengeProgressRepository){
+                            UserChallengeProgressRepository userChallengeProgressRepository,
+                            UserChallengeTaskProgressRepository userChallengeTaskProgressRepository){
         this.challengeRepository = challengeRepository;
         this.userRepository = userRepository;
         this.userChallengeProgressRepository = userChallengeProgressRepository;
+        this.userChallengeTaskProgressRepository = userChallengeTaskProgressRepository;
     }
 
     public List<ChallengeResponse> getActiveChallenges(Integer userId){
@@ -91,7 +96,17 @@ public class ChallengeService {
         progress.setStatus(ChallengeStatus.IN_PROGRESS);
         progress.setStartedAt(LocalDateTime.now());
 
-        userChallengeProgressRepository.save(progress);
+        UserChallengeProgress savedProgress = userChallengeProgressRepository.save(progress);
+
+        for (ChallengeTask task : challenge.getTasks()) {
+            UserChallengeTaskProgress taskProgress = new UserChallengeTaskProgress();
+            taskProgress.setUserChallengeProgress(savedProgress);
+            taskProgress.setChallengeTask(task);
+            taskProgress.setCurrentCount(0);
+            taskProgress.setCompleted(false);
+            taskProgress.setMatchedLabels("");
+            userChallengeTaskProgressRepository.save(taskProgress);
+        }
 
         return toChallengeResponse(challenge, ChallengeStatus.IN_PROGRESS.name());
     }

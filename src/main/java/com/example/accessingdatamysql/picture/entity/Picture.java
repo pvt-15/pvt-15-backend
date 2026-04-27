@@ -1,6 +1,8 @@
-package com.example.accessingdatamysql.model;
+package com.example.accessingdatamysql.picture.entity;
 
+import com.example.accessingdatamysql.model.User;
 import com.example.accessingdatamysql.model.enums.PictureCategory;
+import com.example.accessingdatamysql.picture.enums.PictureMode;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -18,19 +20,18 @@ public class Picture {
     private PictureCategory category;
 
     private double aiConfidence;
-
     private int pointsAwarded;
-
     private String imageUrl;
-
     private LocalDateTime takenAt;
+
+    @Enumerated(EnumType.STRING)
+    private PictureMode pictureMode;
 
     @ManyToOne
     @JoinColumn(name = "user", nullable = false)
     private User user;
 
     public Picture() {
-
     }
 
     public Integer getId() {
@@ -59,6 +60,10 @@ public class Picture {
 
     public LocalDateTime getTakenAt() {
         return takenAt;
+    }
+
+    public PictureMode getPictureMode() {
+        return pictureMode;
     }
 
     public User getUser() {
@@ -91,6 +96,10 @@ public class Picture {
 
     public void setTakenAt(LocalDateTime takenAt) {
         this.takenAt = takenAt;
+    }
+
+    public void setPictureMode(PictureMode pictureMode) {
+        this.pictureMode = pictureMode;
     }
 
     public void setUser(User user) {

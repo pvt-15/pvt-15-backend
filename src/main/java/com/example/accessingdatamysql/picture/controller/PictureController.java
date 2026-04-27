@@ -1,9 +1,13 @@
 package com.example.accessingdatamysql.picture.controller;
 
+import com.example.accessingdatamysql.model.User;
 import com.example.accessingdatamysql.picture.dto.CreatePictureRequest;
+import com.example.accessingdatamysql.picture.dto.DiscoveryStatsResponse;
 import com.example.accessingdatamysql.picture.dto.PictureResponse;
 import com.example.accessingdatamysql.picture.dto.PictureStatsResponse;
+import com.example.accessingdatamysql.picture.service.DiscoveryService;
 import com.example.accessingdatamysql.picture.service.PictureService;
+import com.example.accessingdatamysql.user.repository.UserRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -16,9 +20,15 @@ import java.util.List;
 public class PictureController {
 
     private final PictureService pictureService;
+    private final DiscoveryService discoveryService;
+    private final UserRepository userRepository;
 
-    public PictureController(PictureService pictureService) {
+    public PictureController(PictureService pictureService,
+                             DiscoveryService discoveryService,
+                             UserRepository userRepository) {
         this.pictureService = pictureService;
+        this.discoveryService = discoveryService;
+        this.userRepository = userRepository;
     }
 
     @PostMapping
@@ -43,6 +53,16 @@ public class PictureController {
         Integer userId = Integer.valueOf(jwt.getSubject());
         PictureStatsResponse stats = pictureService.getPictureStats(userId);
         return ResponseEntity.ok(stats);
+    }
+
+    @GetMapping("/discovery-stats")
+    public ResponseEntity<DiscoveryStatsResponse> getDiscoveryStats(@AuthenticationPrincipal Jwt jwt) {
+        Integer userId = Integer.valueOf(jwt.getSubject());
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        return ResponseEntity.ok(discoveryService.getDiscoveryStats(user));
     }
 
     @GetMapping("/{id}")

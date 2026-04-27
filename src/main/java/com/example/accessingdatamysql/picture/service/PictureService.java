@@ -1,13 +1,14 @@
 package com.example.accessingdatamysql.picture.service;
 
-import com.example.accessingdatamysql.model.Picture;
 import com.example.accessingdatamysql.model.User;
+import com.example.accessingdatamysql.model.challenge.service.ChallengeProgressService;
 import com.example.accessingdatamysql.model.enums.Level;
 import com.example.accessingdatamysql.model.enums.PictureCategory;
 import com.example.accessingdatamysql.picture.dto.AiIdentificationResult;
 import com.example.accessingdatamysql.picture.dto.CreatePictureRequest;
 import com.example.accessingdatamysql.picture.dto.PictureResponse;
 import com.example.accessingdatamysql.picture.dto.PictureStatsResponse;
+import com.example.accessingdatamysql.picture.entity.Picture;
 import com.example.accessingdatamysql.picture.enums.PictureMode;
 import com.example.accessingdatamysql.picture.model.enums.TargetType;
 import com.example.accessingdatamysql.picture.repository.PictureRepository;
@@ -32,15 +33,18 @@ public class PictureService {
     private final UserRepository userRepository;
     private final NatureAiService natureAiService;
     private final DiscoveryService discoveryService;
+    private final ChallengeProgressService challengeProgressService;
 
     public PictureService(PictureRepository pictureRepository,
                           UserRepository userRepository,
                           NatureAiService natureAiService,
-                          DiscoveryService discoveryService) {
+                          DiscoveryService discoveryService,
+                          ChallengeProgressService challengeProgressService) {
         this.pictureRepository = pictureRepository;
         this.userRepository = userRepository;
         this.natureAiService = natureAiService;
         this.discoveryService = discoveryService;
+        this.challengeProgressService = challengeProgressService;
     }
 
     @Transactional
@@ -75,6 +79,7 @@ public class PictureService {
         picture.setAiConfidence(aiResult.getAiConfidence());
         picture.setImageUrl(imageUrl);
         picture.setTakenAt(LocalDateTime.now());
+        picture.setPictureMode(pictureMode);
         picture.setUser(user);
 
         int picturePoints = 0;
@@ -129,15 +134,6 @@ public class PictureService {
     public void deletePicture(Integer userId, Integer pictureId) {
         User user = getUserById(userId);
         Picture picture = getPictureOwnedByUser(user, pictureId);
-
-        int newTotalPoints = user.getTotalPoints() - picture.getPointsAwarded();
-        if (newTotalPoints < 0) {
-            newTotalPoints = 0;
-        }
-        user.setTotalPoints(newTotalPoints);
-        user.setLevel(calculateLevel(newTotalPoints));
-        userRepository.save(user);
-
         pictureRepository.delete(picture);
     }
 
@@ -152,7 +148,7 @@ public class PictureService {
         int totalTrees = 0;
         int totalBirds = 0;
         int totalInsects = 0;
-        int totalPoints = 0;
+        int totalPoints = user.getTotalPoints();
 
         for (Picture picture : pictures) {
             PictureCategory category = picture.getCategory();
@@ -174,7 +170,6 @@ public class PictureService {
                 totalInsects++;
                 totalAnimals++;
             }
-            totalPoints += picture.getPointsAwarded();
         }
 
         return new PictureStatsResponse(
@@ -261,7 +256,8 @@ public class PictureService {
                 picture.getAiConfidence(),
                 picture.getPointsAwarded(),
                 picture.getImageUrl(),
-                picture.getTakenAt().toString()
+                picture.getTakenAt().toString(),
+                picture.getPictureMode()
         );
     }
 }
