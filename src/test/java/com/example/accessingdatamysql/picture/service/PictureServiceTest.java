@@ -8,6 +8,7 @@ import com.example.accessingdatamysql.picture.dto.CreatePictureRequest;
 import com.example.accessingdatamysql.picture.dto.PictureResponse;
 import com.example.accessingdatamysql.picture.dto.PictureStatsResponse;
 import com.example.accessingdatamysql.picture.entity.Picture;
+import com.example.accessingdatamysql.picture.enums.PictureMode;
 import com.example.accessingdatamysql.picture.model.enums.TargetType;
 import com.example.accessingdatamysql.picture.repository.PictureRepository;
 import com.example.accessingdatamysql.user.repository.UserRepository;
@@ -55,7 +56,7 @@ class PictureServiceTest {
         user.setLevel(Level.LEVEL_1);
 
         CreatePictureRequest request =
-                new CreatePictureRequest("https://example.com/tree.jpg", TargetType.PLANT);
+                new CreatePictureRequest("https://example.com/tree.jpg", TargetType.PLANT, PictureMode.COLLECTION);
 
         AiIdentificationResult aiResult =
                 new AiIdentificationResult("Oak", "TREE", 0.91);
