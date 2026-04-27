@@ -67,13 +67,13 @@ public class DiscoveryService {
     private DiscoveryCategoryStatsResponse createCategoryStats(User user, PictureCategory category){
         long uniqueCount = userDiscoveryRepository.countByUserAndCategory(user, category);
 
-        long nextMileStone = ((uniqueCount / 10) * 10);
-        long remainingToNextMilestone = nextMileStone - uniqueCount;
+        long nextMilestone = ((uniqueCount / 10) + 1) * 10;
+        long remainingToNextMilestone = nextMilestone - uniqueCount;
 
         return new DiscoveryCategoryStatsResponse(
                 category.name(),
                 uniqueCount,
-                nextMileStone,
+                nextMilestone,
                 remainingToNextMilestone
         );
     }
