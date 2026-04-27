@@ -4,7 +4,9 @@ import com.example.accessingdatamysql.picture.dto.CreatePictureRequest;
 import com.example.accessingdatamysql.picture.dto.PictureResponse;
 import com.example.accessingdatamysql.picture.enums.PictureMode;
 import com.example.accessingdatamysql.picture.model.enums.TargetType;
+import com.example.accessingdatamysql.picture.service.DiscoveryService;
 import com.example.accessingdatamysql.picture.service.PictureService;
+import com.example.accessingdatamysql.user.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -16,7 +18,10 @@ import static org.mockito.Mockito.*;
 class PictureControllerTest {
 
     private final PictureService pictureService = mock(PictureService.class);
-    private final PictureController pictureController = new PictureController(pictureService);
+    private final DiscoveryService discoveryService = mock(DiscoveryService.class);
+    private final UserRepository userRepository = mock(UserRepository.class);
+    private final PictureController pictureController = new PictureController(
+            pictureService,discoveryService, userRepository);
 
     @Test
     void createPicture_shouldReturnOkForAuthenticatedUser() {
