@@ -2,6 +2,7 @@ package com.example.accessingdatamysql.picture.controller;
 
 import com.example.accessingdatamysql.picture.dto.CreatePictureRequest;
 import com.example.accessingdatamysql.picture.dto.PictureResponse;
+import com.example.accessingdatamysql.picture.enums.PictureMode;
 import com.example.accessingdatamysql.picture.model.enums.TargetType;
 import com.example.accessingdatamysql.picture.service.PictureService;
 import org.junit.jupiter.api.Test;
@@ -24,7 +25,8 @@ class PictureControllerTest {
 
         CreatePictureRequest request = new CreatePictureRequest(
                 "https://example.com/tree.jpg",
-                TargetType.PLANT
+                TargetType.PLANT,
+                PictureMode.COLLECTION
         );
 
         PictureResponse response = new PictureResponse(
@@ -34,7 +36,8 @@ class PictureControllerTest {
                 0.91,
                 20,
                 "https://example.com/tree.jpg",
-                "2026-04-23T09:00:00"
+                "2026-04-23T09:00:00",
+                PictureMode.COLLECTION
         );
 
         when(pictureService.createPicture(42, request)).thenReturn(response);
