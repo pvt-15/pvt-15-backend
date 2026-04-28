@@ -37,7 +37,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/auth/me").authenticated()
                         .requestMatchers("/pictures/**").authenticated()
 
-                        .requestMatchers("/challenges/admin").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/challenges/admin").permitAll()
 
                         .anyRequest().authenticated()
                 )
