@@ -6,7 +6,7 @@ import com.example.accessingdatamysql.model.challenge.enums.ChallengeDifficulty;
 import com.example.accessingdatamysql.model.challenge.enums.ChallengeType;
 import com.example.accessingdatamysql.model.challenge.enums.TaskType;
 import com.example.accessingdatamysql.model.challenge.repository.ChallengeRepository;
-import com.example.accessingdatamysql.model.enums.PictureCategory;
+import com.example.accessingdatamysql.picture.enums.PictureCategory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 

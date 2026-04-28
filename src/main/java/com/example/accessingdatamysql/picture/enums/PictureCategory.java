@@ -1,4 +1,4 @@
-package com.example.accessingdatamysql.model.enums;
+package com.example.accessingdatamysql.picture.enums;
 
 public enum PictureCategory {
     FLOWER,

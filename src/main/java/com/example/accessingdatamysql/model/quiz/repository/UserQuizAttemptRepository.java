@@ -1,6 +1,6 @@
-package com.example.accessingdatamysql.quiz.repository;
+package com.example.accessingdatamysql.model.quiz.repository;
 
-import com.example.accessingdatamysql.quiz.entity.UserQuizAttempt;
+import com.example.accessingdatamysql.model.quiz.entity.UserQuizAttempt;
 import com.example.accessingdatamysql.user.entity.User;
 import org.springframework.data.repository.CrudRepository;
 

@@ -1,7 +1,7 @@
 package com.example.accessingdatamysql.model.challenge.entity;
 
 import com.example.accessingdatamysql.model.challenge.enums.TaskType;
-import com.example.accessingdatamysql.model.enums.PictureCategory;
+import com.example.accessingdatamysql.picture.enums.PictureCategory;
 import jakarta.persistence.*;
 
 @Entity

@@ -1,7 +1,7 @@
 package com.example.accessingdatamysql.user.entity;
 
-import com.example.accessingdatamysql.model.enums.Level;
-import com.example.accessingdatamysql.model.enums.Provider;
+import com.example.accessingdatamysql.user.enums.Level;
+import com.example.accessingdatamysql.auth.enums.Provider;
 import jakarta.persistence.*;
 
 @Entity

@@ -1,7 +1,7 @@
 package com.example.accessingdatamysql.user.repository;
 
 import com.example.accessingdatamysql.user.entity.User;
-import com.example.accessingdatamysql.model.enums.Provider;
+import com.example.accessingdatamysql.auth.enums.Provider;
 import org.springframework.data.repository.CrudRepository;
 
 import java.util.Optional;

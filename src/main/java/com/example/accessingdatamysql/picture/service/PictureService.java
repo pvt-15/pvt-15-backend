@@ -2,8 +2,8 @@ package com.example.accessingdatamysql.picture.service;
 
 import com.example.accessingdatamysql.user.entity.User;
 import com.example.accessingdatamysql.model.challenge.service.ChallengeProgressService;
-import com.example.accessingdatamysql.model.enums.Level;
-import com.example.accessingdatamysql.model.enums.PictureCategory;
+import com.example.accessingdatamysql.user.enums.Level;
+import com.example.accessingdatamysql.picture.enums.PictureCategory;
 import com.example.accessingdatamysql.picture.dto.AiIdentificationResult;
 import com.example.accessingdatamysql.picture.dto.CreatePictureRequest;
 import com.example.accessingdatamysql.picture.dto.PictureResponse;

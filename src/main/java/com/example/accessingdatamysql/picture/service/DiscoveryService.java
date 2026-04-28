@@ -1,7 +1,7 @@
 package com.example.accessingdatamysql.picture.service;
 
 import com.example.accessingdatamysql.user.entity.User;
-import com.example.accessingdatamysql.model.enums.PictureCategory;
+import com.example.accessingdatamysql.picture.enums.PictureCategory;
 import com.example.accessingdatamysql.user.entity.UserDiscovery;
 import com.example.accessingdatamysql.user.repository.UserDiscoveryRepository;
 import com.example.accessingdatamysql.picture.dto.DiscoveryCategoryStatsResponse;

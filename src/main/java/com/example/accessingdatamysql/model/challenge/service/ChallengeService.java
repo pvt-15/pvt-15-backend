@@ -12,7 +12,7 @@ import com.example.accessingdatamysql.model.challenge.enums.TaskType;
 import com.example.accessingdatamysql.model.challenge.repository.ChallengeRepository;
 import com.example.accessingdatamysql.model.challenge.repository.UserChallengeProgressRepository;
 import com.example.accessingdatamysql.model.challenge.repository.UserChallengeTaskProgressRepository;
-import com.example.accessingdatamysql.model.enums.PictureCategory;
+import com.example.accessingdatamysql.picture.enums.PictureCategory;
 import com.example.accessingdatamysql.user.entity.User;
 import com.example.accessingdatamysql.user.repository.UserRepository;
 import jakarta.transaction.Transactional;

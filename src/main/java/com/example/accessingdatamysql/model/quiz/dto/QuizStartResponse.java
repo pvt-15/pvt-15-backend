@@ -1,4 +1,4 @@
-package com.example.accessingdatamysql.quiz.dto;
+package com.example.accessingdatamysql.model.quiz.dto;
 
 import java.util.List;
 

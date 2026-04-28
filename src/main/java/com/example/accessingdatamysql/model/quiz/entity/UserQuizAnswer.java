@@ -1,4 +1,4 @@
-package com.example.accessingdatamysql.quiz.entity;
+package com.example.accessingdatamysql.model.quiz.entity;
 
 import jakarta.persistence.*;
 

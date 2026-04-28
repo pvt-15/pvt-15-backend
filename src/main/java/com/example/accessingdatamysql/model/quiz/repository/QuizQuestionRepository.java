@@ -1,7 +1,7 @@
-package com.example.accessingdatamysql.quiz.repository;
+package com.example.accessingdatamysql.model.quiz.repository;
 
-import com.example.accessingdatamysql.quiz.entity.QuizQuestion;
-import com.example.accessingdatamysql.quiz.enums.QuizDifficulty;
+import com.example.accessingdatamysql.model.quiz.entity.QuizQuestion;
+import com.example.accessingdatamysql.model.quiz.enums.QuizDifficulty;
 import org.springframework.data.repository.CrudRepository;
 
 import java.util.List;

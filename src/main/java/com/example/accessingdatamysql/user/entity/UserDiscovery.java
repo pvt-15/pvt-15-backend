@@ -1,6 +1,6 @@
 package com.example.accessingdatamysql.user.entity;
 
-import com.example.accessingdatamysql.model.enums.PictureCategory;
+import com.example.accessingdatamysql.picture.enums.PictureCategory;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;

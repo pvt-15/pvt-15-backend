@@ -1,6 +1,6 @@
-package com.example.accessingdatamysql.quiz.entity;
+package com.example.accessingdatamysql.model.quiz.entity;
 
-import com.example.accessingdatamysql.quiz.enums.QuizDifficulty;
+import com.example.accessingdatamysql.model.quiz.enums.QuizDifficulty;
 import jakarta.persistence.*;
 
 import java.util.ArrayList;

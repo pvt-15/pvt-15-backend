@@ -1,4 +1,4 @@
-package com.example.accessingdatamysql.model.enums;
+package com.example.accessingdatamysql.user.enums;
 
 public enum Level {
     LEVEL_1(1, "Lövjägare"),

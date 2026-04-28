@@ -1,4 +1,4 @@
-package com.example.accessingdatamysql.quiz.enums;
+package com.example.accessingdatamysql.model.quiz.enums;
 
 public enum QuizDifficulty {
     EASY,

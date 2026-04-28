@@ -1,8 +1,8 @@
 package com.example.accessingdatamysql.user.mapper;
 
 import com.example.accessingdatamysql.user.entity.User;
-import com.example.accessingdatamysql.model.enums.Level;
-import com.example.accessingdatamysql.model.enums.Provider;
+import com.example.accessingdatamysql.user.enums.Level;
+import com.example.accessingdatamysql.auth.enums.Provider;
 import com.example.accessingdatamysql.user.dto.UserResponse;
 import org.junit.jupiter.api.Test;
 
