@@ -37,6 +37,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/auth/me").authenticated()
                         .requestMatchers("/pictures/**").authenticated()
 
+                        .requestMatchers("/challenges/admin").permitAll()
+
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
