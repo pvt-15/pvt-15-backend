@@ -1,6 +1,6 @@
 package com.example.accessingdatamysql.model.challenge.repository;
 
-import com.example.accessingdatamysql.model.User;
+import com.example.accessingdatamysql.user.entity.User;
 import com.example.accessingdatamysql.model.challenge.entity.Challenge;
 import com.example.accessingdatamysql.model.challenge.entity.UserChallengeProgress;
 import org.springframework.data.repository.CrudRepository;

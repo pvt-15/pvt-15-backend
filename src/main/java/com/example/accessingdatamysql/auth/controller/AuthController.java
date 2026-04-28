@@ -6,7 +6,7 @@ import com.example.accessingdatamysql.auth.dto.LoginRequest;
 import com.example.accessingdatamysql.auth.dto.RegisterRequest;
 import com.example.accessingdatamysql.user.dto.UserResponse;
 import com.example.accessingdatamysql.user.mapper.UserMapper;
-import com.example.accessingdatamysql.model.User;
+import com.example.accessingdatamysql.user.entity.User;
 import com.example.accessingdatamysql.user.repository.UserRepository;
 import com.example.accessingdatamysql.auth.service.AuthService;
 import org.springframework.http.HttpStatus;

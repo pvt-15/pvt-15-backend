@@ -1,6 +1,6 @@
 package com.example.accessingdatamysql.auth.service;
 
-import com.example.accessingdatamysql.model.User;
+import com.example.accessingdatamysql.user.entity.User;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.JwsHeader;

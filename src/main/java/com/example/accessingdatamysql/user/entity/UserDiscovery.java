@@ -1,6 +1,5 @@
-package com.example.accessingdatamysql.picture.entity;
+package com.example.accessingdatamysql.user.entity;
 
-import com.example.accessingdatamysql.model.User;
 import com.example.accessingdatamysql.model.enums.PictureCategory;
 import jakarta.persistence.*;
 

@@ -1,6 +1,6 @@
 package com.example.accessingdatamysql.picture.repository;
 
-import com.example.accessingdatamysql.model.User;
+import com.example.accessingdatamysql.user.entity.User;
 import com.example.accessingdatamysql.picture.entity.Picture;
 import org.springframework.data.repository.CrudRepository;
 

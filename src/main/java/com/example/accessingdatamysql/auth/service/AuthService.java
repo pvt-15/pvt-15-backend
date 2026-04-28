@@ -1,7 +1,7 @@
 package com.example.accessingdatamysql.auth.service;
 
 import com.example.accessingdatamysql.auth.dto.*;
-import com.example.accessingdatamysql.model.User;
+import com.example.accessingdatamysql.user.entity.User;
 import com.example.accessingdatamysql.model.enums.Level;
 import com.example.accessingdatamysql.model.enums.Provider;
 import com.example.accessingdatamysql.user.repository.UserRepository;

@@ -3,7 +3,7 @@ package com.example.accessingdatamysql.user.controller;
 import com.example.accessingdatamysql.user.dto.UserResponse;
 import com.example.accessingdatamysql.user.mapper.UserMapper;
 import com.example.accessingdatamysql.model.enums.Level;
-import com.example.accessingdatamysql.model.User;
+import com.example.accessingdatamysql.user.entity.User;
 import com.example.accessingdatamysql.model.enums.Provider;
 import com.example.accessingdatamysql.user.repository.UserRepository;
 import org.springframework.http.ResponseEntity;

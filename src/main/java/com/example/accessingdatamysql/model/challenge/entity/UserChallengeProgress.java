@@ -1,6 +1,6 @@
 package com.example.accessingdatamysql.model.challenge.entity;
 
-import com.example.accessingdatamysql.model.User;
+import com.example.accessingdatamysql.user.entity.User;
 import com.example.accessingdatamysql.model.challenge.enums.ChallengeStatus;
 import jakarta.persistence.*;
 

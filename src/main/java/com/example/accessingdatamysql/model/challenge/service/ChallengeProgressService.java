@@ -1,6 +1,6 @@
 package com.example.accessingdatamysql.model.challenge.service;
 
-import com.example.accessingdatamysql.model.User;
+import com.example.accessingdatamysql.user.entity.User;
 import com.example.accessingdatamysql.model.challenge.entity.ChallengeTask;
 import com.example.accessingdatamysql.model.challenge.entity.UserChallengeProgress;
 import com.example.accessingdatamysql.model.challenge.entity.UserChallengeTaskProgress;

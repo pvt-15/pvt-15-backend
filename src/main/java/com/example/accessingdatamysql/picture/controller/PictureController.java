@@ -1,6 +1,6 @@
 package com.example.accessingdatamysql.picture.controller;
 
-import com.example.accessingdatamysql.model.User;
+import com.example.accessingdatamysql.user.entity.User;
 import com.example.accessingdatamysql.picture.dto.CreatePictureRequest;
 import com.example.accessingdatamysql.picture.dto.DiscoveryStatsResponse;
 import com.example.accessingdatamysql.picture.dto.PictureResponse;
