@@ -2,8 +2,6 @@ package com.example.accessingdatamysql.model.quiz.service;
 
 import com.example.accessingdatamysql.user.enums.Level;
 import com.example.accessingdatamysql.model.quiz.dto.*;
-import com.example.accessingdatamysql.model.quiz.quiz.dto.*;
-import com.example.accessingdatamysql.quiz.dto.*;
 import com.example.accessingdatamysql.model.quiz.entity.QuizOption;
 import com.example.accessingdatamysql.model.quiz.entity.QuizQuestion;
 import com.example.accessingdatamysql.model.quiz.entity.UserQuizAnswer;
