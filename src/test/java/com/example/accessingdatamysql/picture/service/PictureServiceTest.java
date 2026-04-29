@@ -23,10 +23,12 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class PictureServiceTest {
+class PictureServiceTest {
 
     @Mock
     private PictureRepository pictureRepository;
@@ -69,13 +71,17 @@ public class PictureServiceTest {
         when(userRepository.findById(1)).thenReturn(Optional.of(user));
         when(natureAiService.identifyImage("https://example.com/red-clover.jpg", TargetType.PLANT))
                 .thenReturn(aiResult);
+
         when(discoveryService.awardDiscoveryPoints(
-                user,
-                PictureCategory.FLOWER,
-                "Red clover",
-                "https://example.com/red-clover.jpg"
+                eq(user),
+                eq(PictureCategory.FLOWER),
+                eq("Red clover"),
+                eq("https://example.com/red-clover.jpg")
         )).thenReturn(5);
-        when(pictureRepository.save(any(Picture.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        when(pictureRepository.save(any(Picture.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
         when(challengeProgressService.updateProgressFromPicture(eq(user), any(Picture.class)))
                 .thenReturn(100);
 
@@ -86,7 +92,12 @@ public class PictureServiceTest {
         assertEquals(165, user.getTotalPoints());
         assertEquals(Level.LEVEL_2, user.getLevel());
 
-        verify(discoveryService).awardDiscoveryPoints(user, PictureCategory.FLOWER, "Red clover", "red_clover.png");
+        verify(discoveryService).awardDiscoveryPoints(
+                user,
+                PictureCategory.FLOWER,
+                "Red clover",
+                "https://example.com/red-clover.jpg"
+        );
         verify(badgeService).checkAndUnlockCategoryBadges(user, PictureCategory.FLOWER);
         verify(challengeProgressService).updateProgressFromPicture(eq(user), any(Picture.class));
         verify(userRepository).save(user);
@@ -112,13 +123,16 @@ public class PictureServiceTest {
         when(userRepository.findById(1)).thenReturn(Optional.of(user));
         when(natureAiService.identifyImage("https://example.com/oak.jpg", TargetType.PLANT))
                 .thenReturn(aiResult);
+
         when(discoveryService.awardDiscoveryPoints(
-                user,
-                PictureCategory.TREE,
-                "Oak",
-                "https://example.com/oak.jpg"
+                eq(user),
+                eq(PictureCategory.TREE),
+                eq("Oak"),
+                eq("https://example.com/oak.jpg")
         )).thenReturn(0);
-        when(pictureRepository.save(any(Picture.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        when(pictureRepository.save(any(Picture.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
         PictureResponse response = pictureService.createPicture(1, request);
 
@@ -127,9 +141,57 @@ public class PictureServiceTest {
         assertEquals(25, user.getTotalPoints());
         assertEquals(Level.LEVEL_1, user.getLevel());
 
-        verify(discoveryService).awardDiscoveryPoints(user, PictureCategory.TREE, "Oak", "oak.png");
+        verify(discoveryService).awardDiscoveryPoints(
+                user,
+                PictureCategory.TREE,
+                "Oak",
+                "https://example.com/oak.jpg"
+        );
         verify(challengeProgressService, never()).updateProgressFromPicture(any(), any());
         verify(badgeService, never()).checkAndUnlockCategoryBadges(any(), any());
+        verify(userRepository).save(user);
+    }
+
+    @Test
+    void createPicture_collectionMode_shouldUnlockBadgeWhenNewDiscoveryGivesPoints() {
+        User user = new User();
+        user.setId(1);
+        user.setTotalPoints(95);
+        user.setLevel(Level.LEVEL_1);
+
+        CreatePictureRequest request = new CreatePictureRequest();
+        request.setImageUrl("https://example.com/birch.jpg");
+        request.setTargetType(TargetType.PLANT);
+        request.setPictureMode(PictureMode.COLLECTION);
+
+        AiIdentificationResult aiResult = mock(AiIdentificationResult.class);
+        when(aiResult.getLabel()).thenReturn("Birch");
+        when(aiResult.getCategory()).thenReturn("TREE");
+        when(aiResult.getAiConfidence()).thenReturn(0.88);
+
+        when(userRepository.findById(1)).thenReturn(Optional.of(user));
+        when(natureAiService.identifyImage("https://example.com/birch.jpg", TargetType.PLANT))
+                .thenReturn(aiResult);
+
+        when(discoveryService.awardDiscoveryPoints(
+                eq(user),
+                eq(PictureCategory.TREE),
+                eq("Birch"),
+                eq("https://example.com/birch.jpg")
+        )).thenReturn(5);
+
+        when(pictureRepository.save(any(Picture.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        PictureResponse response = pictureService.createPicture(1, request);
+
+        assertEquals(5, response.getPointsAwarded());
+        assertEquals(PictureMode.COLLECTION, response.getPictureMode());
+        assertEquals(100, user.getTotalPoints());
+        assertEquals(Level.LEVEL_1, user.getLevel());
+
+        verify(badgeService).checkAndUnlockCategoryBadges(user, PictureCategory.TREE);
+        verify(challengeProgressService, never()).updateProgressFromPicture(any(), any());
         verify(userRepository).save(user);
     }
 }
