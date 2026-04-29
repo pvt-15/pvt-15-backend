@@ -24,7 +24,7 @@ public class DiscoveryService {
         this.userDiscoveryRepository = userDiscoveryRepository;
     }
 
-    public int awardCollectionPoints(User user, PictureCategory pictureCategory, String label){
+    public int awardDiscoveryPoints(User user, PictureCategory pictureCategory, String label){
         String normalizedLabel = normalize(label);
 
         boolean alreadyExists =

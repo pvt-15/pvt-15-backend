@@ -82,21 +82,16 @@ public class PictureService {
         picture.setPictureMode(pictureMode);
         picture.setUser(user);
 
-        int picturePoints = 0;
-
-        if(pictureMode == PictureMode.COLLECTION){
-            picturePoints = discoveryService.awardCollectionPoints(user, pictureCategory, aiResult.getLabel());
-        }
+        int picturePoints = discoveryService.awardDiscoveryPoints(user, pictureCategory, aiResult.getLabel());
 
         picture.setPointsAwarded(picturePoints);
-
         Picture savedPicture = pictureRepository.save(picture);
 
-        if(picturePoints > 0){
+        if (picturePoints > 0) {
             user.setTotalPoints(user.getTotalPoints() + picturePoints);
         }
 
-        if(pictureMode == PictureMode.CHALLENGE){
+        if (pictureMode == PictureMode.CHALLENGE) {
             int challengeReward = challengeProgressService.updateProgressFromPicture(user, savedPicture);
             if (challengeReward > 0) {
                 user.setTotalPoints(user.getTotalPoints() + challengeReward);
