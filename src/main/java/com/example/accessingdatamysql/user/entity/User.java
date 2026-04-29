@@ -28,16 +28,25 @@ public class User {
     @Enumerated(EnumType.STRING)
     private Level level;
 
+    private String profileImageUrl;
+
     public User() {
     }
 
-    public User(String name, String email, String passwordHash, Provider provider, int totalPoints, Level level) {
+    public User(String name,
+                String email,
+                String passwordHash,
+                Provider provider,
+                int totalPoints,
+                Level level,
+                String profileImageUrl) {
         this.name = name;
         this.email = email;
         this.passwordHash = passwordHash;
         this.provider = provider;
         this.totalPoints = totalPoints;
         this.level = level;
+        this.profileImageUrl = profileImageUrl;
     }
 
     public Integer getId() {
@@ -72,6 +81,10 @@ public class User {
         return level;
     }
 
+    public String getProfileImageUrl() {
+        return profileImageUrl;
+    }
+
     public void setId(Integer id) {
         this.id = id;
     }
@@ -102,5 +115,9 @@ public class User {
 
     public void setLevel(Level level) {
         this.level = level;
+    }
+
+    public void setProfileImageUrl(String profileImageUrl) {
+        this.profileImageUrl = profileImageUrl;
     }
 }

@@ -49,8 +49,9 @@ public class MainController {
                              @RequestParam String passwordHash,
                              @RequestParam Provider provider,
                              @RequestParam int totalPoints,
-                             @RequestParam Level level) {
-        userRepository.save(new User(name, email, passwordHash, provider, totalPoints, level));
+                             @RequestParam Level level,
+                             @RequestParam String profileImageUrl) {
+        userRepository.save(new User(name, email, passwordHash, provider, totalPoints, level, profileImageUrl));
         return "saved";
     }
 
