@@ -1,8 +1,9 @@
 package com.example.accessingdatamysql.picture.service;
 
+import com.example.accessingdatamysql.picture.dto.LibraryItemResponse;
 import com.example.accessingdatamysql.user.entity.User;
 import com.example.accessingdatamysql.picture.enums.PictureCategory;
-import com.example.accessingdatamysql.user.entity.UserDiscovery;
+import com.example.accessingdatamysql.picture.entity.UserDiscovery;
 import com.example.accessingdatamysql.user.repository.UserDiscoveryRepository;
 import com.example.accessingdatamysql.picture.dto.DiscoveryCategoryStatsResponse;
 import com.example.accessingdatamysql.picture.dto.DiscoveryStatsResponse;
@@ -24,7 +25,7 @@ public class DiscoveryService {
         this.userDiscoveryRepository = userDiscoveryRepository;
     }
 
-    public int awardDiscoveryPoints(User user, PictureCategory pictureCategory, String label){
+    public int awardDiscoveryPoints(User user, PictureCategory pictureCategory, String label, String imageUrl){
         String normalizedLabel = normalize(label);
 
         boolean alreadyExists =
@@ -39,6 +40,8 @@ public class DiscoveryService {
         discovery.setCategory(pictureCategory);
         discovery.setNormalizedLabel(normalizedLabel);
         discovery.setDiscoveredAt(LocalDateTime.now());
+        discovery.setDisplayLabel(label);
+        discovery.setImageUrl(imageUrl);
         userDiscoveryRepository.save(discovery);
 
         long uniqueCountInCategory = userDiscoveryRepository.countByUserAndCategory(user, pictureCategory);
@@ -62,6 +65,35 @@ public class DiscoveryService {
         categories.add(createCategoryStats(user, PictureCategory.INSECT));
 
         return new DiscoveryStatsResponse(categories);
+    }
+
+    public List<LibraryItemResponse> getUniqueLibrary(User user, String category, String sort){
+        List<UserDiscovery> discoveries = userDiscoveryRepository.findByUser(user);
+        List<LibraryItemResponse> responses = new ArrayList<>();
+
+        for (UserDiscovery discovery : discoveries) {
+            if (category != null && !category.isBlank()) {
+                if (!discovery.getCategory().name().equalsIgnoreCase(category)) {
+                    continue;
+                }
+            }
+
+            responses.add(new LibraryItemResponse(
+                    discovery.getId(),
+                    discovery.getDisplayLabel(),
+                    discovery.getCategory().name(),
+                    discovery.getImageUrl(),
+                    discovery.getDiscoveredAt().toString()
+            ));
+        }
+
+        if (sort == null || sort.isBlank() || sort.equalsIgnoreCase("newest")) {
+            responses.sort((a, b) -> b.getDiscoveredAt().compareTo(a.getDiscoveredAt()));
+        } else if (sort.equalsIgnoreCase("oldest")) {
+            responses.sort((a, b) -> a.getDiscoveredAt().compareTo(b.getDiscoveredAt()));
+        }
+
+        return responses;
     }
 
     private DiscoveryCategoryStatsResponse createCategoryStats(User user, PictureCategory category){

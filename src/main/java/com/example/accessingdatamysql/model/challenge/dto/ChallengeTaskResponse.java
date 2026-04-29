@@ -9,6 +9,8 @@ public class ChallengeTaskResponse {
     private String requiredCategory;
     private Integer requiredCount;
     private boolean mustBeUnique;
+    private String referenceImageUrl;
+    private String helpText;
 
     public ChallengeTaskResponse() {
     }
@@ -19,7 +21,9 @@ public class ChallengeTaskResponse {
                                  String requiredLabel,
                                  String requiredCategory,
                                  Integer requiredCount,
-                                 boolean mustBeUnique) {
+                                 boolean mustBeUnique,
+                                 String referenceImageUrl,
+                                 String helpText) {
         this.id = id;
         this.taskText = taskText;
         this.taskType = taskType;
@@ -27,6 +31,8 @@ public class ChallengeTaskResponse {
         this.requiredCategory = requiredCategory;
         this.requiredCount = requiredCount;
         this.mustBeUnique = mustBeUnique;
+        this.referenceImageUrl = referenceImageUrl;
+        this.helpText = helpText;
     }
 
     public Integer getId() {
@@ -55,5 +61,13 @@ public class ChallengeTaskResponse {
 
     public boolean isMustBeUnique() {
         return mustBeUnique;
+    }
+
+    public String getReferenceImageUrl() {
+        return referenceImageUrl;
+    }
+
+    public String getHelpText() {
+        return helpText;
     }
 }

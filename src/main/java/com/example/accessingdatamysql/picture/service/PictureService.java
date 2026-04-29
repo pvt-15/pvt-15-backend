@@ -85,7 +85,7 @@ public class PictureService {
         picture.setPictureMode(pictureMode);
         picture.setUser(user);
 
-        int picturePoints = discoveryService.awardDiscoveryPoints(user, pictureCategory, aiResult.getLabel());
+        int picturePoints = discoveryService.awardDiscoveryPoints(user, pictureCategory, aiResult.getLabel(), imageUrl);
 
         picture.setPointsAwarded(picturePoints);
         Picture savedPicture = pictureRepository.save(picture);

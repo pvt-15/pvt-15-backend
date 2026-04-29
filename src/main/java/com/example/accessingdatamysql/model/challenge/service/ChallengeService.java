@@ -171,6 +171,8 @@ public class ChallengeService {
 
                 task.setRequiredCount(taskRequest.getRequiredCount());
                 task.setMustBeUnique(taskRequest.isMustBeUnique());
+                task.setReferenceImageUrl(taskRequest.getReferenceImageUrl());
+                task.setHelpText(taskRequest.getHelpText());
 
                 challenge.getTasks().add(task);
             }
@@ -270,7 +272,9 @@ public class ChallengeService {
                 challengeTask.getRequiredLabel(),
                 requiredCategory,
                 challengeTask.getRequiredCount(),
-                challengeTask.isMustBeUnique()
+                challengeTask.isMustBeUnique(),
+                challengeTask.getReferenceImageUrl(),
+                challengeTask.getHelpText()
         );
     }
 }

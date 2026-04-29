@@ -1,6 +1,7 @@
-package com.example.accessingdatamysql.user.entity;
+package com.example.accessingdatamysql.picture.entity;
 
 import com.example.accessingdatamysql.picture.enums.PictureCategory;
+import com.example.accessingdatamysql.user.entity.User;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -20,6 +21,9 @@ public class UserDiscovery {
 
     private String normalizedLabel;
     private LocalDateTime discoveredAt;
+
+    private String displayLabel;
+    private String imageUrl;
 
     public UserDiscovery(){
 
@@ -45,6 +49,14 @@ public class UserDiscovery {
         return discoveredAt;
     }
 
+    public String getDisplayLabel() {
+        return displayLabel;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
     public void setId(Integer id) {
         this.id = id;
     }
@@ -63,5 +75,13 @@ public class UserDiscovery {
 
     public void setDiscoveredAt(LocalDateTime discoveredAt) {
         this.discoveredAt = discoveredAt;
+    }
+
+    public void setDisplayLabel(String displayLabel) {
+        this.displayLabel = displayLabel;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 }

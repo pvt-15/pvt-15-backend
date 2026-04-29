@@ -27,6 +27,11 @@ public class ChallengeTask {
     private Integer requiredCount;
     private boolean mustBeUnique;
 
+    private String referenceImageUrl;
+
+    @Column(length = 1000)
+    private String helpText;
+
     public ChallengeTask() {
     }
 
@@ -92,5 +97,21 @@ public class ChallengeTask {
 
     public void setMustBeUnique(boolean mustBeUnique) {
         this.mustBeUnique = mustBeUnique;
+    }
+
+    public String getReferenceImageUrl() {
+        return referenceImageUrl;
+    }
+
+    public void setReferenceImageUrl(String referenceImageUrl) {
+        this.referenceImageUrl = referenceImageUrl;
+    }
+
+    public String getHelpText() {
+        return helpText;
+    }
+
+    public void setHelpText(String helpText) {
+        this.helpText = helpText;
     }
 }

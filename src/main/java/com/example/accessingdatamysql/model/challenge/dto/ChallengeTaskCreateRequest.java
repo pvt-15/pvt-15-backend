@@ -8,6 +8,8 @@ public class ChallengeTaskCreateRequest {
     private String requiredCategory;
     private Integer requiredCount;
     private boolean mustBeUnique;
+    private String referenceImageUrl;
+    private String helpText;
 
     public ChallengeTaskCreateRequest() {
 
@@ -59,6 +61,22 @@ public class ChallengeTaskCreateRequest {
 
     public void setMustBeUnique(boolean mustBeUnique) {
         this.mustBeUnique = mustBeUnique;
+    }
+
+    public String getReferenceImageUrl() {
+        return referenceImageUrl;
+    }
+
+    public void setReferenceImageUrl(String referenceImageUrl) {
+        this.referenceImageUrl = referenceImageUrl;
+    }
+
+    public String getHelpText() {
+        return helpText;
+    }
+
+    public void setHelpText(String helpText) {
+        this.helpText = helpText;
     }
 
 }

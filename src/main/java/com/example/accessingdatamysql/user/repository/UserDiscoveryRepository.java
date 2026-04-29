@@ -2,7 +2,7 @@ package com.example.accessingdatamysql.user.repository;
 
 import com.example.accessingdatamysql.user.entity.User;
 import com.example.accessingdatamysql.picture.enums.PictureCategory;
-import com.example.accessingdatamysql.user.entity.UserDiscovery;
+import com.example.accessingdatamysql.picture.entity.UserDiscovery;
 import org.springframework.data.repository.CrudRepository;
 
 import java.util.List;

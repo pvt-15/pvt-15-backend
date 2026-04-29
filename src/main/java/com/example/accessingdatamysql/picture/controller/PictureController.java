@@ -1,10 +1,7 @@
 package com.example.accessingdatamysql.picture.controller;
 
+import com.example.accessingdatamysql.picture.dto.*;
 import com.example.accessingdatamysql.user.entity.User;
-import com.example.accessingdatamysql.picture.dto.CreatePictureRequest;
-import com.example.accessingdatamysql.picture.dto.DiscoveryStatsResponse;
-import com.example.accessingdatamysql.picture.dto.PictureResponse;
-import com.example.accessingdatamysql.picture.dto.PictureStatsResponse;
 import com.example.accessingdatamysql.picture.service.DiscoveryService;
 import com.example.accessingdatamysql.picture.service.PictureService;
 import com.example.accessingdatamysql.user.repository.UserRepository;
@@ -71,6 +68,18 @@ public class PictureController {
         Integer userId = Integer.valueOf(jwt.getSubject());
         PictureResponse response = pictureService.getPictureById(userId, id);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/library")
+    public ResponseEntity<List<LibraryItemResponse>> getUniqueLibrary(@AuthenticationPrincipal Jwt jwt,
+                                                                      @RequestParam(required = false) String category,
+                                                                      @RequestParam(required = false) String sort) {
+        Integer userId = Integer.valueOf(jwt.getSubject());
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        return ResponseEntity.ok(discoveryService.getUniqueLibrary(user, category, sort));
     }
 
     @DeleteMapping("/{id}")
