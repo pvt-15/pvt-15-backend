@@ -45,7 +45,7 @@ public class MainController {
         return user.map(userMapper::toUserResponse).map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
-    
+
 
     @PatchMapping("/me/profile-image")
     public ResponseEntity<?> updateProfileImage(@AuthenticationPrincipal Jwt jwt,

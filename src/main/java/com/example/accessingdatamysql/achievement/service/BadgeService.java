@@ -1,5 +1,6 @@
 package com.example.accessingdatamysql.achievement.service;
 
+import com.example.accessingdatamysql.achievement.dto.BadgeResponse;
 import com.example.accessingdatamysql.achievement.entity.BadgeDefinition;
 import com.example.accessingdatamysql.achievement.entity.UserBadge;
 import com.example.accessingdatamysql.achievement.repository.BadgeDefinitionRepository;
@@ -10,6 +11,8 @@ import com.example.accessingdatamysql.user.repository.UserDiscoveryRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -36,7 +39,7 @@ public class BadgeService {
             if (uniqueCount >= badgeDefinition.getRequiredCount()) {
                 boolean alreadyUnlocked = userBadgeRepository.existsByUserAndBadgeDefinition(user, badgeDefinition);
 
-                if(!alreadyUnlocked){
+                if (!alreadyUnlocked) {
                     UserBadge userBadge = new UserBadge();
                     userBadge.setUser(user);
                     userBadge.setBadgeDefinition(badgeDefinition);
@@ -45,5 +48,28 @@ public class BadgeService {
                 }
             }
         }
+    }
+
+    public List<BadgeResponse> getMyBadges(User user) {
+        List<UserBadge> userBadges = userBadgeRepository.findByUser(user);
+        List<BadgeResponse> responses = new ArrayList<>();
+
+        userBadges.sort(Comparator.comparing(UserBadge::getUnlockedAt).reversed());
+
+        for(UserBadge userBadge : userBadges){
+            BadgeDefinition badge = userBadge.getBadgeDefinition();
+
+            responses.add(new BadgeResponse(
+                    userBadge.getId(),
+                    badge.getCode(),
+                    badge.getName(),
+                    badge.getDescription(),
+                    badge.getCategory().name(),
+                    badge.getTier().name(),
+                    badge.getRequiredCount(),
+                    userBadge.getUnlockedAt() != null ? userBadge.getUnlockedAt().toString() : null
+            ));
+        }
+        return responses;
     }
 }
