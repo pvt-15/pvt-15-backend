@@ -69,8 +69,12 @@ public class PictureServiceTest {
         when(userRepository.findById(1)).thenReturn(Optional.of(user));
         when(natureAiService.identifyImage("https://example.com/red-clover.jpg", TargetType.PLANT))
                 .thenReturn(aiResult);
-        when(discoveryService.awardDiscoveryPoints(user, PictureCategory.FLOWER, "Red clover", "red_clover.png"))
-                .thenReturn(5);
+        when(discoveryService.awardDiscoveryPoints(
+                user,
+                PictureCategory.FLOWER,
+                "Red clover",
+                "https://example.com/red-clover.jpg"
+        )).thenReturn(5);
         when(pictureRepository.save(any(Picture.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(challengeProgressService.updateProgressFromPicture(eq(user), any(Picture.class)))
                 .thenReturn(100);
@@ -108,8 +112,12 @@ public class PictureServiceTest {
         when(userRepository.findById(1)).thenReturn(Optional.of(user));
         when(natureAiService.identifyImage("https://example.com/oak.jpg", TargetType.PLANT))
                 .thenReturn(aiResult);
-        when(discoveryService.awardDiscoveryPoints(user, PictureCategory.TREE, "Oak", "oak.png"))
-                .thenReturn(0);
+        when(discoveryService.awardDiscoveryPoints(
+                user,
+                PictureCategory.TREE,
+                "Oak",
+                "https://example.com/oak.jpg"
+        )).thenReturn(0);
         when(pictureRepository.save(any(Picture.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         PictureResponse response = pictureService.createPicture(1, request);
