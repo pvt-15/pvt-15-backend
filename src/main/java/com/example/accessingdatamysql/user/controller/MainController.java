@@ -55,6 +55,9 @@ public class MainController {
         return "saved";
     }
 
+    @PatchMapping("me/profile-image")
+    
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUserById(@PathVariable Integer id) {
         userRepository.deleteById(id);

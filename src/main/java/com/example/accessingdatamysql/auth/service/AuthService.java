@@ -119,7 +119,8 @@ public class AuthService {
                 savedUser.getName(),
                 savedUser.getEmail(),
                 REGISTER_SUCCESS,
-                token);
+                token,
+                savedUser.getProfileImageUrl());
     }
 
     /**
@@ -163,7 +164,8 @@ public class AuthService {
                 user.getName(),
                 user.getEmail(),
                 LOGIN_SUCCESS,
-                token);
+                token,
+                user.getProfileImageUrl());
     }
 
     /**
@@ -234,7 +236,8 @@ public class AuthService {
                 user.getName(),
                 user.getEmail(),
                 GOOGLE_LOGIN_SUCCESS,
-                token);
+                token,
+                user.getProfileImageUrl());
     }
 
     /**

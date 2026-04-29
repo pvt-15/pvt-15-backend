@@ -14,6 +14,7 @@ public class AuthResponse {
     private String email;
     private String message;
     private String token;
+    private String profileImageUrl;
 
     public AuthResponse() {
 
@@ -23,12 +24,14 @@ public class AuthResponse {
                         String name,
                         String email,
                         String message,
-                        String token) {
+                        String token,
+                        String profileImageUrl) {
         this.userId = userId;
         this.name = name;
         this.email = email;
         this.message = message;
         this.token = token;
+        this.profileImageUrl = profileImageUrl;
     }
 
     public Integer getUserId() {
@@ -51,6 +54,10 @@ public class AuthResponse {
         return token;
     }
 
+    public String getProfileImageUrl() {
+        return profileImageUrl;
+    }
+
     public void setUserId(Integer userId) {
         this.userId = userId;
     }
@@ -69,5 +76,9 @@ public class AuthResponse {
 
     public void setToken(String token) {
         this.token = token;
+    }
+
+    public void setProfileImageUrl(String profileImageUrl) {
+        this.profileImageUrl = profileImageUrl;
     }
 }

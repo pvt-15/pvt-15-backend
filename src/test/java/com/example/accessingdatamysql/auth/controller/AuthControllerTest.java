@@ -56,7 +56,8 @@ class AuthControllerTest {
                 "Test User",
                 "Test.User@example.com",
                 "User registered successfully",
-                "jwt-token"
+                "jwt-token",
+                "mock-image.png"
         );
 
         when(authService.register(any(RegisterRequest.class))).thenReturn(response);
@@ -69,7 +70,8 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.name").value("Test User"))
                 .andExpect(jsonPath("$.email").value("Test.User@example.com"))
                 .andExpect(jsonPath("$.message").value("User registered successfully"))
-                .andExpect(jsonPath("$.token").value("jwt-token"));
+                .andExpect(jsonPath("$.token").value("jwt-token"))
+                .andExpect(jsonPath("$.profileImageUrl").value("mock-image.png"));
 
         verify(authService).register(any(RegisterRequest.class));
     }
