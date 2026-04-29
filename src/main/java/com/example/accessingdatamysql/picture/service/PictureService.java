@@ -1,5 +1,6 @@
 package com.example.accessingdatamysql.picture.service;
 
+import com.example.accessingdatamysql.achievement.service.BadgeService;
 import com.example.accessingdatamysql.user.entity.User;
 import com.example.accessingdatamysql.model.challenge.service.ChallengeProgressService;
 import com.example.accessingdatamysql.user.enums.Level;
@@ -34,17 +35,19 @@ public class PictureService {
     private final NatureAiService natureAiService;
     private final DiscoveryService discoveryService;
     private final ChallengeProgressService challengeProgressService;
+    private final BadgeService badgeService;
 
     public PictureService(PictureRepository pictureRepository,
                           UserRepository userRepository,
                           NatureAiService natureAiService,
                           DiscoveryService discoveryService,
-                          ChallengeProgressService challengeProgressService) {
+                          ChallengeProgressService challengeProgressService, BadgeService badgeService) {
         this.pictureRepository = pictureRepository;
         this.userRepository = userRepository;
         this.natureAiService = natureAiService;
         this.discoveryService = discoveryService;
         this.challengeProgressService = challengeProgressService;
+        this.badgeService = badgeService;
     }
 
     @Transactional
@@ -89,6 +92,7 @@ public class PictureService {
 
         if (picturePoints > 0) {
             user.setTotalPoints(user.getTotalPoints() + picturePoints);
+            badgeService.checkAndUnlockCategoryBadges(user, pictureCategory);
         }
 
         if (pictureMode == PictureMode.CHALLENGE) {

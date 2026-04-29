@@ -45,19 +45,7 @@ public class MainController {
         return user.map(userMapper::toUserResponse).map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
-
-    @PostMapping
-    public String addNewUser(@RequestParam String name,
-                             @RequestParam String email,
-                             @RequestParam String passwordHash,
-                             @RequestParam Provider provider,
-                             @RequestParam int totalPoints,
-                             @RequestParam Level level,
-                             @RequestParam String profileImageUrl) {
-        userRepository.save(new User(name, email, passwordHash, provider, totalPoints, level, profileImageUrl));
-        return "saved";
-    }
-
+    
 
     @PatchMapping("/me/profile-image")
     public ResponseEntity<?> updateProfileImage(@AuthenticationPrincipal Jwt jwt,
