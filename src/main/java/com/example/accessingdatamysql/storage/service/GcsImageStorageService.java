@@ -32,7 +32,6 @@ public class GcsImageStorageService implements ImageStorageService {
         try {
             String contentType = file.getContentType();
             String extension = getExtension(file.getOriginalFilename());
-
             String objectKey = buildObjectKey(folder, userId, extension);
 
             BlobId blobId = BlobId.of(storageProperties.getBucketName(), objectKey);
@@ -49,7 +48,8 @@ public class GcsImageStorageService implements ImageStorageService {
 
             return new ImageUploadResponse(imageUrl, objectKey);
 
-        } catch (IOException e) {
+        } catch (Exception e) {
+            e.printStackTrace();
             throw new IllegalStateException("Could not upload image to Google Cloud Storage", e);
         }
     }
