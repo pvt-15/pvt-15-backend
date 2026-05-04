@@ -26,14 +26,13 @@ class GcsImageStorageServiceTest {
     void setUp() {
         storage = mock(Storage.class);
         storageProperties = mock(StorageProperties.class);
-
-        when(storageProperties.getBucketName()).thenReturn("my-test-bucket");
-
         gcsImageStorageService = new GcsImageStorageService(storage, storageProperties);
     }
 
     @Test
     void uploadImage_shouldUploadToGcsAndReturnResponse() {
+        when(storageProperties.getBucketName()).thenReturn("my-test-bucket");
+
         MockMultipartFile file = new MockMultipartFile(
                 "file",
                 "flower.jpg",
@@ -70,6 +69,8 @@ class GcsImageStorageServiceTest {
 
     @Test
     void uploadImage_shouldUseDefaultJpgExtensionWhenFilenameHasNoExtension() {
+        when(storageProperties.getBucketName()).thenReturn("my-test-bucket");
+
         MockMultipartFile file = new MockMultipartFile(
                 "file",
                 "flower",

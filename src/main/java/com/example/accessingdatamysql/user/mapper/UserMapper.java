@@ -31,7 +31,7 @@ public class UserMapper {
                 user.getProvider(),
                 user.getProviderUserId(),
                 user.getTotalPoints(),
-                user.getLevel().getType(),
+                user.getLevel().name(),
                 user.getProfileImageUrl()
         );
     }
