@@ -15,7 +15,8 @@ public class GoogleCloudStorageConfig {
     @Bean
     public Storage storage(StorageProperties storageProperties) {
         try {
-            if (storageProperties.getCredentialsBase64() == null || storageProperties.getCredentialsBase64().isBlank()) {
+            if (storageProperties.getCredentialsBase64() == null
+                    || storageProperties.getCredentialsBase64().isBlank()) {
                 throw new IllegalStateException("gcs.credentials.base64 is missing");
             }
 
@@ -30,7 +31,6 @@ public class GoogleCloudStorageConfig {
                     .setCredentials(credentials)
                     .build()
                     .getService();
-
         } catch (Exception e) {
             throw new IllegalStateException("Could not create Google Cloud Storage client", e);
         }

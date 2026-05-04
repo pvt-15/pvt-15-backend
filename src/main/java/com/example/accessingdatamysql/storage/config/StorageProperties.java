@@ -23,7 +23,6 @@ public class StorageProperties {
         return credentialsBase64;
     }
 
-
     public String getProjectId() {
         return projectId;
     }
