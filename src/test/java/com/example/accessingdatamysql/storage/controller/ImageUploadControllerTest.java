@@ -4,38 +4,32 @@ import com.example.accessingdatamysql.storage.dto.ImageUploadResponse;
 import com.example.accessingdatamysql.storage.enums.StorageFolder;
 import com.example.accessingdatamysql.storage.service.ImageStorageService;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.MockMvc;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(ImageUploadController.class)
+@ExtendWith(MockitoExtension.class)
 class ImageUploadControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
-
-    @MockitoBean
+    @Mock
     private ImageStorageService imageStorageService;
 
-    @MockitoBean
-    private JwtDecoder jwtDecoder;
+    @InjectMocks
+    private ImageUploadController imageUploadController;
 
     @Test
-    void uploadProfileImage_shouldReturnImageUploadResponse() throws Exception {
+    void uploadProfileImage_shouldReturnImageUploadResponse() {
+        Jwt jwt = createJwt("1");
+
         MockMultipartFile file = new MockMultipartFile(
                 "file",
                 "avatar.png",
@@ -43,35 +37,35 @@ class ImageUploadControllerTest {
                 "fake-image-content".getBytes()
         );
 
-        ImageUploadResponse response = new ImageUploadResponse(
+        ImageUploadResponse uploadResponse = new ImageUploadResponse(
                 "https://storage.googleapis.com/my-bucket/profile-images/user-1/avatar.png",
                 "profile-images/user-1/avatar.png"
         );
 
-        when(imageStorageService.uploadImage(any(), eq(StorageFolder.PROFILE_IMAGES), eq(1)))
-                .thenReturn(response);
+        when(imageStorageService.uploadImage(file, StorageFolder.PROFILE_IMAGES, 1))
+                .thenReturn(uploadResponse);
 
-        Jwt jwt = Jwt.withTokenValue("token")
-                .header("alg", "none")
-                .claim("sub", "1")
-                .build();
+        ResponseEntity<ImageUploadResponse> response =
+                imageUploadController.uploadProfileImage(jwt, file);
 
-        mockMvc.perform(
-                        multipart("/uploads/profile-image")
-                                .file(file)
-                                .with(authentication(new JwtAuthenticationToken(jwt)))
-                )
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.imageUrl")
-                        .value("https://storage.googleapis.com/my-bucket/profile-images/user-1/avatar.png"))
-                .andExpect(jsonPath("$.objectKey")
-                        .value("profile-images/user-1/avatar.png"));
+        assertEquals(200, response.getStatusCode().value());
+        assertNotNull(response.getBody());
+        assertEquals(
+                "https://storage.googleapis.com/my-bucket/profile-images/user-1/avatar.png",
+                response.getBody().getImageUrl()
+        );
+        assertEquals(
+                "profile-images/user-1/avatar.png",
+                response.getBody().getObjectKey()
+        );
 
-        verify(imageStorageService).uploadImage(any(), eq(StorageFolder.PROFILE_IMAGES), eq(1));
+        verify(imageStorageService).uploadImage(file, StorageFolder.PROFILE_IMAGES, 1);
     }
 
     @Test
-    void uploadPicture_shouldReturnImageUploadResponse() throws Exception {
+    void uploadPicture_shouldReturnImageUploadResponse() {
+        Jwt jwt = createJwt("1");
+
         MockMultipartFile file = new MockMultipartFile(
                 "file",
                 "flower.jpg",
@@ -79,35 +73,35 @@ class ImageUploadControllerTest {
                 "fake-picture-content".getBytes()
         );
 
-        ImageUploadResponse response = new ImageUploadResponse(
+        ImageUploadResponse uploadResponse = new ImageUploadResponse(
                 "https://storage.googleapis.com/my-bucket/pictures/user-1/flower.jpg",
                 "pictures/user-1/flower.jpg"
         );
 
-        when(imageStorageService.uploadImage(any(), eq(StorageFolder.PICTURES), eq(1)))
-                .thenReturn(response);
+        when(imageStorageService.uploadImage(file, StorageFolder.PICTURES, 1))
+                .thenReturn(uploadResponse);
 
-        Jwt jwt = Jwt.withTokenValue("token")
-                .header("alg", "none")
-                .claim("sub", "1")
-                .build();
+        ResponseEntity<ImageUploadResponse> response =
+                imageUploadController.uploadPicture(jwt, file);
 
-        mockMvc.perform(
-                        multipart("/uploads/picture")
-                                .file(file)
-                                .with(authentication(new JwtAuthenticationToken(jwt)))
-                )
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.imageUrl")
-                        .value("https://storage.googleapis.com/my-bucket/pictures/user-1/flower.jpg"))
-                .andExpect(jsonPath("$.objectKey")
-                        .value("pictures/user-1/flower.jpg"));
+        assertEquals(200, response.getStatusCode().value());
+        assertNotNull(response.getBody());
+        assertEquals(
+                "https://storage.googleapis.com/my-bucket/pictures/user-1/flower.jpg",
+                response.getBody().getImageUrl()
+        );
+        assertEquals(
+                "pictures/user-1/flower.jpg",
+                response.getBody().getObjectKey()
+        );
 
-        verify(imageStorageService).uploadImage(any(), eq(StorageFolder.PICTURES), eq(1));
+        verify(imageStorageService).uploadImage(file, StorageFolder.PICTURES, 1);
     }
 
     @Test
-    void uploadChallengeImage_shouldReturnImageUploadResponse() throws Exception {
+    void uploadChallengeImage_shouldReturnImageUploadResponse() {
+        Jwt jwt = createJwt("1");
+
         MockMultipartFile file = new MockMultipartFile(
                 "file",
                 "challenge.png",
@@ -115,30 +109,35 @@ class ImageUploadControllerTest {
                 "fake-challenge-content".getBytes()
         );
 
-        ImageUploadResponse response = new ImageUploadResponse(
+        ImageUploadResponse uploadResponse = new ImageUploadResponse(
                 "https://storage.googleapis.com/my-bucket/challenge-images/user-1/challenge.png",
                 "challenge-images/user-1/challenge.png"
         );
 
-        when(imageStorageService.uploadImage(any(), eq(StorageFolder.CHALLENGE_IMAGES), eq(1)))
-                .thenReturn(response);
+        when(imageStorageService.uploadImage(file, StorageFolder.CHALLENGE_IMAGES, 1))
+                .thenReturn(uploadResponse);
 
-        Jwt jwt = Jwt.withTokenValue("token")
+        ResponseEntity<ImageUploadResponse> response =
+                imageUploadController.uploadChallengeImage(jwt, file);
+
+        assertEquals(200, response.getStatusCode().value());
+        assertNotNull(response.getBody());
+        assertEquals(
+                "https://storage.googleapis.com/my-bucket/challenge-images/user-1/challenge.png",
+                response.getBody().getImageUrl()
+        );
+        assertEquals(
+                "challenge-images/user-1/challenge.png",
+                response.getBody().getObjectKey()
+        );
+
+        verify(imageStorageService).uploadImage(file, StorageFolder.CHALLENGE_IMAGES, 1);
+    }
+
+    private Jwt createJwt(String subject) {
+        return Jwt.withTokenValue("token")
                 .header("alg", "none")
-                .claim("sub", "1")
+                .claim("sub", subject)
                 .build();
-
-        mockMvc.perform(
-                        multipart("/uploads/challenge-image")
-                                .file(file)
-                                .with(authentication(new JwtAuthenticationToken(jwt)))
-                )
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.imageUrl")
-                        .value("https://storage.googleapis.com/my-bucket/challenge-images/user-1/challenge.png"))
-                .andExpect(jsonPath("$.objectKey")
-                        .value("challenge-images/user-1/challenge.png"));
-
-        verify(imageStorageService).uploadImage(any(), eq(StorageFolder.CHALLENGE_IMAGES), eq(1));
     }
 }
