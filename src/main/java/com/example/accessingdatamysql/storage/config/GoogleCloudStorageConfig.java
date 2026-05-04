@@ -7,7 +7,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.io.ByteArrayInputStream;
-import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 
 @Configuration
 public class GoogleCloudStorageConfig {
@@ -15,10 +15,10 @@ public class GoogleCloudStorageConfig {
     @Bean
     public Storage storage(StorageProperties storageProperties) {
         try {
+            byte[] decoded = Base64.getDecoder().decode(storageProperties.getCredentialsBase64());
+
             GoogleCredentials credentials = GoogleCredentials.fromStream(
-                    new ByteArrayInputStream(
-                            storageProperties.getCredentialsJson().getBytes(StandardCharsets.UTF_8)
-                    )
+                    new ByteArrayInputStream(decoded)
             );
 
             return StorageOptions.newBuilder()

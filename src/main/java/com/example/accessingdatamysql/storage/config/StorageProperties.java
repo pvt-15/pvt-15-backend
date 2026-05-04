@@ -9,7 +9,7 @@ public class StorageProperties {
 
     private String bucketName;
     private String projectId;
-    private String credentialsJson;
+    private String credentialsBase64;
 
     public String getBucketName() {
         return bucketName;
@@ -19,9 +19,10 @@ public class StorageProperties {
         this.bucketName = bucketName;
     }
 
-    public void setCredentialsJson(String credentialsJson) {
-        this.credentialsJson = credentialsJson;
+    public String getCredentialsBase64() {
+        return credentialsBase64;
     }
+
 
     public String getProjectId() {
         return projectId;
@@ -31,7 +32,7 @@ public class StorageProperties {
         this.projectId = projectId;
     }
 
-    public String getCredentialsJson() {
-        return credentialsJson;
+    public void setCredentialsBase64(String credentialsBase64) {
+        this.credentialsBase64 = credentialsBase64;
     }
 }
