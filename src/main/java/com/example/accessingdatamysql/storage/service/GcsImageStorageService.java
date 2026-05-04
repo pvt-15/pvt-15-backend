@@ -30,12 +30,14 @@ public class GcsImageStorageService implements ImageStorageService {
         }
 
         try {
+            String contentType = file.getContentType();
             String extension = getExtension(file.getOriginalFilename());
+
             String objectKey = buildObjectKey(folder, userId, extension);
 
             BlobId blobId = BlobId.of(storageProperties.getBucketName(), objectKey);
             BlobInfo blobInfo = BlobInfo.newBuilder(blobId)
-                    .setContentType(file.getContentType())
+                    .setContentType(contentType)
                     .build();
 
             storage.create(blobInfo, file.getBytes());
@@ -60,14 +62,21 @@ public class GcsImageStorageService implements ImageStorageService {
             case CHALLENGE_IMAGES -> "challenge-images";
         };
 
-        String userPart = userId == null ? "shared" : "user-" + userId;
-        return folderName + "/" + userPart + "/" + UUID.randomUUID() + extension;
+        String ownerPart = userId == null ? "shared" : "user-" + userId;
+        return folderName + "/" + ownerPart + "/" + UUID.randomUUID() + extension;
     }
 
     private String getExtension(String filename) {
         if (filename == null || !filename.contains(".")) {
             return ".jpg";
         }
-        return filename.substring(filename.lastIndexOf("."));
+
+        String extension = filename.substring(filename.lastIndexOf(".")).toLowerCase();
+
+        if (extension.length() > 10) {
+            return ".jpg";
+        }
+
+        return extension;
     }
 }
