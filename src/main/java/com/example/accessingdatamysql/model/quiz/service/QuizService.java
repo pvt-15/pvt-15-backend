@@ -160,6 +160,61 @@ public class QuizService {
         );
     }
 
+    @Transactional
+    public QuizQuestionResponse createQuiz(QuizCreateRequest request){
+        validateQuizCreateRequest(request);
+
+        QuizQuestion question = new QuizQuestion();
+        question.setQuestionText(request.getQuestionText());
+        question.setDifficulty(QuizDifficulty.valueOf(request.getDifficulty().toUpperCase()));
+        question.setActive(request.isActive());
+        question.setImageUrl(request.getImageUrl());
+        question.setExplanation(request.getExplanation());
+
+        for (QuizOptionCreateRequest optionRequest : request.getOptions()) {
+            QuizOption option = new QuizOption();
+            option.setOptionText(optionRequest.getOptionText());
+            option.setImageUrl(optionRequest.getImageUrl());
+            option.setCorrect(optionRequest.isCorrect());
+            option.setQuizQuestion(question);
+
+            question.getOptions().add(option);
+        }
+
+        QuizQuestion savedQuestion = quizQuestionRepository.save(question);
+
+        List<QuizOptionResponse> optionResponses = new ArrayList<>();
+        for (QuizOption option : savedQuestion.getOptions()) {
+            optionResponses.add(new QuizOptionResponse(
+                    option.getId(),
+                    option.getOptionText(),
+                    option.getImageUrl()
+            ));
+        }
+
+        return new QuizQuestionResponse(
+                savedQuestion.getId(),
+                savedQuestion.getQuestionText(),
+                savedQuestion.getImageUrl(),
+                optionResponses
+        );
+    }
+
+    private void validateQuizCreateRequest(QuizCreateRequest request){
+        if (request == null) {
+            throw new IllegalArgumentException("Request body is required");
+        }
+        if (request.getQuestionText() == null || request.getQuestionText().isBlank()) {
+            throw new IllegalArgumentException("Question text is required");
+        }
+        if (request.getDifficulty() == null || request.getDifficulty().isBlank()) {
+            throw new IllegalArgumentException("Quiz difficulty is required");
+        }
+        if (request.getOptions() == null || request.getOptions().size() < 2) {
+            throw new IllegalArgumentException("At least two options are required");
+        }
+    }
+
     private int calculateQuizPoints(QuizDifficulty difficulty, int score, int totalQuestions) {
         if (totalQuestions == 0) {
             return 0;

@@ -36,7 +36,7 @@ public class UserResponse {
                         Provider provider,
                         String providerUserId,
                         int totalPoints,
-                        Level level,
+                        String level,
                         String profileImageUrl) {
         this.id = id;
         this.name = name;
@@ -44,7 +44,7 @@ public class UserResponse {
         this.provider = provider;
         this.providerUserId = providerUserId;
         this.totalPoints = totalPoints;
-        this.level = level;
+        this.level = Level.valueOf(level);
         this.profileImageUrl = profileImageUrl;
     }
 
