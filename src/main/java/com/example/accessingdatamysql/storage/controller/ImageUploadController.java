@@ -26,12 +26,19 @@ public class ImageUploadController {
     }
 
     @PostMapping("/profile-image")
-    public ResponseEntity<ImageUploadResponse> uploadProfileImage(@AuthenticationPrincipal Jwt jwt,
-                                                                  @RequestParam("file") MultipartFile file) {
-        Integer userId = Integer.valueOf(jwt.getSubject());
-        return ResponseEntity.ok(
-                imageStorageService.uploadImage(file, StorageFolder.PROFILE_IMAGES, userId)
-        );
+    public ResponseEntity<?> uploadProfileImage(@AuthenticationPrincipal Jwt jwt,
+                                                @RequestParam("file") MultipartFile file) {
+        try {
+            Integer userId = Integer.valueOf(jwt.getSubject());
+            return ResponseEntity.ok(
+                    imageStorageService.uploadImage(file, StorageFolder.PROFILE_IMAGES, userId)
+            );
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of(
+                    "error", e.getClass().getSimpleName(),
+                    "message", e.getMessage()
+            ));
+        }
     }
 
     @PostMapping("/picture")

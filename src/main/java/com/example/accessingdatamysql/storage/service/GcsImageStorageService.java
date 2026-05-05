@@ -6,6 +6,7 @@ import com.example.accessingdatamysql.storage.enums.StorageFolder;
 import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.Storage;
+import com.google.cloud.storage.StorageException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -48,9 +49,15 @@ public class GcsImageStorageService implements ImageStorageService {
 
             return new ImageUploadResponse(imageUrl, objectKey);
 
+        } catch (StorageException e) {
+            throw new IllegalStateException(
+                    "GCS upload failed. Code: " + e.getCode() + ", Message: " + e.getMessage(),
+                    e
+            );
+        } catch (IOException e) {
+            throw new IllegalStateException("Could not read uploaded file", e);
         } catch (Exception e) {
-            e.printStackTrace();
-            throw new IllegalStateException("Could not upload image to Google Cloud Storage", e);
+            throw new IllegalStateException("Unexpected upload error: " + e.getMessage(), e);
         }
     }
 
