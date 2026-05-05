@@ -46,7 +46,7 @@ class ImageUploadControllerTest {
                 .thenReturn(uploadResponse);
 
         ResponseEntity<ImageUploadResponse> response =
-                imageUploadController.uploadProfileImage(jwt, file);
+                (ResponseEntity<ImageUploadResponse>) imageUploadController.uploadProfileImage(jwt, file);
 
         assertEquals(200, response.getStatusCode().value());
         assertNotNull(response.getBody());
