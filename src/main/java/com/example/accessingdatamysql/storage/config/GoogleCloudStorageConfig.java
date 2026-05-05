@@ -15,15 +15,22 @@ public class GoogleCloudStorageConfig {
     @Bean
     public Storage storage(StorageProperties storageProperties) {
         try {
-            if (storageProperties.getCredentialsBase64() == null
-                    || storageProperties.getCredentialsBase64().isBlank()) {
-                throw new IllegalStateException("gcs.credentials.base64 is missing");
+            if (storageProperties.getBucketName() == null || storageProperties.getBucketName().isBlank()) {
+                throw new IllegalStateException("gcs.bucket-name is missing");
             }
 
-            byte[] decoded = Base64.getDecoder().decode(storageProperties.getCredentialsBase64());
+            if (storageProperties.getProjectId() == null || storageProperties.getProjectId().isBlank()) {
+                throw new IllegalStateException("gcs.project-id is missing");
+            }
+
+            if (storageProperties.getCredentialsBase64() == null || storageProperties.getCredentialsBase64().isBlank()) {
+                throw new IllegalStateException("gcs.credentials-base64 is missing");
+            }
+
+            byte[] decodedCredentials = Base64.getDecoder().decode(storageProperties.getCredentialsBase64());
 
             GoogleCredentials credentials = GoogleCredentials.fromStream(
-                    new ByteArrayInputStream(decoded)
+                    new ByteArrayInputStream(decodedCredentials)
             );
 
             return StorageOptions.newBuilder()
@@ -31,12 +38,9 @@ public class GoogleCloudStorageConfig {
                     .setCredentials(credentials)
                     .build()
                     .getService();
+
         } catch (Exception e) {
-            e.printStackTrace();
-            throw new IllegalStateException(
-                    "Could not upload image to Google Cloud Storage: " + e.getClass().getSimpleName() + " - " + e.getMessage(),
-                    e
-            );
+            throw new IllegalStateException("Could not create Google Cloud Storage client", e);
         }
     }
 }
