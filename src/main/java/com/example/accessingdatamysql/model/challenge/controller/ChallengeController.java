@@ -3,6 +3,7 @@ package com.example.accessingdatamysql.model.challenge.controller;
 import com.example.accessingdatamysql.model.challenge.dto.ChallengeCreateRequest;
 import com.example.accessingdatamysql.model.challenge.dto.ChallengeDetailsResponse;
 import com.example.accessingdatamysql.model.challenge.dto.ChallengeResponse;
+import com.example.accessingdatamysql.model.challenge.dto.ChallengeStartRandomRequest;
 import com.example.accessingdatamysql.model.challenge.service.ChallengeService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -38,6 +39,13 @@ public class ChallengeController {
                                                                      @PathVariable Integer id) {
         Integer userId = Integer.valueOf(jwt.getSubject());
         return ResponseEntity.ok(challengeService.getChallengeById(userId, id));
+    }
+
+    @PostMapping("/start")
+    public ResponseEntity<ChallengeResponse> startRandomChallenge(@AuthenticationPrincipal Jwt jwt,
+                                                                  @RequestBody ChallengeStartRandomRequest request) {
+        Integer userId = Integer.valueOf(jwt.getSubject());
+        return ResponseEntity.ok(challengeService.startRandomChallenge(userId, request));
     }
 
     @PostMapping("/{id}/start")

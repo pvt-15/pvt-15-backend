@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -33,6 +34,10 @@ public class ChallengeService {
     private static final String EMPTY_CHALLENGE_TITLE = "Challenge title is required";
     private static final String EMPTY_CHALLENGE_TYPE = "Challenge type is required";
     private static final String EMPTY_CHALLENGE_DIFFICULTY = "Challenge difficulty is required";
+    private static final String EMPTY_RANDOM_CHALLENGE_REQUEST = "Random challenge request is required";
+    private static final String EMPTY_RANDOM_CHALLENGE_DIFFICULTY = "Challenge difficulty is required";
+    private static final String EMPTY_RANDOM_CHALLENGE_TYPE = "Challenge type is required";
+    private static final String NO_RANDOM_CHALLENGE_FOUND = "No available challenge found for selected difficulty and type";
 
     private final ChallengeRepository challengeRepository;
     private final UserRepository userRepository;
@@ -198,6 +203,55 @@ public class ChallengeService {
                 ChallengeStatus.NOT_STARTED.name(),
                 taskResponses
         );
+    }
+
+    @Transactional
+    public ChallengeResponse startRandomChallenge(Integer userId, ChallengeStartRandomRequest request) {
+        User user = getUserById(userId);
+
+        if (request == null) {
+            throw new IllegalArgumentException(EMPTY_RANDOM_CHALLENGE_REQUEST);
+        }
+
+        if (request.getChallengeDifficulty() == null || request.getChallengeDifficulty().isBlank()) {
+            throw new IllegalArgumentException(EMPTY_RANDOM_CHALLENGE_DIFFICULTY);
+        }
+
+        if (request.getChallengeType() == null || request.getChallengeType().isBlank()) {
+            throw new IllegalArgumentException(EMPTY_RANDOM_CHALLENGE_TYPE);
+        }
+
+        ChallengeDifficulty difficulty = ChallengeDifficulty.valueOf(
+                request.getChallengeDifficulty().toUpperCase()
+        );
+
+        ChallengeType type = ChallengeType.valueOf(
+                request.getChallengeType().toUpperCase()
+        );
+
+        List<Challenge> matchingChallenges =
+                challengeRepository.findByActiveTrueAndDifficultyAndType(difficulty, type);
+
+        List<Challenge> availableChallenges = new ArrayList<>();
+
+        for (Challenge challenge : matchingChallenges) {
+            Optional<UserChallengeProgress> existingProgress =
+                    userChallengeProgressRepository.findByUserAndChallenge(user, challenge);
+
+            if (existingProgress.isEmpty()) {
+                availableChallenges.add(challenge);
+            }
+        }
+
+        if (availableChallenges.isEmpty()) {
+            throw new IllegalArgumentException(NO_RANDOM_CHALLENGE_FOUND);
+        }
+
+        Collections.shuffle(availableChallenges);
+
+        Challenge selectedChallenge = availableChallenges.get(0);
+
+        return startChallenge(userId, selectedChallenge.getId());
     }
 
     private void createTaskProgress(Challenge challenge, UserChallengeProgress savedProgress) {
