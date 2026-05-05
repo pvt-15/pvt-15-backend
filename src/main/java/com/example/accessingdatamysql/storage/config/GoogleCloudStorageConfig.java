@@ -32,7 +32,11 @@ public class GoogleCloudStorageConfig {
                     .build()
                     .getService();
         } catch (Exception e) {
-            throw new IllegalStateException("Could not create Google Cloud Storage client", e);
+            e.printStackTrace();
+            throw new IllegalStateException(
+                    "Could not upload image to Google Cloud Storage: " + e.getClass().getSimpleName() + " - " + e.getMessage(),
+                    e
+            );
         }
     }
 }
