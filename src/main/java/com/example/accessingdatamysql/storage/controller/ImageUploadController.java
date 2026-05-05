@@ -67,7 +67,8 @@ public class ImageUploadController {
                 "credentialsBase64Present", storageProperties.getCredentialsBase64() != null && !storageProperties.getCredentialsBase64().isBlank(),
                 "bucketNameLength", storageProperties.getBucketName() == null ? 0 : storageProperties.getBucketName().length(),
                 "projectIdLength", storageProperties.getProjectId() == null ? 0 : storageProperties.getProjectId().length(),
-                "credentialsBase64Length", storageProperties.getCredentialsBase64() == null ? 0 : storageProperties.getCredentialsBase64().length()
+                "credentialsBase64Length", storageProperties.getCredentialsBase64() == null ? 0 : storageProperties.getCredentialsBase64().length(),
+                "bucketName", storageProperties.getBucketName()
         ));
     }
 }
