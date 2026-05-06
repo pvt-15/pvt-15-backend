@@ -91,12 +91,18 @@ public class PictureService {
         picture.setPictureMode(pictureMode);
         picture.setUser(user);
 
-        int picturePoints = discoveryService.awardDiscoveryPoints(user, pictureCategory, aiResult.getLabel(), imageUrl);
+        int picturePoints = discoveryService.awardDiscoveryPoints(
+                user,
+                pictureCategory,
+                aiResult.getLabel(),
+                imageUrl
+        );
 
         picture.setPointsAwarded(picturePoints);
+
         Picture savedPicture = pictureRepository.save(picture);
 
-        int totalAward = picturePoints;
+        int totalPointsToAward = picturePoints;
 
         if (picturePoints > 0) {
             badgeService.checkAndUnlockCategoryBadges(user, pictureCategory);
@@ -104,12 +110,10 @@ public class PictureService {
 
         if (pictureMode == PictureMode.CHALLENGE) {
             int challengeReward = challengeProgressService.updateProgressFromPicture(user, savedPicture);
-            totalAward += challengeReward;
+            totalPointsToAward += challengeReward;
         }
 
-        userProgressionService.applyAward(user, totalAward);
-
-        userRepository.save(user);
+        userProgressionService.applyAward(user, totalPointsToAward);
 
         return toResponse(savedPicture);
     }
