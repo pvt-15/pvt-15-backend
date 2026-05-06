@@ -89,7 +89,7 @@ public class ChallengeService {
                 challenge.getStartMonth(),
                 challenge.getEndMonth(),
                 status,
-                challenge.getCategory().name(),
+                categoryNameOrNull(challenge),
                 taskResponses
         );
     }
@@ -155,6 +155,12 @@ public class ChallengeService {
         challenge.setEndMonth(request.getEndMonth());
         challenge.setLocationName(request.getLocationName());
 
+        if (request.getCategory() != null && !request.getCategory().isBlank()) {
+            challenge.setCategory(
+                    PictureCategory.valueOf(request.getCategory().toUpperCase())
+            );
+        }
+
         List<ChallengeTaskResponse> taskResponses = new ArrayList<>();
 
         if(request.getTasks() != null){
@@ -172,12 +178,6 @@ public class ChallengeService {
                 if (taskRequest.getRequiredCategory() != null && !taskRequest.getRequiredCategory().isBlank()) {
                     task.setRequiredCategory(
                             PictureCategory.valueOf(taskRequest.getRequiredCategory().toUpperCase())
-                    );
-                }
-
-                if (request.getCategory() != null && !request.getCategory().isBlank()) {
-                    challenge.setCategory(
-                            PictureCategory.valueOf(request.getCategory().toUpperCase())
                     );
                 }
 
@@ -208,7 +208,7 @@ public class ChallengeService {
                 savedChallenge.getStartMonth(),
                 savedChallenge.getEndMonth(),
                 ChallengeStatus.NOT_STARTED.name(),
-                savedChallenge.getCategory().name(),
+                categoryNameOrNull(challenge),
                 taskResponses
         );
     }
@@ -323,12 +323,15 @@ public class ChallengeService {
         return challengeRepository.findById(challengeId).orElseThrow(() -> new IllegalArgumentException(CHALLENGE_NOT_FOUND));
     }
 
-    private ChallengeResponse toChallengeResponse(Challenge challenge, String status) {
-        String category = null;
-
-        if (challenge.getCategory() != null) {
-            category = challenge.getCategory().name();
+    private String categoryNameOrNull(Challenge challenge) {
+        if (challenge.getCategory() == null) {
+            return null;
         }
+
+        return challenge.getCategory().name();
+    }
+
+    private ChallengeResponse toChallengeResponse(Challenge challenge, String status) {
         return new ChallengeResponse(
                 challenge.getId(),
                 challenge.getTitle(),
@@ -338,7 +341,7 @@ public class ChallengeService {
                 challenge.getRewardPoints(),
                 challenge.isActive(),
                 status,
-                category
+                categoryNameOrNull(challenge)
         );
     }
 

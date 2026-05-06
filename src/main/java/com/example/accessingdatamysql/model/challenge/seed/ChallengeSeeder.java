@@ -16,13 +16,13 @@ public class ChallengeSeeder implements CommandLineRunner {
 
     private final ChallengeRepository challengeRepository;
 
-    public ChallengeSeeder(ChallengeRepository challengeRepository){
+    public ChallengeSeeder(ChallengeRepository challengeRepository) {
         this.challengeRepository = challengeRepository;
     }
 
     @Override
-    public void run(String... args){
-        if(challengeRepository.count() > 0){
+    public void run(String... args) {
+        if (challengeRepository.count() > 0) {
             return;
         }
 
@@ -38,8 +38,8 @@ public class ChallengeSeeder implements CommandLineRunner {
                 "Hitta enkla saker under promenaden.",
                 ChallengeType.TREASURE_HUNT,
                 ChallengeDifficulty.EASY,
+                null,
                 ScoringRules.defaultChallengeReward(ChallengeDifficulty.EASY),
-                PictureCategory.UNKNOWN,
                 true,
                 3,
                 9,
@@ -58,6 +58,7 @@ public class ChallengeSeeder implements CommandLineRunner {
                 "Hitta lite mer specifika saker i naturen.",
                 ChallengeType.TREASURE_HUNT,
                 ChallengeDifficulty.MEDIUM,
+                null,
                 ScoringRules.defaultChallengeReward(ChallengeDifficulty.MEDIUM),
                 true,
                 3,
@@ -77,6 +78,7 @@ public class ChallengeSeeder implements CommandLineRunner {
                 "Hitta fyra olika sorters träd.",
                 ChallengeType.BINGO,
                 ChallengeDifficulty.HARD,
+                PictureCategory.TREE,
                 ScoringRules.defaultChallengeReward(ChallengeDifficulty.HARD),
                 true,
                 1,
@@ -98,6 +100,7 @@ public class ChallengeSeeder implements CommandLineRunner {
                 "Hitta färgglada blommor och en humla i Humlegården.",
                 ChallengeType.LOCATION,
                 ChallengeDifficulty.MEDIUM,
+                null,
                 ScoringRules.defaultChallengeReward(ChallengeDifficulty.MEDIUM),
                 true,
                 4,
@@ -126,12 +129,12 @@ public class ChallengeSeeder implements CommandLineRunner {
         challenge.setDescription(description);
         challenge.setType(type);
         challenge.setDifficulty(difficulty);
+        challenge.setCategory(category);
         challenge.setRewardPoints(rewardPoints);
         challenge.setActive(active);
         challenge.setStartMonth(startMonth);
         challenge.setEndMonth(endMonth);
         challenge.setLocationName(locationName);
-        challenge.setCategory(category);
         return challenge;
     }
 

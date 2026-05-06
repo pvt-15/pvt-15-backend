@@ -1,6 +1,7 @@
 package com.example.accessingdatamysql.challenge.service;
 
 import com.example.accessingdatamysql.model.challenge.dto.ChallengeResponse;
+import com.example.accessingdatamysql.model.challenge.dto.ChallengeStartRandomRequest;
 import com.example.accessingdatamysql.model.challenge.entity.Challenge;
 import com.example.accessingdatamysql.model.challenge.entity.ChallengeTask;
 import com.example.accessingdatamysql.model.challenge.entity.UserChallengeProgress;
@@ -24,6 +25,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -156,5 +158,97 @@ class ChallengeServiceTest {
         assertEquals("IN_PROGRESS", response.getStatus());
         verify(userChallengeTaskProgressRepository, times(2)).save(any(UserChallengeTaskProgress.class));
         verify(userChallengeProgressRepository, never()).save(any(UserChallengeProgress.class));
+    }
+
+    @Test
+    void startRandomChallenge_withCategory_shouldFilterByDifficultyTypeAndCategory() {
+        User user = new User();
+        user.setId(1);
+
+        Challenge challenge = new Challenge();
+        challenge.setId(10);
+        challenge.setTitle("Trädbingo");
+        challenge.setDescription("Hitta träd");
+        challenge.setType(ChallengeType.BINGO);
+        challenge.setDifficulty(ChallengeDifficulty.HARD);
+        challenge.setCategory(PictureCategory.TREE);
+        challenge.setRewardPoints(200);
+        challenge.setActive(true);
+
+        ChallengeStartRandomRequest request = new ChallengeStartRandomRequest();
+        request.setChallengeDifficulty("HARD");
+        request.setChallengeType("BINGO");
+        request.setChallengeCategory("TREE");
+
+        when(userRepository.findById(1)).thenReturn(Optional.of(user));
+        when(challengeRepository.findByActiveTrueAndDifficultyAndTypeAndCategory(
+                ChallengeDifficulty.HARD,
+                ChallengeType.BINGO,
+                PictureCategory.TREE
+        )).thenReturn(List.of(challenge));
+        when(userChallengeProgressRepository.findByUserAndChallenge(user, challenge))
+                .thenReturn(Optional.empty());
+        when(challengeRepository.findById(10)).thenReturn(Optional.of(challenge));
+        when(userChallengeProgressRepository.save(any(UserChallengeProgress.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        ChallengeResponse response = challengeService.startRandomChallenge(1, request);
+
+        assertEquals("Trädbingo", response.getTitle());
+
+        verify(challengeRepository).findByActiveTrueAndDifficultyAndTypeAndCategory(
+                ChallengeDifficulty.HARD,
+                ChallengeType.BINGO,
+                PictureCategory.TREE
+        );
+        verify(challengeRepository, never()).findByActiveTrueAndDifficultyAndType(
+                any(),
+                any()
+        );
+    }
+
+    @Test
+    void startRandomChallenge_withoutCategory_shouldFilterOnlyByDifficultyAndType() {
+        User user = new User();
+        user.setId(1);
+
+        Challenge challenge = new Challenge();
+        challenge.setId(11);
+        challenge.setTitle("Random bingo");
+        challenge.setDescription("Valfri bingo");
+        challenge.setType(ChallengeType.BINGO);
+        challenge.setDifficulty(ChallengeDifficulty.EASY);
+        challenge.setRewardPoints(100);
+        challenge.setActive(true);
+
+        ChallengeStartRandomRequest request = new ChallengeStartRandomRequest();
+        request.setChallengeDifficulty("EASY");
+        request.setChallengeType("BINGO");
+        request.setChallengeCategory(null);
+
+        when(userRepository.findById(1)).thenReturn(Optional.of(user));
+        when(challengeRepository.findByActiveTrueAndDifficultyAndType(
+                ChallengeDifficulty.EASY,
+                ChallengeType.BINGO
+        )).thenReturn(List.of(challenge));
+        when(userChallengeProgressRepository.findByUserAndChallenge(user, challenge))
+                .thenReturn(Optional.empty());
+        when(challengeRepository.findById(11)).thenReturn(Optional.of(challenge));
+        when(userChallengeProgressRepository.save(any(UserChallengeProgress.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        ChallengeResponse response = challengeService.startRandomChallenge(1, request);
+
+        assertEquals("Random bingo", response.getTitle());
+
+        verify(challengeRepository).findByActiveTrueAndDifficultyAndType(
+                ChallengeDifficulty.EASY,
+                ChallengeType.BINGO
+        );
+        verify(challengeRepository, never()).findByActiveTrueAndDifficultyAndTypeAndCategory(
+                any(),
+                any(),
+                any()
+        );
     }
 }
