@@ -2,6 +2,7 @@ package com.example.accessingdatamysql.picture.service;
 
 import com.example.accessingdatamysql.achievement.service.BadgeService;
 import com.example.accessingdatamysql.gamification.UserProgressionService;
+import com.example.accessingdatamysql.storage.service.ImageStorageService;
 import com.example.accessingdatamysql.user.entity.User;
 import com.example.accessingdatamysql.model.challenge.service.ChallengeProgressService;
 import com.example.accessingdatamysql.user.enums.Level;
@@ -38,6 +39,7 @@ public class PictureService {
     private final ChallengeProgressService challengeProgressService;
     private final BadgeService badgeService;
     private final UserProgressionService userProgressionService;
+    private final ImageStorageService imageStorageService;
 
     public PictureService(PictureRepository pictureRepository,
                           UserRepository userRepository,
@@ -45,7 +47,8 @@ public class PictureService {
                           DiscoveryService discoveryService,
                           ChallengeProgressService challengeProgressService,
                           BadgeService badgeService,
-                          UserProgressionService userProgressionService) {
+                          UserProgressionService userProgressionService,
+                          ImageStorageService imageStorageService) {
         this.pictureRepository = pictureRepository;
         this.userRepository = userRepository;
         this.natureAiService = natureAiService;
@@ -53,7 +56,7 @@ public class PictureService {
         this.challengeProgressService = challengeProgressService;
         this.badgeService = badgeService;
         this.userProgressionService = userProgressionService;
-
+        this.imageStorageService = imageStorageService;
     }
 
     @Transactional

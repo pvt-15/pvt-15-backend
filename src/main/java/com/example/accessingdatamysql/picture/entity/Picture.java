@@ -22,6 +22,7 @@ public class Picture {
     private double aiConfidence;
     private int pointsAwarded;
     private String imageUrl;
+    private String imageObjectKey;
     private LocalDateTime takenAt;
 
     @Enumerated(EnumType.STRING)
@@ -70,6 +71,10 @@ public class Picture {
         return user;
     }
 
+    public String getImageObjectKey() {
+        return imageObjectKey;
+    }
+
     public void setId(Integer id) {
         this.id = id;
     }
@@ -104,5 +109,9 @@ public class Picture {
 
     public void setUser(User user) {
         this.user = user;
+    }
+
+    public void setImageObjectKey(String imageObjectKey) {
+        this.imageObjectKey = imageObjectKey;
     }
 }
