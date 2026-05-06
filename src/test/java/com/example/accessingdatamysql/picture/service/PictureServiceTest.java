@@ -1,6 +1,7 @@
 package com.example.accessingdatamysql.picture.service;
 
 import com.example.accessingdatamysql.achievement.service.BadgeService;
+import com.example.accessingdatamysql.gamification.UserProgressionService;
 import com.example.accessingdatamysql.model.challenge.service.ChallengeProgressService;
 import com.example.accessingdatamysql.picture.dto.AiIdentificationResult;
 import com.example.accessingdatamysql.picture.dto.CreatePictureRequest;
@@ -48,6 +49,9 @@ class PictureServiceTest {
     @Mock
     private BadgeService badgeService;
 
+    @Mock
+    private UserProgressionService userProgressionService;
+
     @InjectMocks
     private PictureService pictureService;
 
@@ -89,8 +93,6 @@ class PictureServiceTest {
 
         assertEquals(5, response.getPointsAwarded());
         assertEquals(PictureMode.CHALLENGE, response.getPictureMode());
-        assertEquals(165, user.getTotalPoints());
-        assertEquals(Level.LEVEL_2, user.getLevel());
 
         verify(discoveryService).awardDiscoveryPoints(
                 user,
@@ -100,7 +102,7 @@ class PictureServiceTest {
         );
         verify(badgeService).checkAndUnlockCategoryBadges(user, PictureCategory.FLOWER);
         verify(challengeProgressService).updateProgressFromPicture(eq(user), any(Picture.class));
-        verify(userRepository).save(user);
+        verify(userProgressionService).applyAward(user, 105);
     }
 
     @Test
@@ -149,7 +151,8 @@ class PictureServiceTest {
         );
         verify(challengeProgressService, never()).updateProgressFromPicture(any(), any());
         verify(badgeService, never()).checkAndUnlockCategoryBadges(any(), any());
-        verify(userRepository).save(user);
+        verify(userProgressionService).applyAward(user, 0);
+        verify(userRepository, never()).save(user);
     }
 
     @Test
@@ -187,11 +190,12 @@ class PictureServiceTest {
 
         assertEquals(5, response.getPointsAwarded());
         assertEquals(PictureMode.COLLECTION, response.getPictureMode());
-        assertEquals(100, user.getTotalPoints());
+        assertEquals(95, user.getTotalPoints());
         assertEquals(Level.LEVEL_1, user.getLevel());
 
         verify(badgeService).checkAndUnlockCategoryBadges(user, PictureCategory.TREE);
         verify(challengeProgressService, never()).updateProgressFromPicture(any(), any());
-        verify(userRepository).save(user);
+        verify(userProgressionService).applyAward(user, 5);
+        verify(userRepository, never()).save(user);
     }
 }

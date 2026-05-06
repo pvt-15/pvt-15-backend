@@ -89,6 +89,7 @@ public class ChallengeService {
                 challenge.getStartMonth(),
                 challenge.getEndMonth(),
                 status,
+                categoryNameOrNull(challenge),
                 taskResponses
         );
     }
@@ -154,6 +155,12 @@ public class ChallengeService {
         challenge.setEndMonth(request.getEndMonth());
         challenge.setLocationName(request.getLocationName());
 
+        if (request.getCategory() != null && !request.getCategory().isBlank()) {
+            challenge.setCategory(
+                    PictureCategory.valueOf(request.getCategory().toUpperCase())
+            );
+        }
+
         List<ChallengeTaskResponse> taskResponses = new ArrayList<>();
 
         if(request.getTasks() != null){
@@ -201,6 +208,7 @@ public class ChallengeService {
                 savedChallenge.getStartMonth(),
                 savedChallenge.getEndMonth(),
                 ChallengeStatus.NOT_STARTED.name(),
+                categoryNameOrNull(challenge),
                 taskResponses
         );
     }
@@ -229,8 +237,28 @@ public class ChallengeService {
                 request.getChallengeType().toUpperCase()
         );
 
-        List<Challenge> matchingChallenges =
-                challengeRepository.findByActiveTrueAndDifficultyAndType(difficulty, type);
+        PictureCategory category = null;
+
+        if (request.getChallengeCategory() != null && !request.getChallengeCategory().isBlank()) {
+            category = PictureCategory.valueOf(
+                    request.getChallengeCategory().toUpperCase()
+            );
+        }
+
+        List<Challenge> matchingChallenges;
+
+        if (category == null) {
+            matchingChallenges = challengeRepository.findByActiveTrueAndDifficultyAndType(
+                    difficulty,
+                    type
+            );
+        } else {
+            matchingChallenges = challengeRepository.findByActiveTrueAndDifficultyAndTypeAndCategory(
+                    difficulty,
+                    type,
+                    category
+            );
+        }
 
         List<Challenge> availableChallenges = new ArrayList<>();
 
@@ -295,6 +323,14 @@ public class ChallengeService {
         return challengeRepository.findById(challengeId).orElseThrow(() -> new IllegalArgumentException(CHALLENGE_NOT_FOUND));
     }
 
+    private String categoryNameOrNull(Challenge challenge) {
+        if (challenge.getCategory() == null) {
+            return null;
+        }
+
+        return challenge.getCategory().name();
+    }
+
     private ChallengeResponse toChallengeResponse(Challenge challenge, String status) {
         return new ChallengeResponse(
                 challenge.getId(),
@@ -304,7 +340,8 @@ public class ChallengeService {
                 challenge.getDifficulty().name(),
                 challenge.getRewardPoints(),
                 challenge.isActive(),
-                status
+                status,
+                categoryNameOrNull(challenge)
         );
     }
 

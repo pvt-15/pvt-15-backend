@@ -15,6 +15,7 @@ public class ChallengeDetailsResponse {
     private Integer startMonth;
     private Integer endMonth;
     private String status;
+    private String category;
     private List<ChallengeTaskResponse> tasks;
 
     public ChallengeDetailsResponse() {
@@ -31,6 +32,7 @@ public class ChallengeDetailsResponse {
                                     Integer startMonth,
                                     Integer endMonth,
                                     String status,
+                                    String category,
                                     List<ChallengeTaskResponse> tasks) {
         this.id = id;
         this.title = title;
@@ -44,6 +46,7 @@ public class ChallengeDetailsResponse {
         this.endMonth = endMonth;
         this.status = status;
         this.tasks = tasks;
+        this.category = category;
     }
 
     public Integer getId() {
@@ -88,6 +91,10 @@ public class ChallengeDetailsResponse {
 
     public String getStatus() {
         return status;
+    }
+
+    public String getCategory() {
+        return category;
     }
 
     public List<ChallengeTaskResponse> getTasks() {

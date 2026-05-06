@@ -10,6 +10,7 @@ public class ChallengeResponse {
     private Integer rewardPoints;
     private boolean active;
     private String status;
+    private String category;
 
     public ChallengeResponse() {
     }
@@ -21,7 +22,8 @@ public class ChallengeResponse {
                              String difficulty,
                              Integer rewardPoints,
                              boolean active,
-                             String status) {
+                             String status,
+                             String category) {
         this.id = id;
         this.title = title;
         this.description = description;
@@ -30,6 +32,7 @@ public class ChallengeResponse {
         this.rewardPoints = rewardPoints;
         this.active = active;
         this.status = status;
+        this.category = category;
     }
 
     public Integer getId() {
@@ -62,5 +65,9 @@ public class ChallengeResponse {
 
     public String getStatus() {
         return status;
+    }
+
+    public String getCategory() {
+        return category;
     }
 }

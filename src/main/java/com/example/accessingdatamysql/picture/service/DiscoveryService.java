@@ -1,5 +1,6 @@
 package com.example.accessingdatamysql.picture.service;
 
+import com.example.accessingdatamysql.gamification.ScoringRules;
 import com.example.accessingdatamysql.picture.dto.LibraryItemResponse;
 import com.example.accessingdatamysql.user.entity.User;
 import com.example.accessingdatamysql.picture.enums.PictureCategory;
@@ -15,9 +16,6 @@ import java.util.List;
 
 @Service
 public class DiscoveryService {
-
-    private static final int NEW_UNIQUE_POINTS = 5;
-    private static final int MILESTONE_BONUS = 20;
 
     private final UserDiscoveryRepository userDiscoveryRepository;
 
@@ -46,10 +44,10 @@ public class DiscoveryService {
 
         long uniqueCountInCategory = userDiscoveryRepository.countByUserAndCategory(user, pictureCategory);
 
-        int points = NEW_UNIQUE_POINTS;
+        int points = ScoringRules.NEW_UNIQUE_DISCOVERY_POINTS;
 
-        if(uniqueCountInCategory % 10 == 0){
-            points += MILESTONE_BONUS;
+        if (uniqueCountInCategory % ScoringRules.DISCOVERY_MILESTONE_SIZE == 0) {
+            points += ScoringRules.DISCOVERY_MILESTONE_BONUS;
         }
         return points;
     }
@@ -99,7 +97,8 @@ public class DiscoveryService {
     private DiscoveryCategoryStatsResponse createCategoryStats(User user, PictureCategory category){
         long uniqueCount = userDiscoveryRepository.countByUserAndCategory(user, category);
 
-        long nextMilestone = ((uniqueCount / 10) + 1) * 10;
+        long milestoneSize = ScoringRules.DISCOVERY_MILESTONE_SIZE;
+        long nextMilestone = ((uniqueCount / milestoneSize) + 1) * milestoneSize;
         long remainingToNextMilestone = nextMilestone - uniqueCount;
 
         return new DiscoveryCategoryStatsResponse(

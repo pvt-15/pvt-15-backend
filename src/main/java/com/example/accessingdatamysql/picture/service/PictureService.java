@@ -1,6 +1,7 @@
 package com.example.accessingdatamysql.picture.service;
 
 import com.example.accessingdatamysql.achievement.service.BadgeService;
+import com.example.accessingdatamysql.gamification.UserProgressionService;
 import com.example.accessingdatamysql.user.entity.User;
 import com.example.accessingdatamysql.model.challenge.service.ChallengeProgressService;
 import com.example.accessingdatamysql.user.enums.Level;
@@ -36,18 +37,23 @@ public class PictureService {
     private final DiscoveryService discoveryService;
     private final ChallengeProgressService challengeProgressService;
     private final BadgeService badgeService;
+    private final UserProgressionService userProgressionService;
 
     public PictureService(PictureRepository pictureRepository,
                           UserRepository userRepository,
                           NatureAiService natureAiService,
                           DiscoveryService discoveryService,
-                          ChallengeProgressService challengeProgressService, BadgeService badgeService) {
+                          ChallengeProgressService challengeProgressService,
+                          BadgeService badgeService,
+                          UserProgressionService userProgressionService) {
         this.pictureRepository = pictureRepository;
         this.userRepository = userRepository;
         this.natureAiService = natureAiService;
         this.discoveryService = discoveryService;
         this.challengeProgressService = challengeProgressService;
         this.badgeService = badgeService;
+        this.userProgressionService = userProgressionService;
+
     }
 
     @Transactional
@@ -85,24 +91,29 @@ public class PictureService {
         picture.setPictureMode(pictureMode);
         picture.setUser(user);
 
-        int picturePoints = discoveryService.awardDiscoveryPoints(user, pictureCategory, aiResult.getLabel(), imageUrl);
+        int picturePoints = discoveryService.awardDiscoveryPoints(
+                user,
+                pictureCategory,
+                aiResult.getLabel(),
+                imageUrl
+        );
 
         picture.setPointsAwarded(picturePoints);
+
         Picture savedPicture = pictureRepository.save(picture);
 
+        int totalPointsToAward = picturePoints;
+
         if (picturePoints > 0) {
-            user.setTotalPoints(user.getTotalPoints() + picturePoints);
             badgeService.checkAndUnlockCategoryBadges(user, pictureCategory);
         }
 
         if (pictureMode == PictureMode.CHALLENGE) {
             int challengeReward = challengeProgressService.updateProgressFromPicture(user, savedPicture);
-            if (challengeReward > 0) {
-                user.setTotalPoints(user.getTotalPoints() + challengeReward);
-            }
+            totalPointsToAward += challengeReward;
         }
-        user.setLevel(calculateLevel(user.getTotalPoints()));
-        userRepository.save(user);
+
+        userProgressionService.applyAward(user, totalPointsToAward);
 
         return toResponse(savedPicture);
     }
@@ -217,16 +228,6 @@ public class PictureService {
         if (sort.equalsIgnoreCase("oldest")) {
             pictures.sort(Comparator.comparing(Picture::getTakenAt));
         }
-    }
-
-    private Level calculateLevel(int totalPoints) {
-        if (totalPoints >= 300) {
-            return Level.LEVEL_3;
-        }
-        if (totalPoints >= 150) {
-            return Level.LEVEL_2;
-        }
-        return Level.LEVEL_1;
     }
 
     private PictureCategory parseCategory(String category, TargetType targetType) {

@@ -1,5 +1,6 @@
 package com.example.accessingdatamysql.model.challenge.seed;
 
+import com.example.accessingdatamysql.gamification.ScoringRules;
 import com.example.accessingdatamysql.model.challenge.entity.Challenge;
 import com.example.accessingdatamysql.model.challenge.entity.ChallengeTask;
 import com.example.accessingdatamysql.model.challenge.enums.ChallengeDifficulty;
@@ -15,13 +16,13 @@ public class ChallengeSeeder implements CommandLineRunner {
 
     private final ChallengeRepository challengeRepository;
 
-    public ChallengeSeeder(ChallengeRepository challengeRepository){
+    public ChallengeSeeder(ChallengeRepository challengeRepository) {
         this.challengeRepository = challengeRepository;
     }
 
     @Override
-    public void run(String... args){
-        if(challengeRepository.count() > 0){
+    public void run(String... args) {
+        if (challengeRepository.count() > 0) {
             return;
         }
 
@@ -37,7 +38,8 @@ public class ChallengeSeeder implements CommandLineRunner {
                 "Hitta enkla saker under promenaden.",
                 ChallengeType.TREASURE_HUNT,
                 ChallengeDifficulty.EASY,
-                100,
+                null,
+                ScoringRules.defaultChallengeReward(ChallengeDifficulty.EASY),
                 true,
                 3,
                 9,
@@ -56,7 +58,8 @@ public class ChallengeSeeder implements CommandLineRunner {
                 "Hitta lite mer specifika saker i naturen.",
                 ChallengeType.TREASURE_HUNT,
                 ChallengeDifficulty.MEDIUM,
-                150,
+                null,
+                ScoringRules.defaultChallengeReward(ChallengeDifficulty.MEDIUM),
                 true,
                 3,
                 10,
@@ -75,7 +78,8 @@ public class ChallengeSeeder implements CommandLineRunner {
                 "Hitta fyra olika sorters träd.",
                 ChallengeType.BINGO,
                 ChallengeDifficulty.HARD,
-                200,
+                PictureCategory.TREE,
+                ScoringRules.defaultChallengeReward(ChallengeDifficulty.HARD),
                 true,
                 1,
                 12,
@@ -96,7 +100,8 @@ public class ChallengeSeeder implements CommandLineRunner {
                 "Hitta färgglada blommor och en humla i Humlegården.",
                 ChallengeType.LOCATION,
                 ChallengeDifficulty.MEDIUM,
-                175,
+                null,
+                ScoringRules.defaultChallengeReward(ChallengeDifficulty.MEDIUM),
                 true,
                 4,
                 9,
@@ -113,6 +118,7 @@ public class ChallengeSeeder implements CommandLineRunner {
                                       String description,
                                       ChallengeType type,
                                       ChallengeDifficulty difficulty,
+                                      PictureCategory category,
                                       int rewardPoints,
                                       boolean active,
                                       Integer startMonth,
@@ -123,6 +129,7 @@ public class ChallengeSeeder implements CommandLineRunner {
         challenge.setDescription(description);
         challenge.setType(type);
         challenge.setDifficulty(difficulty);
+        challenge.setCategory(category);
         challenge.setRewardPoints(rewardPoints);
         challenge.setActive(active);
         challenge.setStartMonth(startMonth);

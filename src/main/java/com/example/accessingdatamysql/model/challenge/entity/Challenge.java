@@ -2,6 +2,7 @@ package com.example.accessingdatamysql.model.challenge.entity;
 
 import com.example.accessingdatamysql.model.challenge.enums.ChallengeDifficulty;
 import com.example.accessingdatamysql.model.challenge.enums.ChallengeType;
+import com.example.accessingdatamysql.picture.enums.PictureCategory;
 import jakarta.persistence.*;
 
 import java.util.ArrayList;
@@ -28,6 +29,9 @@ public class Challenge {
     private Integer startMonth;
     private Integer endMonth;
     private String locationName;
+
+    @Enumerated(EnumType.STRING)
+    private PictureCategory category;
 
     @OneToMany(mappedBy = "challenge", cascade = CascadeType.ALL)
     private List<ChallengeTask> tasks = new ArrayList<>();
@@ -113,6 +117,14 @@ public class Challenge {
 
     public void setLocationName(String locationName) {
         this.locationName = locationName;
+    }
+
+    public PictureCategory getCategory() {
+        return category;
+    }
+
+    public void setCategory(PictureCategory category) {
+        this.category = category;
     }
 
     public List<ChallengeTask> getTasks() {
