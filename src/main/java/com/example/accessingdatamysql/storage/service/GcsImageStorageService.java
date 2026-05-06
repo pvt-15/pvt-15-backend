@@ -12,6 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class GcsImageStorageService implements ImageStorageService {
@@ -42,12 +43,9 @@ public class GcsImageStorageService implements ImageStorageService {
 
             storage.create(blobInfo, file.getBytes());
 
-            String imageUrl = "https://storage.googleapis.com/"
-                    + storageProperties.getBucketName()
-                    + "/"
-                    + objectKey;
+            String signedUrl = generateSignedReadUrl(objectKey);
 
-            return new ImageUploadResponse(imageUrl, objectKey);
+            return new ImageUploadResponse(signedUrl, objectKey);
 
         } catch (StorageException e) {
             throw new IllegalStateException(
@@ -59,6 +57,24 @@ public class GcsImageStorageService implements ImageStorageService {
         } catch (Exception e) {
             throw new IllegalStateException("Unexpected upload error: " + e.getMessage(), e);
         }
+    }
+
+    @Override
+    public String generateSignedReadUrl(String objectKey) {
+        if (objectKey == null || objectKey.isBlank()) {
+            throw new IllegalArgumentException("Object key is required");
+        }
+
+        BlobInfo blobInfo = BlobInfo.newBuilder(
+                BlobId.of(storageProperties.getBucketName(), objectKey)
+        ).build();
+
+        return storage.signUrl(
+                blobInfo,
+                30,
+                TimeUnit.MINUTES,
+                Storage.SignUrlOption.withV4Signature()
+        ).toString();
     }
 
     private String buildObjectKey(StorageFolder folder, Integer userId, String extension) {

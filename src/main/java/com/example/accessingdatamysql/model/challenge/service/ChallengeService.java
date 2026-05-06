@@ -66,6 +66,7 @@ public class ChallengeService {
         return responses;
     }
 
+    @Transactional
     public ChallengeDetailsResponse getChallengeById(Integer userId, Integer challengeId) {
         User user = getUserById(userId);
         Challenge challenge = getChallengeByIdInternal(challengeId);

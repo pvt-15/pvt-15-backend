@@ -6,4 +6,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 public interface ImageStorageService {
     ImageUploadResponse uploadImage(MultipartFile file, StorageFolder folder, Integer userId);
+
+    String generateSignedReadUrl(String objectKey);
 }
