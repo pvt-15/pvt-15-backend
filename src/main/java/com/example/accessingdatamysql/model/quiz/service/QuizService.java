@@ -31,8 +31,8 @@ public class QuizService {
 
     private static final double RATIO_FOR_FULL_POINTS = 0.8;
     private static final double RATIO_FOR_HALF_POINTS = 0.5;
-    private static final int POINTS_AWARDED_EASY = 20;
-    private static final int POINTS_AWARDED_MEDIUM = 30;
+    private static final int POINTS_AWARDED_EASY = 50;
+    private static final int POINTS_AWARDED_MEDIUM = 50;
     private static final int POINTS_AWARDED_HARD = 50;
 
     private final QuizQuestionRepository quizQuestionRepository;
