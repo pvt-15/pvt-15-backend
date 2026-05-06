@@ -15,9 +15,7 @@ public final class ScoringRules {
 
     public static int defaultChallengeReward(ChallengeDifficulty difficulty) {
         return switch (difficulty) {
-            case EASY -> 100;
-            case MEDIUM -> 150;
-            case HARD -> 200;
+            case EASY, MEDIUM, HARD -> CHALLENGE_REWARD;
         };
     }
 }

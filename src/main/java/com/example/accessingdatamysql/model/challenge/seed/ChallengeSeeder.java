@@ -1,5 +1,6 @@
 package com.example.accessingdatamysql.model.challenge.seed;
 
+import com.example.accessingdatamysql.gamification.ScoringRules;
 import com.example.accessingdatamysql.model.challenge.entity.Challenge;
 import com.example.accessingdatamysql.model.challenge.entity.ChallengeTask;
 import com.example.accessingdatamysql.model.challenge.enums.ChallengeDifficulty;
@@ -37,7 +38,7 @@ public class ChallengeSeeder implements CommandLineRunner {
                 "Hitta enkla saker under promenaden.",
                 ChallengeType.TREASURE_HUNT,
                 ChallengeDifficulty.EASY,
-                100,
+                ScoringRules.defaultChallengeReward(ChallengeDifficulty.EASY),
                 true,
                 3,
                 9,
@@ -56,7 +57,7 @@ public class ChallengeSeeder implements CommandLineRunner {
                 "Hitta lite mer specifika saker i naturen.",
                 ChallengeType.TREASURE_HUNT,
                 ChallengeDifficulty.MEDIUM,
-                150,
+                ScoringRules.defaultChallengeReward(ChallengeDifficulty.MEDIUM),
                 true,
                 3,
                 10,
@@ -75,7 +76,7 @@ public class ChallengeSeeder implements CommandLineRunner {
                 "Hitta fyra olika sorters träd.",
                 ChallengeType.BINGO,
                 ChallengeDifficulty.HARD,
-                200,
+                ScoringRules.defaultChallengeReward(ChallengeDifficulty.HARD),
                 true,
                 1,
                 12,
@@ -96,7 +97,7 @@ public class ChallengeSeeder implements CommandLineRunner {
                 "Hitta färgglada blommor och en humla i Humlegården.",
                 ChallengeType.LOCATION,
                 ChallengeDifficulty.MEDIUM,
-                175,
+                ScoringRules.defaultChallengeReward(ChallengeDifficulty.MEDIUM),
                 true,
                 4,
                 9,

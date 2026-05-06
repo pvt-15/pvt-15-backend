@@ -151,7 +151,8 @@ class PictureServiceTest {
         );
         verify(challengeProgressService, never()).updateProgressFromPicture(any(), any());
         verify(badgeService, never()).checkAndUnlockCategoryBadges(any(), any());
-        verify(userRepository).save(user);
+        verify(userProgressionService).applyAward(user, 0);
+        verify(userRepository, never()).save(user);
     }
 
     @Test
@@ -189,11 +190,12 @@ class PictureServiceTest {
 
         assertEquals(5, response.getPointsAwarded());
         assertEquals(PictureMode.COLLECTION, response.getPictureMode());
-        assertEquals(100, user.getTotalPoints());
+        assertEquals(95, user.getTotalPoints());
         assertEquals(Level.LEVEL_1, user.getLevel());
 
         verify(badgeService).checkAndUnlockCategoryBadges(user, PictureCategory.TREE);
         verify(challengeProgressService, never()).updateProgressFromPicture(any(), any());
-        verify(userRepository).save(user);
+        verify(userProgressionService).applyAward(user, 5);
+        verify(userRepository, never()).save(user);
     }
 }

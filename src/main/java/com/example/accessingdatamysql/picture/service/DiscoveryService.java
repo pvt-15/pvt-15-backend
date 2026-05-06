@@ -44,7 +44,7 @@ public class DiscoveryService {
 
         long uniqueCountInCategory = userDiscoveryRepository.countByUserAndCategory(user, pictureCategory);
 
-        int points = ScoringRules.DISCOVERY_MILESTONE_BONUS;
+        int points = ScoringRules.NEW_UNIQUE_DISCOVERY_POINTS;
 
         if (uniqueCountInCategory % ScoringRules.DISCOVERY_MILESTONE_SIZE == 0) {
             points += ScoringRules.DISCOVERY_MILESTONE_BONUS;
@@ -97,7 +97,8 @@ public class DiscoveryService {
     private DiscoveryCategoryStatsResponse createCategoryStats(User user, PictureCategory category){
         long uniqueCount = userDiscoveryRepository.countByUserAndCategory(user, category);
 
-        long nextMilestone = ((uniqueCount / 10) + 1) * 10;
+        long milestoneSize = ScoringRules.DISCOVERY_MILESTONE_SIZE;
+        long nextMilestone = ((uniqueCount / milestoneSize) + 1) * milestoneSize;
         long remainingToNextMilestone = nextMilestone - uniqueCount;
 
         return new DiscoveryCategoryStatsResponse(
