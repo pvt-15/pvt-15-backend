@@ -2,19 +2,18 @@ package com.example.accessingdatamysql.picture.service;
 
 import com.example.accessingdatamysql.achievement.service.BadgeService;
 import com.example.accessingdatamysql.gamification.UserProgressionService;
-import com.example.accessingdatamysql.storage.service.ImageStorageService;
-import com.example.accessingdatamysql.user.entity.User;
 import com.example.accessingdatamysql.model.challenge.service.ChallengeProgressService;
-import com.example.accessingdatamysql.user.enums.Level;
-import com.example.accessingdatamysql.picture.enums.PictureCategory;
 import com.example.accessingdatamysql.picture.dto.AiIdentificationResult;
 import com.example.accessingdatamysql.picture.dto.CreatePictureRequest;
 import com.example.accessingdatamysql.picture.dto.PictureResponse;
 import com.example.accessingdatamysql.picture.dto.PictureStatsResponse;
 import com.example.accessingdatamysql.picture.entity.Picture;
+import com.example.accessingdatamysql.picture.enums.PictureCategory;
 import com.example.accessingdatamysql.picture.enums.PictureMode;
 import com.example.accessingdatamysql.picture.model.enums.TargetType;
 import com.example.accessingdatamysql.picture.repository.PictureRepository;
+import com.example.accessingdatamysql.storage.service.ImageStorageService;
+import com.example.accessingdatamysql.user.entity.User;
 import com.example.accessingdatamysql.user.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
@@ -30,7 +29,7 @@ public class PictureService {
     private static final String USER_NOT_FOUND = "User not found";
     private static final String PICTURE_NOT_FOUND = "Picture not found";
     private static final String REQUEST_BODY_REQUIRED = "Request body is required";
-    private static final String IMAGE_URL_REQUIRED = "Image URL is required";
+    private static final String IMAGE_OBJECT_KEY_REQUIRED = "Image object key is required";
 
     private final PictureRepository pictureRepository;
     private final UserRepository userRepository;
@@ -64,16 +63,17 @@ public class PictureService {
         if (request == null) {
             throw new IllegalArgumentException(REQUEST_BODY_REQUIRED);
         }
-        String imageUrl = request.getImageUrl();
 
-        if (imageUrl == null || imageUrl.isBlank()) {
-            throw new IllegalArgumentException(IMAGE_URL_REQUIRED);
+        String imageObjectKey = request.getImageObjectKey();
+
+        if (imageObjectKey == null || imageObjectKey.isBlank()) {
+            throw new IllegalArgumentException(IMAGE_OBJECT_KEY_REQUIRED);
         }
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND));
+
+        User user = getUserById(userId);
 
         PictureMode pictureMode = request.getPictureMode();
-        if(pictureMode == null){
+        if (pictureMode == null) {
             pictureMode = PictureMode.COLLECTION;
         }
 
@@ -81,15 +81,17 @@ public class PictureService {
         if (targetType == null) {
             targetType = TargetType.ANIMAL;
         }
-        AiIdentificationResult aiResult = natureAiService.identifyImage(imageUrl, targetType);
 
+        String signedImageUrl = imageStorageService.generateSignedReadUrl(imageObjectKey);
+
+        AiIdentificationResult aiResult = natureAiService.identifyImage(signedImageUrl, targetType);
         PictureCategory pictureCategory = parseCategory(aiResult.getCategory(), targetType);
 
         Picture picture = new Picture();
         picture.setLabel(aiResult.getLabel());
-        picture.setCategory(parseCategory(aiResult.getCategory(), targetType));
+        picture.setCategory(pictureCategory);
         picture.setAiConfidence(aiResult.getAiConfidence());
-        picture.setImageUrl(imageUrl);
+        picture.setImageObjectKey(imageObjectKey);
         picture.setTakenAt(LocalDateTime.now());
         picture.setPictureMode(pictureMode);
         picture.setUser(user);
@@ -98,7 +100,7 @@ public class PictureService {
                 user,
                 pictureCategory,
                 aiResult.getLabel(),
-                imageUrl
+                imageObjectKey
         );
 
         picture.setPointsAwarded(picturePoints);
@@ -123,23 +125,27 @@ public class PictureService {
 
     public List<PictureResponse> getMyPictures(Integer userId, String category, String sort) {
         User user = getUserById(userId);
+
         List<Picture> pictures = new ArrayList<>(pictureRepository.findByUser(user));
 
         if (category != null && !category.isBlank()) {
             pictures = filterByCategory(pictures, category);
         }
+
         sortPictures(pictures, sort);
 
         List<PictureResponse> responses = new ArrayList<>();
         for (Picture picture : pictures) {
             responses.add(toResponse(picture));
         }
+
         return responses;
     }
 
     public PictureResponse getPictureById(Integer userId, Integer pictureId) {
         User user = getUserById(userId);
         Picture picture = getPictureOwnedByUser(user, pictureId);
+
         return toResponse(picture);
     }
 
@@ -147,6 +153,7 @@ public class PictureService {
     public void deletePicture(Integer userId, Integer pictureId) {
         User user = getUserById(userId);
         Picture picture = getPictureOwnedByUser(user, pictureId);
+
         pictureRepository.delete(picture);
     }
 
@@ -209,6 +216,7 @@ public class PictureService {
         if (!picture.getUser().getId().equals(user.getId())) {
             throw new IllegalArgumentException(PICTURE_NOT_FOUND);
         }
+
         return picture;
     }
 
@@ -216,10 +224,12 @@ public class PictureService {
         List<Picture> filteredPictures = new ArrayList<>();
 
         for (Picture picture : pictures) {
-            if (picture.getCategory().name().equalsIgnoreCase(category)) {
+            if (picture.getCategory() != null
+                    && picture.getCategory().name().equalsIgnoreCase(category)) {
                 filteredPictures.add(picture);
             }
         }
+
         return filteredPictures;
     }
 
@@ -228,6 +238,7 @@ public class PictureService {
             pictures.sort(Comparator.comparing(Picture::getTakenAt).reversed());
             return;
         }
+
         if (sort.equalsIgnoreCase("oldest")) {
             pictures.sort(Comparator.comparing(Picture::getTakenAt));
         }
@@ -237,6 +248,7 @@ public class PictureService {
         if (category == null || category.isBlank()) {
             return defaultCategory(targetType);
         }
+
         try {
             return PictureCategory.valueOf(category.toUpperCase());
         } catch (IllegalArgumentException e) {
@@ -248,19 +260,37 @@ public class PictureService {
         if (targetType == TargetType.PLANT) {
             return PictureCategory.PLANT;
         }
+
         return PictureCategory.ANIMAL;
     }
 
     private PictureResponse toResponse(Picture picture) {
+        String imageUrl = getSignedUrlOrFallback(picture);
+
+        String category = null;
+        if (picture.getCategory() != null) {
+            category = picture.getCategory().name();
+        }
+
         return new PictureResponse(
                 picture.getId(),
                 picture.getLabel(),
-                picture.getCategory().name(),
+                category,
                 picture.getAiConfidence(),
                 picture.getPointsAwarded(),
-                picture.getImageUrl(),
+                imageUrl,
                 picture.getTakenAt().toString(),
                 picture.getPictureMode()
         );
+    }
+
+    private String getSignedUrlOrFallback(Picture picture) {
+        String imageObjectKey = picture.getImageObjectKey();
+
+        if (imageObjectKey != null && !imageObjectKey.isBlank()) {
+            return imageStorageService.generateSignedReadUrl(imageObjectKey);
+        }
+
+        return picture.getImageUrl();
     }
 }

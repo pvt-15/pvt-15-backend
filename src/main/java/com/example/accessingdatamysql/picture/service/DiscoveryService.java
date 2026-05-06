@@ -1,13 +1,14 @@
 package com.example.accessingdatamysql.picture.service;
 
 import com.example.accessingdatamysql.gamification.ScoringRules;
-import com.example.accessingdatamysql.picture.dto.LibraryItemResponse;
-import com.example.accessingdatamysql.user.entity.User;
-import com.example.accessingdatamysql.picture.enums.PictureCategory;
-import com.example.accessingdatamysql.picture.entity.UserDiscovery;
-import com.example.accessingdatamysql.user.repository.UserDiscoveryRepository;
 import com.example.accessingdatamysql.picture.dto.DiscoveryCategoryStatsResponse;
 import com.example.accessingdatamysql.picture.dto.DiscoveryStatsResponse;
+import com.example.accessingdatamysql.picture.dto.LibraryItemResponse;
+import com.example.accessingdatamysql.picture.entity.UserDiscovery;
+import com.example.accessingdatamysql.picture.enums.PictureCategory;
+import com.example.accessingdatamysql.storage.service.ImageStorageService;
+import com.example.accessingdatamysql.user.entity.User;
+import com.example.accessingdatamysql.user.repository.UserDiscoveryRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -18,18 +19,27 @@ import java.util.List;
 public class DiscoveryService {
 
     private final UserDiscoveryRepository userDiscoveryRepository;
+    private final ImageStorageService imageStorageService;
 
-    public DiscoveryService(UserDiscoveryRepository userDiscoveryRepository){
+    public DiscoveryService(UserDiscoveryRepository userDiscoveryRepository,
+                            ImageStorageService imageStorageService) {
         this.userDiscoveryRepository = userDiscoveryRepository;
+        this.imageStorageService = imageStorageService;
     }
 
-    public int awardDiscoveryPoints(User user, PictureCategory pictureCategory, String label, String imageUrl){
+    public int awardDiscoveryPoints(User user,
+                                    PictureCategory pictureCategory,
+                                    String label,
+                                    String imageObjectKey) {
         String normalizedLabel = normalize(label);
 
-        boolean alreadyExists =
-                userDiscoveryRepository.existsByUserAndCategoryAndNormalizedLabel(user, pictureCategory, normalizedLabel);
+        boolean alreadyExists = userDiscoveryRepository.existsByUserAndCategoryAndNormalizedLabel(
+                user,
+                pictureCategory,
+                normalizedLabel
+        );
 
-        if(alreadyExists){
+        if (alreadyExists) {
             return 0;
         }
 
@@ -39,7 +49,8 @@ public class DiscoveryService {
         discovery.setNormalizedLabel(normalizedLabel);
         discovery.setDiscoveredAt(LocalDateTime.now());
         discovery.setDisplayLabel(label);
-        discovery.setImageUrl(imageUrl);
+        discovery.setImageObjectKey(imageObjectKey);
+
         userDiscoveryRepository.save(discovery);
 
         long uniqueCountInCategory = userDiscoveryRepository.countByUserAndCategory(user, pictureCategory);
@@ -49,11 +60,12 @@ public class DiscoveryService {
         if (uniqueCountInCategory % ScoringRules.DISCOVERY_MILESTONE_SIZE == 0) {
             points += ScoringRules.DISCOVERY_MILESTONE_BONUS;
         }
+
         return points;
     }
 
-    public DiscoveryStatsResponse getDiscoveryStats(User user){
-        List<DiscoveryCategoryStatsResponse> categories =  new ArrayList<>();
+    public DiscoveryStatsResponse getDiscoveryStats(User user) {
+        List<DiscoveryCategoryStatsResponse> categories = new ArrayList<>();
 
         categories.add(createCategoryStats(user, PictureCategory.FLOWER));
         categories.add(createCategoryStats(user, PictureCategory.TREE));
@@ -65,7 +77,7 @@ public class DiscoveryService {
         return new DiscoveryStatsResponse(categories);
     }
 
-    public List<LibraryItemResponse> getUniqueLibrary(User user, String category, String sort){
+    public List<LibraryItemResponse> getUniqueLibrary(User user, String category, String sort) {
         List<UserDiscovery> discoveries = userDiscoveryRepository.findByUser(user);
         List<LibraryItemResponse> responses = new ArrayList<>();
 
@@ -76,11 +88,13 @@ public class DiscoveryService {
                 }
             }
 
+            String imageUrl = getSignedUrlOrFallback(discovery);
+
             responses.add(new LibraryItemResponse(
                     discovery.getId(),
                     discovery.getDisplayLabel(),
                     discovery.getCategory().name(),
-                    discovery.getImageUrl(),
+                    imageUrl,
                     discovery.getDiscoveredAt().toString()
             ));
         }
@@ -94,9 +108,18 @@ public class DiscoveryService {
         return responses;
     }
 
-    private DiscoveryCategoryStatsResponse createCategoryStats(User user, PictureCategory category){
-        long uniqueCount = userDiscoveryRepository.countByUserAndCategory(user, category);
+    private String getSignedUrlOrFallback(UserDiscovery discovery) {
+        String imageObjectKey = discovery.getImageObjectKey();
 
+        if (imageObjectKey != null && !imageObjectKey.isBlank()) {
+            return imageStorageService.generateSignedReadUrl(imageObjectKey);
+        }
+
+        return discovery.getImageUrl();
+    }
+
+    private DiscoveryCategoryStatsResponse createCategoryStats(User user, PictureCategory category) {
+        long uniqueCount = userDiscoveryRepository.countByUserAndCategory(user, category);
         long milestoneSize = ScoringRules.DISCOVERY_MILESTONE_SIZE;
         long nextMilestone = ((uniqueCount / milestoneSize) + 1) * milestoneSize;
         long remainingToNextMilestone = nextMilestone - uniqueCount;
@@ -108,7 +131,6 @@ public class DiscoveryService {
                 remainingToNextMilestone
         );
     }
-
 
     private String normalize(String label) {
         if (label == null) {

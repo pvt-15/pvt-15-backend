@@ -5,39 +5,37 @@ import com.example.accessingdatamysql.picture.model.enums.TargetType;
 
 public class CreatePictureRequest {
 
-    private String imageObjectKey;;
+    private String imageObjectKey;
     private TargetType targetType;
     private PictureMode pictureMode;
 
     public CreatePictureRequest() {
     }
 
-    public CreatePictureRequest(String imageUrl,
-                                TargetType targetType,
-                                PictureMode pictureMode) {
-        this.imageObjectKey = imageUrl;
+    public CreatePictureRequest(String imageObjectKey, TargetType targetType, PictureMode pictureMode) {
+        this.imageObjectKey = imageObjectKey;
         this.targetType = targetType;
         this.pictureMode = pictureMode;
     }
 
-    public String getImageUrl() {
+    public String getImageObjectKey() {
         return imageObjectKey;
+    }
+
+    public void setImageObjectKey(String imageObjectKey) {
+        this.imageObjectKey = imageObjectKey;
     }
 
     public TargetType getTargetType() {
         return targetType;
     }
 
-    public PictureMode getPictureMode() {
-        return pictureMode;
-    }
-
-    public void setImageUrl(String imageUrl) {
-        this.imageObjectKey = imageUrl;
-    }
-
     public void setTargetType(TargetType targetType) {
         this.targetType = targetType;
+    }
+
+    public PictureMode getPictureMode() {
+        return pictureMode;
     }
 
     public void setPictureMode(PictureMode pictureMode) {

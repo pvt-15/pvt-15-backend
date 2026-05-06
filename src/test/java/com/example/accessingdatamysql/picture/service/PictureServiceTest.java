@@ -11,11 +11,13 @@ import com.example.accessingdatamysql.picture.enums.PictureCategory;
 import com.example.accessingdatamysql.picture.enums.PictureMode;
 import com.example.accessingdatamysql.picture.model.enums.TargetType;
 import com.example.accessingdatamysql.picture.repository.PictureRepository;
+import com.example.accessingdatamysql.storage.service.ImageStorageService;
 import com.example.accessingdatamysql.user.entity.User;
 import com.example.accessingdatamysql.user.enums.Level;
 import com.example.accessingdatamysql.user.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -23,8 +25,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
@@ -52,6 +54,9 @@ class PictureServiceTest {
     @Mock
     private UserProgressionService userProgressionService;
 
+    @Mock
+    private ImageStorageService imageStorageService;
+
     @InjectMocks
     private PictureService pictureService;
 
@@ -62,8 +67,11 @@ class PictureServiceTest {
         user.setTotalPoints(60);
         user.setLevel(Level.LEVEL_1);
 
+        String objectKey = "pictures/user-1/red-clover.jpg";
+        String signedUrl = "https://signed-url.test/red-clover.jpg";
+
         CreatePictureRequest request = new CreatePictureRequest();
-        request.setImageUrl("https://example.com/red-clover.jpg");
+        request.setImageObjectKey(objectKey);
         request.setTargetType(TargetType.PLANT);
         request.setPictureMode(PictureMode.CHALLENGE);
 
@@ -73,14 +81,14 @@ class PictureServiceTest {
         when(aiResult.getAiConfidence()).thenReturn(0.48);
 
         when(userRepository.findById(1)).thenReturn(Optional.of(user));
-        when(natureAiService.identifyImage("https://example.com/red-clover.jpg", TargetType.PLANT))
-                .thenReturn(aiResult);
+        when(imageStorageService.generateSignedReadUrl(objectKey)).thenReturn(signedUrl);
+        when(natureAiService.identifyImage(signedUrl, TargetType.PLANT)).thenReturn(aiResult);
 
         when(discoveryService.awardDiscoveryPoints(
                 eq(user),
                 eq(PictureCategory.FLOWER),
                 eq("Red clover"),
-                eq("https://example.com/red-clover.jpg")
+                eq(objectKey)
         )).thenReturn(5);
 
         when(pictureRepository.save(any(Picture.class)))
@@ -93,16 +101,30 @@ class PictureServiceTest {
 
         assertEquals(5, response.getPointsAwarded());
         assertEquals(PictureMode.CHALLENGE, response.getPictureMode());
+        assertEquals(signedUrl, response.getImageUrl());
+
+        verify(natureAiService).identifyImage(signedUrl, TargetType.PLANT);
 
         verify(discoveryService).awardDiscoveryPoints(
                 user,
                 PictureCategory.FLOWER,
                 "Red clover",
-                "https://example.com/red-clover.jpg"
+                objectKey
         );
+
         verify(badgeService).checkAndUnlockCategoryBadges(user, PictureCategory.FLOWER);
         verify(challengeProgressService).updateProgressFromPicture(eq(user), any(Picture.class));
         verify(userProgressionService).applyAward(user, 105);
+
+        ArgumentCaptor<Picture> pictureCaptor = ArgumentCaptor.forClass(Picture.class);
+        verify(pictureRepository).save(pictureCaptor.capture());
+
+        Picture savedPicture = pictureCaptor.getValue();
+
+        assertEquals("Red clover", savedPicture.getLabel());
+        assertEquals(PictureCategory.FLOWER, savedPicture.getCategory());
+        assertEquals(objectKey, savedPicture.getImageObjectKey());
+        assertNull(savedPicture.getImageUrl());
     }
 
     @Test
@@ -112,8 +134,11 @@ class PictureServiceTest {
         user.setTotalPoints(25);
         user.setLevel(Level.LEVEL_1);
 
+        String objectKey = "pictures/user-1/oak.jpg";
+        String signedUrl = "https://signed-url.test/oak.jpg";
+
         CreatePictureRequest request = new CreatePictureRequest();
-        request.setImageUrl("https://example.com/oak.jpg");
+        request.setImageObjectKey(objectKey);
         request.setTargetType(TargetType.PLANT);
         request.setPictureMode(PictureMode.COLLECTION);
 
@@ -123,14 +148,14 @@ class PictureServiceTest {
         when(aiResult.getAiConfidence()).thenReturn(0.91);
 
         when(userRepository.findById(1)).thenReturn(Optional.of(user));
-        when(natureAiService.identifyImage("https://example.com/oak.jpg", TargetType.PLANT))
-                .thenReturn(aiResult);
+        when(imageStorageService.generateSignedReadUrl(objectKey)).thenReturn(signedUrl);
+        when(natureAiService.identifyImage(signedUrl, TargetType.PLANT)).thenReturn(aiResult);
 
         when(discoveryService.awardDiscoveryPoints(
                 eq(user),
                 eq(PictureCategory.TREE),
                 eq("Oak"),
-                eq("https://example.com/oak.jpg")
+                eq(objectKey)
         )).thenReturn(0);
 
         when(pictureRepository.save(any(Picture.class)))
@@ -140,15 +165,20 @@ class PictureServiceTest {
 
         assertEquals(0, response.getPointsAwarded());
         assertEquals(PictureMode.COLLECTION, response.getPictureMode());
+        assertEquals(signedUrl, response.getImageUrl());
+
         assertEquals(25, user.getTotalPoints());
         assertEquals(Level.LEVEL_1, user.getLevel());
+
+        verify(natureAiService).identifyImage(signedUrl, TargetType.PLANT);
 
         verify(discoveryService).awardDiscoveryPoints(
                 user,
                 PictureCategory.TREE,
                 "Oak",
-                "https://example.com/oak.jpg"
+                objectKey
         );
+
         verify(challengeProgressService, never()).updateProgressFromPicture(any(), any());
         verify(badgeService, never()).checkAndUnlockCategoryBadges(any(), any());
         verify(userProgressionService).applyAward(user, 0);
@@ -162,8 +192,11 @@ class PictureServiceTest {
         user.setTotalPoints(95);
         user.setLevel(Level.LEVEL_1);
 
+        String objectKey = "pictures/user-1/birch.jpg";
+        String signedUrl = "https://signed-url.test/birch.jpg";
+
         CreatePictureRequest request = new CreatePictureRequest();
-        request.setImageUrl("https://example.com/birch.jpg");
+        request.setImageObjectKey(objectKey);
         request.setTargetType(TargetType.PLANT);
         request.setPictureMode(PictureMode.COLLECTION);
 
@@ -173,14 +206,14 @@ class PictureServiceTest {
         when(aiResult.getAiConfidence()).thenReturn(0.88);
 
         when(userRepository.findById(1)).thenReturn(Optional.of(user));
-        when(natureAiService.identifyImage("https://example.com/birch.jpg", TargetType.PLANT))
-                .thenReturn(aiResult);
+        when(imageStorageService.generateSignedReadUrl(objectKey)).thenReturn(signedUrl);
+        when(natureAiService.identifyImage(signedUrl, TargetType.PLANT)).thenReturn(aiResult);
 
         when(discoveryService.awardDiscoveryPoints(
                 eq(user),
                 eq(PictureCategory.TREE),
                 eq("Birch"),
-                eq("https://example.com/birch.jpg")
+                eq(objectKey)
         )).thenReturn(5);
 
         when(pictureRepository.save(any(Picture.class)))
@@ -190,8 +223,19 @@ class PictureServiceTest {
 
         assertEquals(5, response.getPointsAwarded());
         assertEquals(PictureMode.COLLECTION, response.getPictureMode());
+        assertEquals(signedUrl, response.getImageUrl());
+
         assertEquals(95, user.getTotalPoints());
         assertEquals(Level.LEVEL_1, user.getLevel());
+
+        verify(natureAiService).identifyImage(signedUrl, TargetType.PLANT);
+
+        verify(discoveryService).awardDiscoveryPoints(
+                user,
+                PictureCategory.TREE,
+                "Birch",
+                objectKey
+        );
 
         verify(badgeService).checkAndUnlockCategoryBadges(user, PictureCategory.TREE);
         verify(challengeProgressService, never()).updateProgressFromPicture(any(), any());

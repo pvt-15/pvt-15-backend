@@ -24,6 +24,7 @@ public class UserDiscovery {
 
     private String displayLabel;
     private String imageUrl;
+    private String imageObjectKey;
 
     public UserDiscovery(){
 
@@ -57,6 +58,10 @@ public class UserDiscovery {
         return imageUrl;
     }
 
+    public String getImageObjectKey() {
+        return imageObjectKey;
+    }
+
     public void setId(Integer id) {
         this.id = id;
     }
@@ -83,5 +88,9 @@ public class UserDiscovery {
 
     public void setImageUrl(String imageUrl) {
         this.imageUrl = imageUrl;
+    }
+
+    public void setImageObjectKey(String imageObjectKey) {
+        this.imageObjectKey = imageObjectKey;
     }
 }
