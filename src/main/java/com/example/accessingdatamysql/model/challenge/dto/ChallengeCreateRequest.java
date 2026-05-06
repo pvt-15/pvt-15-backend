@@ -13,6 +13,7 @@ public class ChallengeCreateRequest {
     private Integer startMonth;
     private Integer endMonth;
     private String locationName;
+    private String category;
     private List<ChallengeTaskCreateRequest> tasks;
 
     public ChallengeCreateRequest() {
@@ -88,6 +89,14 @@ public class ChallengeCreateRequest {
 
     public void setLocationName(String locationName) {
         this.locationName = locationName;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
     }
 
     public List<ChallengeTaskCreateRequest> getTasks() {

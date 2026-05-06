@@ -39,6 +39,7 @@ public class ChallengeSeeder implements CommandLineRunner {
                 ChallengeType.TREASURE_HUNT,
                 ChallengeDifficulty.EASY,
                 ScoringRules.defaultChallengeReward(ChallengeDifficulty.EASY),
+                PictureCategory.UNKNOWN,
                 true,
                 3,
                 9,
@@ -114,6 +115,7 @@ public class ChallengeSeeder implements CommandLineRunner {
                                       String description,
                                       ChallengeType type,
                                       ChallengeDifficulty difficulty,
+                                      PictureCategory category,
                                       int rewardPoints,
                                       boolean active,
                                       Integer startMonth,
@@ -129,6 +131,7 @@ public class ChallengeSeeder implements CommandLineRunner {
         challenge.setStartMonth(startMonth);
         challenge.setEndMonth(endMonth);
         challenge.setLocationName(locationName);
+        challenge.setCategory(category);
         return challenge;
     }
 

@@ -89,6 +89,7 @@ public class ChallengeService {
                 challenge.getStartMonth(),
                 challenge.getEndMonth(),
                 status,
+                challenge.getCategory().name(),
                 taskResponses
         );
     }
@@ -174,6 +175,12 @@ public class ChallengeService {
                     );
                 }
 
+                if (request.getCategory() != null && !request.getCategory().isBlank()) {
+                    challenge.setCategory(
+                            PictureCategory.valueOf(request.getCategory().toUpperCase())
+                    );
+                }
+
                 task.setRequiredCount(taskRequest.getRequiredCount());
                 task.setMustBeUnique(taskRequest.isMustBeUnique());
                 task.setReferenceImageUrl(taskRequest.getReferenceImageUrl());
@@ -201,6 +208,7 @@ public class ChallengeService {
                 savedChallenge.getStartMonth(),
                 savedChallenge.getEndMonth(),
                 ChallengeStatus.NOT_STARTED.name(),
+                savedChallenge.getCategory().name(),
                 taskResponses
         );
     }
@@ -229,8 +237,28 @@ public class ChallengeService {
                 request.getChallengeType().toUpperCase()
         );
 
-        List<Challenge> matchingChallenges =
-                challengeRepository.findByActiveTrueAndDifficultyAndType(difficulty, type);
+        PictureCategory category = null;
+
+        if (request.getChallengeCategory() != null && !request.getChallengeCategory().isBlank()) {
+            category = PictureCategory.valueOf(
+                    request.getChallengeCategory().toUpperCase()
+            );
+        }
+
+        List<Challenge> matchingChallenges;
+
+        if (category == null) {
+            matchingChallenges = challengeRepository.findByActiveTrueAndDifficultyAndType(
+                    difficulty,
+                    type
+            );
+        } else {
+            matchingChallenges = challengeRepository.findByActiveTrueAndDifficultyAndTypeAndCategory(
+                    difficulty,
+                    type,
+                    category
+            );
+        }
 
         List<Challenge> availableChallenges = new ArrayList<>();
 
@@ -296,6 +324,11 @@ public class ChallengeService {
     }
 
     private ChallengeResponse toChallengeResponse(Challenge challenge, String status) {
+        String category = null;
+
+        if (challenge.getCategory() != null) {
+            category = challenge.getCategory().name();
+        }
         return new ChallengeResponse(
                 challenge.getId(),
                 challenge.getTitle(),
@@ -304,7 +337,8 @@ public class ChallengeService {
                 challenge.getDifficulty().name(),
                 challenge.getRewardPoints(),
                 challenge.isActive(),
-                status
+                status,
+                category
         );
     }
 
