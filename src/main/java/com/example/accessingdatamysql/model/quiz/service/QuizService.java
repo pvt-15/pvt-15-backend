@@ -161,6 +161,71 @@ public class QuizService {
     }
 
     @Transactional
+    public QuizReviewResponse getQuizReview(Integer userId, Integer attemptId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND));
+
+        UserQuizAttempt attempt = userQuizAttemptRepository.findById(attemptId)
+                .orElseThrow(() -> new IllegalArgumentException(QUIZ_ATTEMPT_NOT_FOUND));
+
+        if (!attempt.getUser().getId().equals(user.getId())) {
+            throw new IllegalArgumentException(QUIZ_ATTEMPT_NOT_FOUND);
+        }
+
+        List<UserQuizAnswer> savedAnswers = userQuizAnswerRepository.findByUserQuizAttempt(attempt);
+        List<QuizAnswerReviewResponse> answerResponses = new ArrayList<>();
+
+        for (UserQuizAnswer savedAnswer : savedAnswers) {
+            QuizQuestion question = savedAnswer.getQuizQuestion();
+            QuizOption selectedOption = savedAnswer.getSelectedOption();
+            QuizOption correctOption = findCorrectOption(question);
+
+            answerResponses.add(new QuizAnswerReviewResponse(
+                    question.getId(),
+                    question.getQuestionText(),
+                    question.getImageUrl(),
+
+                    selectedOption.getId(),
+                    selectedOption.getOptionText(),
+                    selectedOption.getImageUrl(),
+
+                    correctOption.getId(),
+                    correctOption.getOptionText(),
+                    correctOption.getImageUrl(),
+
+                    savedAnswer.isCorrect(),
+                    question.getExplanation()
+            ));
+        }
+
+        String completedAt = null;
+        if (attempt.getCompletedAt() != null) {
+            completedAt = attempt.getCompletedAt().toString();
+        }
+
+        return new QuizReviewResponse(
+                attempt.getId(),
+                attempt.getScore(),
+                attempt.getTotalQuestions(),
+                attempt.getPointsAwarded(),
+                completedAt,
+                answerResponses
+        );
+    }
+
+    private QuizOption findCorrectOption(QuizQuestion question) {
+        List<QuizOption> options = quizOptionRepository.findByQuizQuestion(question);
+
+        for (QuizOption option : options) {
+            if (option.isCorrect()) {
+                return option;
+            }
+        }
+
+        throw new IllegalStateException("Correct quiz option not found for question " + question.getId());
+    }
+
+    @Transactional
     public QuizQuestionResponse createQuiz(QuizCreateRequest request){
         validateQuizCreateRequest(request);
 

@@ -38,6 +38,13 @@ public class QuizController {
         return ResponseEntity.ok(quizService.submitQuiz(userId, request));
     }
 
+    @GetMapping("/attempts/{attemptId}/review")
+    public ResponseEntity<QuizReviewResponse> getQuizReview(@AuthenticationPrincipal Jwt jwt,
+                                                            @PathVariable Integer attemptId) {
+        Integer userId = Integer.valueOf(jwt.getSubject());
+        return ResponseEntity.ok(quizService.getQuizReview(userId, attemptId));
+    }
+
     @PostMapping("/admin")
     public ResponseEntity<QuizQuestionResponse> createQuiz(
             @RequestHeader("ADMIN-KEY") String providedAdminKey,
