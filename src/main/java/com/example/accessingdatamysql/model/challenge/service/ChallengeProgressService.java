@@ -1,5 +1,7 @@
 package com.example.accessingdatamysql.model.challenge.service;
 
+import com.example.accessingdatamysql.model.challenge.entity.UserChallengePictureMatch;
+import com.example.accessingdatamysql.model.challenge.repository.UserChallengePictureMatchRepository;
 import com.example.accessingdatamysql.user.entity.User;
 import com.example.accessingdatamysql.model.challenge.entity.ChallengeTask;
 import com.example.accessingdatamysql.model.challenge.entity.UserChallengeProgress;
@@ -9,6 +11,7 @@ import com.example.accessingdatamysql.model.challenge.enums.TaskType;
 import com.example.accessingdatamysql.model.challenge.repository.UserChallengeProgressRepository;
 import com.example.accessingdatamysql.model.challenge.repository.UserChallengeTaskProgressRepository;
 import com.example.accessingdatamysql.picture.entity.Picture;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -19,51 +22,78 @@ public class ChallengeProgressService {
 
     private final UserChallengeProgressRepository userChallengeProgressRepository;
     private final UserChallengeTaskProgressRepository userChallengeTaskProgressRepository;
+    private final UserChallengePictureMatchRepository userChallengePictureMatchRepository;
 
     public ChallengeProgressService(UserChallengeProgressRepository userChallengeProgressRepository,
-                                    UserChallengeTaskProgressRepository userChallengeTaskProgressRepository){
+                                    UserChallengeTaskProgressRepository userChallengeTaskProgressRepository,
+                                    UserChallengePictureMatchRepository userChallengePictureMatchRepository){
         this.userChallengeProgressRepository = userChallengeProgressRepository;
         this.userChallengeTaskProgressRepository = userChallengeTaskProgressRepository;
+        this.userChallengePictureMatchRepository = userChallengePictureMatchRepository;
     }
 
-    public int updateProgressFromPicture(User user, Picture picture){
+    @Transactional
+    public int updateProgressFromPicture(User user, Picture picture) {
         List<UserChallengeProgress> allProgress = userChallengeProgressRepository.findByUser(user);
 
         int rewardToGive = 0;
 
-        for(UserChallengeProgress progress : allProgress){
-            if(progress.getStatus() != ChallengeStatus.IN_PROGRESS){
+        for (UserChallengeProgress progress : allProgress) {
+            if (progress.getStatus() != ChallengeStatus.IN_PROGRESS) {
                 continue;
             }
+
             List<UserChallengeTaskProgress> taskProgressList =
                     userChallengeTaskProgressRepository.findByUserChallengeProgress(progress);
 
             boolean anyTaskChanged = false;
 
-            for(UserChallengeTaskProgress taskProgress : taskProgressList){
-                if(taskProgress.isCompleted()) {
+            for (UserChallengeTaskProgress taskProgress : taskProgressList) {
+                if (taskProgress.isCompleted()) {
                     continue;
                 }
+
                 ChallengeTask task = taskProgress.getChallengeTask();
 
-                if(!pictureMatchesTask(picture, task)){
+                if (!pictureMatchesTask(picture, task)) {
                     continue;
                 }
 
-                if(task.isMustBeUnique()){
+                if (userChallengePictureMatchRepository.existsByTaskProgressAndPicture(taskProgress, picture)) {
+                    continue;
+                }
+
+                if (task.isMustBeUnique()) {
                     String normalizedPictureLabel = normalize(picture.getLabel());
-                    if(alreadyMatched(taskProgress, normalizedPictureLabel)){
+
+                    if (normalizedPictureLabel.isBlank()) {
                         continue;
                     }
+
+                    if (alreadyMatched(taskProgress, normalizedPictureLabel)) {
+                        continue;
+                    }
+
                     addMatchedLabel(taskProgress, normalizedPictureLabel);
                 }
 
-                int current = taskProgress.getCurrentCount() == null ? 0 : taskProgress.getCurrentCount();
-                taskProgress.setCurrentCount(current + 1);
+                UserChallengePictureMatch pictureMatch = new UserChallengePictureMatch();
+                pictureMatch.setTaskProgress(taskProgress);
+                pictureMatch.setPicture(picture);
+                pictureMatch.setMatchedAt(LocalDateTime.now());
+                userChallengePictureMatchRepository.save(pictureMatch);
 
-                int requiredCount = task.getRequiredCount() == null ? 1 : task.getRequiredCount();
+                int currentCount = taskProgress.getCurrentCount() == null
+                        ? 0
+                        : taskProgress.getCurrentCount();
 
-                if(taskProgress.getCurrentCount() >= requiredCount){
+                taskProgress.setCurrentCount(currentCount + 1);
+
+                int requiredCount = task.getRequiredCount() == null
+                        ? 1
+                        : task.getRequiredCount();
+
+                if (taskProgress.getCurrentCount() >= requiredCount) {
                     taskProgress.setCompleted(true);
                 }
 
@@ -71,18 +101,19 @@ public class ChallengeProgressService {
                 anyTaskChanged = true;
             }
 
-            if(anyTaskChanged && allTasksCompleted(taskProgressList) && !progress.isRewardClaimed()){
+            if (anyTaskChanged && allTasksCompleted(taskProgressList) && !progress.isRewardClaimed()) {
                 progress.setStatus(ChallengeStatus.COMPLETED);
                 progress.setCompletedAt(LocalDateTime.now());
                 progress.setRewardClaimed(true);
                 userChallengeProgressRepository.save(progress);
 
                 Integer reward = progress.getChallenge().getRewardPoints();
-                if(reward != null){
+                if (reward != null) {
                     rewardToGive += reward;
                 }
             }
         }
+
         return rewardToGive;
     }
 

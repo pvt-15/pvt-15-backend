@@ -1,9 +1,6 @@
 package com.example.accessingdatamysql.model.challenge.controller;
 
-import com.example.accessingdatamysql.model.challenge.dto.ChallengeCreateRequest;
-import com.example.accessingdatamysql.model.challenge.dto.ChallengeDetailsResponse;
-import com.example.accessingdatamysql.model.challenge.dto.ChallengeResponse;
-import com.example.accessingdatamysql.model.challenge.dto.ChallengeStartRandomRequest;
+import com.example.accessingdatamysql.model.challenge.dto.*;
 import com.example.accessingdatamysql.model.challenge.service.ChallengeService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -53,6 +50,13 @@ public class ChallengeController {
                                                             @PathVariable Integer id) {
         Integer userId = Integer.valueOf(jwt.getSubject());
         return ResponseEntity.ok(challengeService.startChallenge(userId, id));
+    }
+
+    @GetMapping("/{id}/pictures")
+    public ResponseEntity<ChallengePicturesResponse> getChallengePictures(@AuthenticationPrincipal Jwt jwt,
+                                                                          @PathVariable Integer id) {
+        Integer userId = Integer.valueOf(jwt.getSubject());
+        return ResponseEntity.ok(challengeService.getChallengePictures(userId, id));
     }
 
     @GetMapping("/me")

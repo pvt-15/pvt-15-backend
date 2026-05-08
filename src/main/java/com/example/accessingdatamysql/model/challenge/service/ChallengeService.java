@@ -1,18 +1,18 @@
 package com.example.accessingdatamysql.model.challenge.service;
 
 import com.example.accessingdatamysql.model.challenge.dto.*;
-import com.example.accessingdatamysql.model.challenge.entity.Challenge;
-import com.example.accessingdatamysql.model.challenge.entity.ChallengeTask;
-import com.example.accessingdatamysql.model.challenge.entity.UserChallengeProgress;
-import com.example.accessingdatamysql.model.challenge.entity.UserChallengeTaskProgress;
+import com.example.accessingdatamysql.model.challenge.entity.*;
 import com.example.accessingdatamysql.model.challenge.enums.ChallengeDifficulty;
 import com.example.accessingdatamysql.model.challenge.enums.ChallengeStatus;
 import com.example.accessingdatamysql.model.challenge.enums.ChallengeType;
 import com.example.accessingdatamysql.model.challenge.enums.TaskType;
 import com.example.accessingdatamysql.model.challenge.repository.ChallengeRepository;
+import com.example.accessingdatamysql.model.challenge.repository.UserChallengePictureMatchRepository;
 import com.example.accessingdatamysql.model.challenge.repository.UserChallengeProgressRepository;
 import com.example.accessingdatamysql.model.challenge.repository.UserChallengeTaskProgressRepository;
+import com.example.accessingdatamysql.picture.entity.Picture;
 import com.example.accessingdatamysql.picture.enums.PictureCategory;
+import com.example.accessingdatamysql.storage.service.ImageStorageService;
 import com.example.accessingdatamysql.user.entity.User;
 import com.example.accessingdatamysql.user.repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -43,15 +43,21 @@ public class ChallengeService {
     private final UserRepository userRepository;
     private final UserChallengeProgressRepository userChallengeProgressRepository;
     private final UserChallengeTaskProgressRepository userChallengeTaskProgressRepository;
+    private final UserChallengePictureMatchRepository userChallengePictureMatchRepository;
+    private final ImageStorageService imageStorageService;
 
     public ChallengeService(ChallengeRepository challengeRepository,
                             UserRepository userRepository,
                             UserChallengeProgressRepository userChallengeProgressRepository,
-                            UserChallengeTaskProgressRepository userChallengeTaskProgressRepository) {
+                            UserChallengeTaskProgressRepository userChallengeTaskProgressRepository,
+                            UserChallengePictureMatchRepository userChallengePictureMatchRepository,
+                            ImageStorageService imageStorageService) {
         this.challengeRepository = challengeRepository;
         this.userRepository = userRepository;
         this.userChallengeProgressRepository = userChallengeProgressRepository;
         this.userChallengeTaskProgressRepository = userChallengeTaskProgressRepository;
+        this.userChallengePictureMatchRepository = userChallengePictureMatchRepository;
+        this.imageStorageService = imageStorageService;
     }
 
     public List<ChallengeResponse> getActiveChallenges(Integer userId) {
@@ -281,6 +287,71 @@ public class ChallengeService {
         Challenge selectedChallenge = availableChallenges.get(0);
 
         return startChallenge(userId, selectedChallenge.getId());
+    }
+
+    @Transactional
+    public ChallengePicturesResponse getChallengePictures(Integer userId, Integer challengeId) {
+        User user = getUserById(userId);
+        Challenge challenge = getChallengeByIdInternal(challengeId);
+
+        UserChallengeProgress progress = userChallengeProgressRepository
+                .findByUserAndChallenge(user, challenge)
+                .orElseThrow(() -> new IllegalArgumentException("Challenge has not been started"));
+
+        List<UserChallengeTaskProgress> taskProgressList =
+                userChallengeTaskProgressRepository.findByUserChallengeProgress(progress);
+
+        List<UserChallengePictureMatch> matches =
+                userChallengePictureMatchRepository.findByTaskProgress_UserChallengeProgress(progress);
+
+        List<ChallengeTaskPicturesResponse> taskResponses = new ArrayList<>();
+
+        for (UserChallengeTaskProgress taskProgress : taskProgressList) {
+            List<ChallengeMatchedPictureResponse> pictureResponses = new ArrayList<>();
+
+            for (UserChallengePictureMatch match : matches) {
+                if (!match.getTaskProgress().getId().equals(taskProgress.getId())) {
+                    continue;
+                }
+
+                Picture picture = match.getPicture();
+
+                pictureResponses.add(new ChallengeMatchedPictureResponse(
+                        picture.getId(),
+                        picture.getLabel(),
+                        picture.getCategory() == null ? null : picture.getCategory().name(),
+                        getSignedUrlOrFallback(picture),
+                        picture.getTakenAt() == null ? null : picture.getTakenAt().toString()
+                ));
+            }
+
+            ChallengeTask task = taskProgress.getChallengeTask();
+
+            taskResponses.add(new ChallengeTaskPicturesResponse(
+                    taskProgress.getId(),
+                    task.getId(),
+                    task.getTaskText(),
+                    taskProgress.getCurrentCount(),
+                    task.getRequiredCount(),
+                    taskProgress.isCompleted(),
+                    pictureResponses
+            ));
+        }
+
+        return new ChallengePicturesResponse(
+                challenge.getId(),
+                challenge.getTitle(),
+                progress.getStatus().name(),
+                taskResponses
+        );
+    }
+
+    private String getSignedUrlOrFallback(Picture picture) {
+        if (picture.getImageObjectKey() != null && !picture.getImageObjectKey().isBlank()) {
+            return imageStorageService.generateSignedReadUrl(picture.getImageObjectKey());
+        }
+
+        return picture.getImageUrl();
     }
 
     private void createTaskProgress(Challenge challenge, UserChallengeProgress savedProgress) {
