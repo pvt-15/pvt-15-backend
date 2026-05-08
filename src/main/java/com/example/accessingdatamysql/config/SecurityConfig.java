@@ -27,16 +27,19 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/ping").permitAll()
-
                         .requestMatchers(HttpMethod.POST, "/auth/register").permitAll()
                         .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/auth/google").permitAll()
 
+                        .requestMatchers(HttpMethod.GET, "/auth/me").authenticated()
                         .requestMatchers(HttpMethod.PATCH, "/users/me/profile-image").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/users/me").authenticated()
 
-                        .requestMatchers(HttpMethod.GET, "/auth/me").authenticated()
                         .requestMatchers("/pictures/**").authenticated()
+                        .requestMatchers("/challenges/**").authenticated()
+                        .requestMatchers("/quiz/**").authenticated()
+                        .requestMatchers("/badges/**").authenticated()
+                        .requestMatchers("/uploads/**").authenticated()
 
                         .requestMatchers(HttpMethod.POST, "/challenges/admin").permitAll()
                         .requestMatchers(HttpMethod.POST, "/quiz/admin").permitAll()
