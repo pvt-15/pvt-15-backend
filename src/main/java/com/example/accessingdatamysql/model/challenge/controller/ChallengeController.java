@@ -59,6 +59,13 @@ public class ChallengeController {
         return ResponseEntity.ok(challengeService.getChallengePictures(userId, id));
     }
 
+    @DeleteMapping("/{id}/progress")
+    public ResponseEntity<ChallengeResponse> abandonChallenge(@AuthenticationPrincipal Jwt jwt,
+                                                              @PathVariable Integer id) {
+        Integer userId = Integer.valueOf(jwt.getSubject());
+        return ResponseEntity.ok(challengeService.abandonChallenge(userId, id));
+    }
+
     @GetMapping("/me")
     public ResponseEntity<List<ChallengeResponse>> getMyChallenges(@AuthenticationPrincipal Jwt jwt) {
         Integer userId = Integer.valueOf(jwt.getSubject());

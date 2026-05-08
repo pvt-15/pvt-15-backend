@@ -38,6 +38,8 @@ public class ChallengeService {
     private static final String EMPTY_RANDOM_CHALLENGE_DIFFICULTY = "Challenge difficulty is required";
     private static final String EMPTY_RANDOM_CHALLENGE_TYPE = "Challenge type is required";
     private static final String NO_RANDOM_CHALLENGE_FOUND = "No available challenge found for selected difficulty and type";
+    private static final String CHALLENGE_ALREADY_COMPLETED = "Completed challenges cannot be abandoned";
+    private static final String CHALLENGE_NOT_STARTED = "Challenge has not been started";
 
     private final ChallengeRepository challengeRepository;
     private final UserRepository userRepository;
@@ -296,7 +298,7 @@ public class ChallengeService {
 
         UserChallengeProgress progress = userChallengeProgressRepository
                 .findByUserAndChallenge(user, challenge)
-                .orElseThrow(() -> new IllegalArgumentException("Challenge has not been started"));
+                .orElseThrow(() -> new IllegalArgumentException(CHALLENGE_NOT_STARTED));
 
         List<UserChallengeTaskProgress> taskProgressList =
                 userChallengeTaskProgressRepository.findByUserChallengeProgress(progress);
@@ -346,24 +348,36 @@ public class ChallengeService {
         );
     }
 
-    private String getSignedUrlOrFallback(Picture picture) {
-        if (picture.getImageObjectKey() != null && !picture.getImageObjectKey().isBlank()) {
-            return imageStorageService.generateSignedReadUrl(picture.getImageObjectKey());
+    @Transactional
+    public ChallengeResponse abandonChallenge(Integer userId, Integer challengeId) {
+        User user = getUserById(userId);
+        Challenge challenge = getChallengeByIdInternal(challengeId);
+
+        Optional<UserChallengeProgress> existingProgress =
+                userChallengeProgressRepository.findByUserAndChallenge(user, challenge);
+
+        if (existingProgress.isEmpty()) {
+            return toChallengeResponse(challenge, ChallengeStatus.NOT_STARTED.name());
         }
 
-        return picture.getImageUrl();
-    }
+        UserChallengeProgress progress = existingProgress.get();
 
-    private void createTaskProgress(Challenge challenge, UserChallengeProgress savedProgress) {
-        for (ChallengeTask task : challenge.getTasks()) {
-            UserChallengeTaskProgress taskProgress = new UserChallengeTaskProgress();
-            taskProgress.setUserChallengeProgress(savedProgress);
-            taskProgress.setChallengeTask(task);
-            taskProgress.setCurrentCount(0);
-            taskProgress.setCompleted(false);
-            taskProgress.setMatchedLabels("");
-            userChallengeTaskProgressRepository.save(taskProgress);
+        if (progress.getStatus() == ChallengeStatus.COMPLETED) {
+            throw new IllegalArgumentException("Completed challenges cannot be abandoned");
         }
+
+        List<UserChallengePictureMatch> pictureMatches =
+                userChallengePictureMatchRepository.findByTaskProgress_UserChallengeProgress(progress);
+
+        userChallengePictureMatchRepository.deleteAll(pictureMatches);
+
+        List<UserChallengeTaskProgress> taskProgressList =
+                userChallengeTaskProgressRepository.findByUserChallengeProgress(progress);
+
+        userChallengeTaskProgressRepository.deleteAll(taskProgressList);
+        userChallengeProgressRepository.delete(progress);
+
+        return toChallengeResponse(challenge, ChallengeStatus.NOT_STARTED.name());
     }
 
     public List<ChallengeResponse> getMyChallenges(Integer userId) {
@@ -415,6 +429,26 @@ public class ChallengeService {
                 status,
                 categoryNameOrNull(challenge)
         );
+    }
+
+    private String getSignedUrlOrFallback(Picture picture) {
+        if (picture.getImageObjectKey() != null && !picture.getImageObjectKey().isBlank()) {
+            return imageStorageService.generateSignedReadUrl(picture.getImageObjectKey());
+        }
+
+        return picture.getImageUrl();
+    }
+
+    private void createTaskProgress(Challenge challenge, UserChallengeProgress savedProgress) {
+        for (ChallengeTask task : challenge.getTasks()) {
+            UserChallengeTaskProgress taskProgress = new UserChallengeTaskProgress();
+            taskProgress.setUserChallengeProgress(savedProgress);
+            taskProgress.setChallengeTask(task);
+            taskProgress.setCurrentCount(0);
+            taskProgress.setCompleted(false);
+            taskProgress.setMatchedLabels("");
+            userChallengeTaskProgressRepository.save(taskProgress);
+        }
     }
 
     private ChallengeTaskResponse toTaskResponse(ChallengeTask challengeTask) {
