@@ -32,7 +32,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/auth/google").permitAll()
 
-                        .requestMatchers(HttpMethod.GET, "/users/**").permitAll()
+                        .requestMatchers(HttpMethod.PATCH, "/users/me/profile-image").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/users/me").authenticated()
 
                         .requestMatchers(HttpMethod.GET, "/auth/me").authenticated()
                         .requestMatchers("/pictures/**").authenticated()
