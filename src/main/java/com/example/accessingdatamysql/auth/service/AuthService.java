@@ -1,6 +1,7 @@
 package com.example.accessingdatamysql.auth.service;
 
 import com.example.accessingdatamysql.auth.dto.*;
+import com.example.accessingdatamysql.storage.service.ImageStorageService;
 import com.example.accessingdatamysql.user.entity.User;
 import com.example.accessingdatamysql.user.enums.Level;
 import com.example.accessingdatamysql.auth.enums.Provider;
@@ -54,6 +55,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final GoogleTokenVerifierService googleTokenVerifierService;
+    private final ImageStorageService imageStorageService;
 
     /**
      * Creates a new {@code AuthService}
@@ -65,11 +67,13 @@ public class AuthService {
     public AuthService(UserRepository userRepository,
                        PasswordEncoder passwordEncoder,
                        JwtService jwtService,
-                       GoogleTokenVerifierService googleTokenVerifierService) {
+                       GoogleTokenVerifierService googleTokenVerifierService,
+                       ImageStorageService imageStorageService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.googleTokenVerifierService = googleTokenVerifierService;
+        this.imageStorageService = imageStorageService;
     }
 
     /**
@@ -120,7 +124,7 @@ public class AuthService {
                 savedUser.getEmail(),
                 REGISTER_SUCCESS,
                 token,
-                savedUser.getProfileImageUrl());
+                getProfileImageUrl(savedUser));
     }
 
     /**
@@ -165,7 +169,7 @@ public class AuthService {
                 user.getEmail(),
                 LOGIN_SUCCESS,
                 token,
-                user.getProfileImageUrl());
+                getProfileImageUrl(user));
     }
 
     /**
@@ -237,7 +241,7 @@ public class AuthService {
                 user.getEmail(),
                 GOOGLE_LOGIN_SUCCESS,
                 token,
-                user.getProfileImageUrl());
+                getProfileImageUrl(user));
     }
 
     /**
@@ -306,5 +310,15 @@ public class AuthService {
             return googleUserInfo.getName();
         }
         return googleUserInfo.getEmail();
+    }
+
+    private String getProfileImageUrl(User user) {
+        String objectKey = user.getProfileImageObjectKey();
+
+        if (objectKey != null && !objectKey.isBlank()) {
+            return imageStorageService.generateSignedReadUrl(objectKey);
+        }
+
+        return user.getProfileImageUrl();
     }
 }

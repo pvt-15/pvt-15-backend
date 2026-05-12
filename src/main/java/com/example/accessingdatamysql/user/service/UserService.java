@@ -15,7 +15,9 @@ import com.example.accessingdatamysql.model.quiz.repository.UserQuizAttemptRepos
 import com.example.accessingdatamysql.picture.entity.Picture;
 import com.example.accessingdatamysql.picture.entity.UserDiscovery;
 import com.example.accessingdatamysql.picture.repository.PictureRepository;
+import com.example.accessingdatamysql.user.dto.UserResponse;
 import com.example.accessingdatamysql.user.entity.User;
+import com.example.accessingdatamysql.user.mapper.UserMapper;
 import com.example.accessingdatamysql.user.repository.UserDiscoveryRepository;
 import com.example.accessingdatamysql.user.repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -29,6 +31,7 @@ public class UserService {
     private static final String USER_NOT_FOUND = "User not found";
 
     private final UserRepository userRepository;
+    private final UserMapper userMapper;
     private final PictureRepository pictureRepository;
     private final UserDiscoveryRepository userDiscoveryRepository;
     private final UserBadgeRepository userBadgeRepository;
@@ -39,6 +42,7 @@ public class UserService {
     private final UserQuizAnswerRepository userQuizAnswerRepository;
 
     public UserService(UserRepository userRepository,
+                       UserMapper userMapper,
                        PictureRepository pictureRepository,
                        UserDiscoveryRepository userDiscoveryRepository,
                        UserBadgeRepository userBadgeRepository,
@@ -48,6 +52,7 @@ public class UserService {
                        UserQuizAttemptRepository userQuizAttemptRepository,
                        UserQuizAnswerRepository userQuizAnswerRepository) {
         this.userRepository = userRepository;
+        this.userMapper = userMapper;
         this.pictureRepository = pictureRepository;
         this.userDiscoveryRepository = userDiscoveryRepository;
         this.userBadgeRepository = userBadgeRepository;
@@ -56,6 +61,13 @@ public class UserService {
         this.userChallengePictureMatchRepository = userChallengePictureMatchRepository;
         this.userQuizAttemptRepository = userQuizAttemptRepository;
         this.userQuizAnswerRepository = userQuizAnswerRepository;
+    }
+
+    public UserResponse getCurrentUser(Integer userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND));
+
+        return userMapper.toUserResponse(user);
     }
 
     @Transactional

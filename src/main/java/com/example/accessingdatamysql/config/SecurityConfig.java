@@ -32,17 +32,19 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/auth/google").permitAll()
 
                         .requestMatchers(HttpMethod.GET, "/auth/me").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/users/me").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/users/profile-images/options").authenticated()
                         .requestMatchers(HttpMethod.PATCH, "/users/me/profile-image").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/users/me").authenticated()
+
+                        .requestMatchers(HttpMethod.POST, "/challenges/admin").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/quiz/admin").permitAll()
 
                         .requestMatchers("/pictures/**").authenticated()
                         .requestMatchers("/challenges/**").authenticated()
                         .requestMatchers("/quiz/**").authenticated()
                         .requestMatchers("/badges/**").authenticated()
                         .requestMatchers("/uploads/**").authenticated()
-
-                        .requestMatchers(HttpMethod.POST, "/challenges/admin").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/quiz/admin").permitAll()
 
                         .anyRequest().authenticated()
                 )
