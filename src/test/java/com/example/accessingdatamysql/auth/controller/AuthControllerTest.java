@@ -5,6 +5,7 @@ import com.example.accessingdatamysql.auth.dto.RegisterRequest;
 import com.example.accessingdatamysql.auth.service.AuthService;
 import com.example.accessingdatamysql.user.mapper.UserMapper;
 import com.example.accessingdatamysql.user.repository.UserRepository;
+import com.example.accessingdatamysql.user.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -33,6 +34,9 @@ class AuthControllerTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @MockitoBean
+    private UserService userService;
 
     @MockitoBean
     private AuthService authService;

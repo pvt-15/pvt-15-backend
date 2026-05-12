@@ -25,7 +25,7 @@ public class UserController {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final UserService userService;
-    ImageStorageService imageStorageService;
+    private final ImageStorageService imageStorageService;
 
     public UserController(UserRepository userRepository,
                           UserMapper userMapper,
@@ -35,6 +35,18 @@ public class UserController {
         this.userMapper = userMapper;
         this.userService = userService;
         this.imageStorageService = imageStorageService;
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<?> getCurrentUser(@AuthenticationPrincipal Jwt jwt) {
+        try {
+            Integer userId = Integer.valueOf(jwt.getSubject());
+            return ResponseEntity.ok(userService.getCurrentUser(userId));
+        } catch (NumberFormatException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @GetMapping("/profile-images/options")
