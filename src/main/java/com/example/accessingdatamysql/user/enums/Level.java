@@ -1,19 +1,19 @@
 package com.example.accessingdatamysql.user.enums;
 
 public enum Level {
-    LEVEL_1(0, 1, "Lövjägare"),
-    LEVEL_2(150, 2, "Djurspanare"),
+    LEVEL_1(0, 1, "Skogsjägare"),
+    LEVEL_2(150, 2, "Naturspanare"),
     LEVEL_3(300, 3, "Skogsexpert"),
-    LEVEL_4(600, 4, "Naturmästare");
+    LEVEL_4(600, 4, "Skogsmästare");
 
     private final int minPoints;
     private final int code;
-    private final String type;
+    private final String displayName;
 
-    Level(int minPoints, int code, String type) {
+    Level(int minPoints, int code, String displayName) {
         this.minPoints = minPoints;
         this.code = code;
-        this.type = type;
+        this.displayName = displayName;
     }
 
     public static Level fromPoints(int totalPoints) {
@@ -36,7 +36,7 @@ public enum Level {
         return code;
     }
 
-    public String getType() {
-        return type;
+    public String getDisplayName() {
+        return displayName;
     }
 }
