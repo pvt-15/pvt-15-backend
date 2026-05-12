@@ -8,4 +8,6 @@ import java.util.List;
 
 public interface BadgeDefinitionRepository extends CrudRepository<BadgeDefinition, Integer> {
     List<BadgeDefinition> findByActiveTrueAndCategory(PictureCategory category);
+
+    List<BadgeDefinition> findByActiveTrue();
 }

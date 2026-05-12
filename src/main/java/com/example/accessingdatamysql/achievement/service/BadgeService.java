@@ -6,6 +6,7 @@ import com.example.accessingdatamysql.achievement.entity.UserBadge;
 import com.example.accessingdatamysql.achievement.repository.BadgeDefinitionRepository;
 import com.example.accessingdatamysql.achievement.repository.UserBadgeRepository;
 import com.example.accessingdatamysql.picture.enums.PictureCategory;
+import com.example.accessingdatamysql.storage.service.ImageStorageService;
 import com.example.accessingdatamysql.user.entity.User;
 import com.example.accessingdatamysql.user.repository.UserDiscoveryRepository;
 import org.springframework.stereotype.Service;
@@ -18,16 +19,21 @@ import java.util.List;
 @Service
 public class BadgeService {
 
+    private static final String BADGE_ICON_FOLDER = "badge-icons/";
+
     private final BadgeDefinitionRepository badgeDefinitionRepository;
     private final UserBadgeRepository userBadgeRepository;
     private final UserDiscoveryRepository userDiscoveryRepository;
+    private final ImageStorageService imageStorageService;
 
     public BadgeService(BadgeDefinitionRepository badgeDefinitionRepository,
                         UserBadgeRepository userBadgeRepository,
-                        UserDiscoveryRepository userDiscoveryRepository) {
+                        UserDiscoveryRepository userDiscoveryRepository,
+                        ImageStorageService imageStorageService) {
         this.badgeDefinitionRepository = badgeDefinitionRepository;
         this.userBadgeRepository = userBadgeRepository;
         this.userDiscoveryRepository = userDiscoveryRepository;
+        this.imageStorageService = imageStorageService;
     }
 
     public void checkAndUnlockCategoryBadges(User user, PictureCategory category) {
@@ -59,6 +65,8 @@ public class BadgeService {
         for(UserBadge userBadge : userBadges){
             BadgeDefinition badge = userBadge.getBadgeDefinition();
 
+            String imageUrl = getBadgeImageUrl(badge);
+
             responses.add(new BadgeResponse(
                     userBadge.getId(),
                     badge.getCode(),
@@ -67,9 +75,19 @@ public class BadgeService {
                     badge.getCategory().name(),
                     badge.getTier().name(),
                     badge.getRequiredCount(),
-                    userBadge.getUnlockedAt() != null ? userBadge.getUnlockedAt().toString() : null
+                    userBadge.getUnlockedAt() != null ? userBadge.getUnlockedAt().toString() : null,
+                    imageUrl
             ));
         }
         return responses;
+    }
+
+    private String getBadgeImageUrl(BadgeDefinition badge) {
+        if (badge == null || badge.getCode() == null || badge.getCode().isBlank()) {
+            return null;
+        }
+
+        String objectKey = BADGE_ICON_FOLDER + badge.getCode() + ".png";
+        return imageStorageService.generateSignedReadUrl(objectKey);
     }
 }

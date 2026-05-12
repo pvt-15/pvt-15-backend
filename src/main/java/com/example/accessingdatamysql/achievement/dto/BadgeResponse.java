@@ -1,7 +1,6 @@
 package com.example.accessingdatamysql.achievement.dto;
 
 public class BadgeResponse {
-
     private Integer id;
     private String code;
     private String name;
@@ -10,12 +9,20 @@ public class BadgeResponse {
     private String tier;
     private Integer requiredCount;
     private String unlockedAt;
+    private String imageUrl;
 
     public BadgeResponse() {
     }
 
-    public BadgeResponse(Integer id, String code, String name, String description,
-                         String category, String tier, Integer requiredCount, String unlockedAt) {
+    public BadgeResponse(Integer id,
+                         String code,
+                         String name,
+                         String description,
+                         String category,
+                         String tier,
+                         Integer requiredCount,
+                         String unlockedAt,
+                         String imageUrl) {
         this.id = id;
         this.code = code;
         this.name = name;
@@ -24,6 +31,7 @@ public class BadgeResponse {
         this.tier = tier;
         this.requiredCount = requiredCount;
         this.unlockedAt = unlockedAt;
+        this.imageUrl = imageUrl;
     }
 
     public Integer getId() {
@@ -56,5 +64,9 @@ public class BadgeResponse {
 
     public String getUnlockedAt() {
         return unlockedAt;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
     }
 }
