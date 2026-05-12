@@ -8,14 +8,19 @@ public class CreatePictureRequest {
     private String imageObjectKey;
     private TargetType targetType;
     private PictureMode pictureMode;
+    private Integer challengeId;
 
     public CreatePictureRequest() {
     }
 
-    public CreatePictureRequest(String imageObjectKey, TargetType targetType, PictureMode pictureMode) {
+    public CreatePictureRequest(String imageObjectKey,
+                                TargetType targetType,
+                                PictureMode pictureMode,
+                                Integer challengeId) {
         this.imageObjectKey = imageObjectKey;
         this.targetType = targetType;
         this.pictureMode = pictureMode;
+        this.challengeId = challengeId;
     }
 
     public String getImageObjectKey() {
@@ -40,5 +45,13 @@ public class CreatePictureRequest {
 
     public void setPictureMode(PictureMode pictureMode) {
         this.pictureMode = pictureMode;
+    }
+
+    public Integer getChallengeId() {
+        return challengeId;
+    }
+
+    public void setChallengeId(Integer challengeId) {
+        this.challengeId = challengeId;
     }
 }

@@ -30,6 +30,7 @@ public class PictureService {
     private static final String PICTURE_NOT_FOUND = "Picture not found";
     private static final String REQUEST_BODY_REQUIRED = "Request body is required";
     private static final String IMAGE_OBJECT_KEY_REQUIRED = "Image object key is required";
+    private static final String CHALLENGE_ID_REQUIRED = "Challenge id is required when pictureMode is CHALLENGE";
 
     private final PictureRepository pictureRepository;
     private final UserRepository userRepository;
@@ -114,7 +115,18 @@ public class PictureService {
         }
 
         if (pictureMode == PictureMode.CHALLENGE) {
-            int challengeReward = challengeProgressService.updateProgressFromPicture(user, savedPicture);
+            Integer challengeId = request.getChallengeId();
+
+            if (challengeId == null) {
+                throw new IllegalArgumentException(CHALLENGE_ID_REQUIRED);
+            }
+
+            int challengeReward = challengeProgressService.updateProgressFromPicture(
+                    user,
+                    savedPicture,
+                    challengeId
+            );
+
             totalPointsToAward += challengeReward;
         }
 

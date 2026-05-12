@@ -33,88 +33,91 @@ public class ChallengeProgressService {
     }
 
     @Transactional
-    public int updateProgressFromPicture(User user, Picture picture) {
-        List<UserChallengeProgress> allProgress = userChallengeProgressRepository.findByUser(user);
+    public int updateProgressFromPicture(User user, Picture picture, Integer challengeId) {
+        if (challengeId == null) {
+            throw new IllegalArgumentException("Challenge id is required");
+        }
 
-        int rewardToGive = 0;
+        UserChallengeProgress progress = userChallengeProgressRepository
+                .findByUserAndChallenge_Id(user, challengeId)
+                .orElseThrow(() -> new IllegalArgumentException("Challenge has not been started"));
 
-        for (UserChallengeProgress progress : allProgress) {
-            if (progress.getStatus() != ChallengeStatus.IN_PROGRESS) {
+        if (progress.getStatus() != ChallengeStatus.IN_PROGRESS) {
+            throw new IllegalArgumentException("Challenge is not in progress");
+        }
+
+        List<UserChallengeTaskProgress> taskProgressList =
+                userChallengeTaskProgressRepository.findByUserChallengeProgress(progress);
+
+        boolean anyTaskChanged = false;
+
+        for (UserChallengeTaskProgress taskProgress : taskProgressList) {
+            if (taskProgress.isCompleted()) {
                 continue;
             }
 
-            List<UserChallengeTaskProgress> taskProgressList =
-                    userChallengeTaskProgressRepository.findByUserChallengeProgress(progress);
+            ChallengeTask task = taskProgress.getChallengeTask();
 
-            boolean anyTaskChanged = false;
-
-            for (UserChallengeTaskProgress taskProgress : taskProgressList) {
-                if (taskProgress.isCompleted()) {
-                    continue;
-                }
-
-                ChallengeTask task = taskProgress.getChallengeTask();
-
-                if (!pictureMatchesTask(picture, task)) {
-                    continue;
-                }
-
-                if (userChallengePictureMatchRepository.existsByTaskProgressAndPicture(taskProgress, picture)) {
-                    continue;
-                }
-
-                if (task.isMustBeUnique()) {
-                    String normalizedPictureLabel = normalize(picture.getLabel());
-
-                    if (normalizedPictureLabel.isBlank()) {
-                        continue;
-                    }
-
-                    if (alreadyMatched(taskProgress, normalizedPictureLabel)) {
-                        continue;
-                    }
-
-                    addMatchedLabel(taskProgress, normalizedPictureLabel);
-                }
-
-                UserChallengePictureMatch pictureMatch = new UserChallengePictureMatch();
-                pictureMatch.setTaskProgress(taskProgress);
-                pictureMatch.setPicture(picture);
-                pictureMatch.setMatchedAt(LocalDateTime.now());
-                userChallengePictureMatchRepository.save(pictureMatch);
-
-                int currentCount = taskProgress.getCurrentCount() == null
-                        ? 0
-                        : taskProgress.getCurrentCount();
-
-                taskProgress.setCurrentCount(currentCount + 1);
-
-                int requiredCount = task.getRequiredCount() == null
-                        ? 1
-                        : task.getRequiredCount();
-
-                if (taskProgress.getCurrentCount() >= requiredCount) {
-                    taskProgress.setCompleted(true);
-                }
-
-                userChallengeTaskProgressRepository.save(taskProgress);
-                anyTaskChanged = true;
+            if (!pictureMatchesTask(picture, task)) {
+                continue;
             }
 
-            if (anyTaskChanged && allTasksCompleted(taskProgressList) && !progress.isRewardClaimed()) {
-                progress.setStatus(ChallengeStatus.COMPLETED);
-                progress.setCompletedAt(LocalDateTime.now());
-                progress.setRewardClaimed(true);
-                userChallengeProgressRepository.save(progress);
+            if (userChallengePictureMatchRepository.existsByTaskProgressAndPicture(taskProgress, picture)) {
+                continue;
+            }
 
-                Integer reward = progress.getChallenge().getRewardPoints();
-                if (reward != null) {
-                    rewardToGive += reward;
+            if (task.isMustBeUnique()) {
+                String normalizedPictureLabel = normalize(picture.getLabel());
+
+                if (normalizedPictureLabel.isBlank()) {
+                    continue;
                 }
+
+                if (alreadyMatched(taskProgress, normalizedPictureLabel)) {
+                    continue;
+                }
+
+                addMatchedLabel(taskProgress, normalizedPictureLabel);
+            }
+
+            UserChallengePictureMatch pictureMatch = new UserChallengePictureMatch();
+            pictureMatch.setTaskProgress(taskProgress);
+            pictureMatch.setPicture(picture);
+            pictureMatch.setMatchedAt(LocalDateTime.now());
+            userChallengePictureMatchRepository.save(pictureMatch);
+
+            int currentCount = taskProgress.getCurrentCount() == null
+                    ? 0
+                    : taskProgress.getCurrentCount();
+
+            taskProgress.setCurrentCount(currentCount + 1);
+
+            int requiredCount = task.getRequiredCount() == null
+                    ? 1
+                    : task.getRequiredCount();
+
+            if (taskProgress.getCurrentCount() >= requiredCount) {
+                taskProgress.setCompleted(true);
+            }
+
+            userChallengeTaskProgressRepository.save(taskProgress);
+            anyTaskChanged = true;
+        }
+
+        if (anyTaskChanged && allTasksCompleted(taskProgressList) && !progress.isRewardClaimed()) {
+            progress.setStatus(ChallengeStatus.COMPLETED);
+            progress.setCompletedAt(LocalDateTime.now());
+            progress.setRewardClaimed(true);
+            userChallengeProgressRepository.save(progress);
+
+            Integer reward = progress.getChallenge().getRewardPoints();
+
+            if (reward != null) {
+                return reward;
             }
         }
 
-        return rewardToGive;
+        return 0;
     }
 
     private boolean pictureMatchesTask(Picture picture, ChallengeTask task){

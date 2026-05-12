@@ -39,6 +39,7 @@ public class SecurityConfig {
 
                         .requestMatchers(HttpMethod.POST, "/challenges/admin").permitAll()
                         .requestMatchers(HttpMethod.POST, "/quiz/admin").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/uploads/challenge-image").permitAll()
 
                         .requestMatchers("/pictures/**").authenticated()
                         .requestMatchers("/challenges/**").authenticated()

@@ -74,6 +74,7 @@ class PictureServiceTest {
         request.setImageObjectKey(objectKey);
         request.setTargetType(TargetType.PLANT);
         request.setPictureMode(PictureMode.CHALLENGE);
+        request.setChallengeId(22);
 
         AiIdentificationResult aiResult = mock(AiIdentificationResult.class);
         when(aiResult.getLabel()).thenReturn("Red clover");
@@ -94,7 +95,7 @@ class PictureServiceTest {
         when(pictureRepository.save(any(Picture.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
-        when(challengeProgressService.updateProgressFromPicture(eq(user), any(Picture.class)))
+        when(challengeProgressService.updateProgressFromPicture(eq(user), any(Picture.class), eq(22)))
                 .thenReturn(100);
 
         PictureResponse response = pictureService.createPicture(1, request);
@@ -113,7 +114,7 @@ class PictureServiceTest {
         );
 
         verify(badgeService).checkAndUnlockCategoryBadges(user, PictureCategory.FLOWER);
-        verify(challengeProgressService).updateProgressFromPicture(eq(user), any(Picture.class));
+        verify(challengeProgressService).updateProgressFromPicture(eq(user), any(Picture.class), eq(22));
         verify(userProgressionService).applyAward(user, 105);
 
         ArgumentCaptor<Picture> pictureCaptor = ArgumentCaptor.forClass(Picture.class);
@@ -179,7 +180,7 @@ class PictureServiceTest {
                 objectKey
         );
 
-        verify(challengeProgressService, never()).updateProgressFromPicture(any(), any());
+        verify(challengeProgressService, never()).updateProgressFromPicture(any(), any(), any());
         verify(badgeService, never()).checkAndUnlockCategoryBadges(any(), any());
         verify(userProgressionService).applyAward(user, 0);
         verify(userRepository, never()).save(user);
@@ -238,7 +239,7 @@ class PictureServiceTest {
         );
 
         verify(badgeService).checkAndUnlockCategoryBadges(user, PictureCategory.TREE);
-        verify(challengeProgressService, never()).updateProgressFromPicture(any(), any());
+        verify(challengeProgressService, never()).updateProgressFromPicture(any(), any(), any());
         verify(userProgressionService).applyAward(user, 5);
         verify(userRepository, never()).save(user);
     }
