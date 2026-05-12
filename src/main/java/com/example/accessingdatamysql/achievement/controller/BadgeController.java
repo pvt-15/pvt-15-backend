@@ -42,4 +42,23 @@ public class BadgeController {
             return ResponseEntity.badRequest().body("Invalid user id in token");
         }
     }
+
+    @GetMapping("/me/all")
+    public ResponseEntity<?> getAllBadgesForCurrentUser(@AuthenticationPrincipal Jwt jwt) {
+        try {
+            Integer userId = Integer.valueOf(jwt.getSubject());
+
+            Optional<User> optionalUser = userRepository.findById(userId);
+
+            if (optionalUser.isEmpty()) {
+                return ResponseEntity.notFound().build();
+            }
+
+            return ResponseEntity.ok(
+                    badgeService.getAllBadgesForUser(optionalUser.get())
+            );
+        } catch (NumberFormatException e) {
+            return ResponseEntity.badRequest().body("Invalid user id in token");
+        }
+    }
 }

@@ -1,11 +1,13 @@
 package com.example.accessingdatamysql.achievement.service;
 
+import com.example.accessingdatamysql.achievement.dto.BadgeProgressResponse;
 import com.example.accessingdatamysql.achievement.entity.BadgeDefinition;
 import com.example.accessingdatamysql.achievement.entity.UserBadge;
 import com.example.accessingdatamysql.achievement.enums.BadgeTier;
 import com.example.accessingdatamysql.achievement.repository.BadgeDefinitionRepository;
 import com.example.accessingdatamysql.achievement.repository.UserBadgeRepository;
 import com.example.accessingdatamysql.picture.enums.PictureCategory;
+import com.example.accessingdatamysql.storage.service.ImageStorageService;
 import com.example.accessingdatamysql.user.entity.User;
 import com.example.accessingdatamysql.user.repository.UserDiscoveryRepository;
 import org.junit.jupiter.api.Test;
@@ -31,6 +33,9 @@ class BadgeServiceTest {
 
     @Mock
     private UserDiscoveryRepository userDiscoveryRepository;
+
+    @Mock
+    private ImageStorageService imageStorageService;
 
     @InjectMocks
     private BadgeService badgeService;
@@ -85,5 +90,69 @@ class BadgeServiceTest {
         badgeService.checkAndUnlockCategoryBadges(user, PictureCategory.FLOWER);
 
         verify(userBadgeRepository, never()).save(any(UserBadge.class));
+    }
+
+    @Test
+    void getAllBadgesForUser_shouldReturnAllBadgesWithUnlockedStatusAndImageUrls() {
+        User user = new User();
+        user.setId(1);
+
+        BadgeDefinition bronze = new BadgeDefinition();
+        bronze.setId(10);
+        bronze.setCode("TREE_BRONZE");
+        bronze.setName("Tree Bronze Badge");
+        bronze.setDescription("Find 10 unique tree discoveries.");
+        bronze.setCategory(PictureCategory.TREE);
+        bronze.setTier(BadgeTier.BRONZE);
+        bronze.setRequiredCount(10);
+        bronze.setActive(true);
+
+        BadgeDefinition silver = new BadgeDefinition();
+        silver.setId(11);
+        silver.setCode("TREE_SILVER");
+        silver.setName("Tree Silver Badge");
+        silver.setDescription("Find 20 unique tree discoveries.");
+        silver.setCategory(PictureCategory.TREE);
+        silver.setTier(BadgeTier.SILVER);
+        silver.setRequiredCount(20);
+        silver.setActive(true);
+
+        UserBadge unlockedBronze = new UserBadge();
+        unlockedBronze.setId(100);
+        unlockedBronze.setUser(user);
+        unlockedBronze.setBadgeDefinition(bronze);
+
+        when(badgeDefinitionRepository.findByActiveTrue())
+                .thenReturn(List.of(bronze, silver));
+
+        when(userBadgeRepository.findByUser(user))
+                .thenReturn(List.of(unlockedBronze));
+
+        when(userDiscoveryRepository.countByUserAndCategory(user, PictureCategory.TREE))
+                .thenReturn(12L);
+
+        when(imageStorageService.generateSignedReadUrl("badge-icons/TREE_BRONZE.png"))
+                .thenReturn("https://signed-url.test/TREE_BRONZE.png");
+
+        when(imageStorageService.generateSignedReadUrl("badge-icons/TREE_SILVER.png"))
+                .thenReturn("https://signed-url.test/TREE_SILVER.png");
+
+        List<BadgeProgressResponse> responses = badgeService.getAllBadgesForUser(user);
+
+        assertEquals(2, responses.size());
+
+        BadgeProgressResponse bronzeResponse = responses.get(0);
+        assertEquals("TREE_BRONZE", bronzeResponse.getCode());
+        assertEquals(true, bronzeResponse.isUnlocked());
+        assertEquals(100, bronzeResponse.getUserBadgeId());
+        assertEquals(12L, bronzeResponse.getCurrentCount());
+        assertEquals("https://signed-url.test/TREE_BRONZE.png", bronzeResponse.getImageUrl());
+
+        BadgeProgressResponse silverResponse = responses.get(1);
+        assertEquals("TREE_SILVER", silverResponse.getCode());
+        assertEquals(false, silverResponse.isUnlocked());
+        assertEquals(null, silverResponse.getUserBadgeId());
+        assertEquals(12L, silverResponse.getCurrentCount());
+        assertEquals("https://signed-url.test/TREE_SILVER.png", silverResponse.getImageUrl());
     }
 }
