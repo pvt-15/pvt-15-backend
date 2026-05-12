@@ -83,6 +83,10 @@ public class PictureService {
             targetType = TargetType.ANIMAL;
         }
 
+        if (pictureMode == PictureMode.CHALLENGE && request.getChallengeId() == null) {
+            throw new IllegalArgumentException(CHALLENGE_ID_REQUIRED);
+        }
+
         String signedImageUrl = imageStorageService.generateSignedReadUrl(imageObjectKey);
 
         AiIdentificationResult aiResult = natureAiService.identifyImage(signedImageUrl, targetType);
