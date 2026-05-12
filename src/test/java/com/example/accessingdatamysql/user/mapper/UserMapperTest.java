@@ -43,7 +43,7 @@ class UserMapperTest {
         assertEquals(Provider.GOOGLE, response.getProvider());
         assertEquals("google-123", response.getProviderUserId());
         assertEquals(120, response.getTotalPoints());
-        assertEquals(Level.LEVEL_2, response.getLevel());
+        assertEquals("Naturspanare", response.getLevel());
         assertEquals("https://old-url.test/profile.png", response.getProfileImageUrl());
 
         verifyNoInteractions(imageStorageService);
