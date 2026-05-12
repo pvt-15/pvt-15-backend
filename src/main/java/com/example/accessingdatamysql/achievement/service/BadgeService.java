@@ -56,14 +56,16 @@ public class BadgeService {
     }
 
     public List<BadgeResponse> getMyBadges(User user) {
-        List<UserBadge> userBadges = userBadgeRepository.findByUser(user);
+        List<UserBadge> userBadges = new ArrayList<>(
+                userBadgeRepository.findByUser(user)
+        );
+
         List<BadgeResponse> responses = new ArrayList<>();
 
         userBadges.sort(Comparator.comparing(UserBadge::getUnlockedAt).reversed());
 
-        for(UserBadge userBadge : userBadges){
+        for (UserBadge userBadge : userBadges) {
             BadgeDefinition badge = userBadge.getBadgeDefinition();
-
             String imageUrl = getBadgeImageUrl(badge);
 
             responses.add(new BadgeResponse(
@@ -78,11 +80,15 @@ public class BadgeService {
                     imageUrl
             ));
         }
+
         return responses;
     }
 
     public List<BadgeProgressResponse> getAllBadgesForUser(User user) {
-        List<BadgeDefinition> badgeDefinitions = badgeDefinitionRepository.findByActiveTrue();
+        List<BadgeDefinition> badgeDefinitions = new ArrayList<>(
+                badgeDefinitionRepository.findByActiveTrue()
+        );
+
         List<UserBadge> userBadges = userBadgeRepository.findByUser(user);
 
         Map<Integer, UserBadge> unlockedByBadgeDefinitionId = new HashMap<>();
