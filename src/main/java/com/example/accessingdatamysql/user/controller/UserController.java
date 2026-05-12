@@ -89,7 +89,7 @@ public class UserController {
 
         User user = optionalUser.get();
         user.setProfileImageObjectKey(objectKey);
-        user.setProfileImageUrl(null); // undvik att spara gammal signed URL
+        user.setProfileImageUrl(null);
         userRepository.save(user);
 
         UserResponse response = userMapper.toUserResponse(user);
