@@ -2,16 +2,25 @@ package com.example.accessingdatamysql.user.dto;
 
 public class UpdateProfileImageRequest {
 
-    private String profileImageUrl;
+    private String avatarId;
+    private String profileImageObjectKey;
 
     public UpdateProfileImageRequest() {
     }
 
-    public String getProfileImageUrl() {
-        return profileImageUrl;
+    public String getAvatarId() {
+        return avatarId;
     }
 
-    public void setProfileImageUrl(String profileImageUrl) {
-        this.profileImageUrl = profileImageUrl;
+    public void setAvatarId(String avatarId) {
+        this.avatarId = avatarId;
+    }
+
+    public String getProfileImageObjectKey() {
+        return profileImageObjectKey;
+    }
+
+    public void setProfileImageObjectKey(String profileImageObjectKey) {
+        this.profileImageObjectKey = profileImageObjectKey;
     }
 }

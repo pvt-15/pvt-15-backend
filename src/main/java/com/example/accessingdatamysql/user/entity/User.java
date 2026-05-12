@@ -29,6 +29,7 @@ public class User {
     private Level level;
 
     private String profileImageUrl;
+    private String profileImageObjectKey;
 
     public User() {
     }
@@ -85,6 +86,10 @@ public class User {
         return profileImageUrl;
     }
 
+    public String getProfileImageObjectKey() {
+        return profileImageObjectKey;
+    }
+
     public void setId(Integer id) {
         this.id = id;
     }
@@ -119,5 +124,9 @@ public class User {
 
     public void setProfileImageUrl(String profileImageUrl) {
         this.profileImageUrl = profileImageUrl;
+    }
+
+    public void setProfileImageObjectKey(String profileImageObjectKey) {
+        this.profileImageObjectKey = profileImageObjectKey;
     }
 }
