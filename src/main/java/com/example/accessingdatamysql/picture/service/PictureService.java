@@ -1,12 +1,11 @@
 package com.example.accessingdatamysql.picture.service;
 
+import com.example.accessingdatamysql.achievement.dto.BadgeResponse;
 import com.example.accessingdatamysql.achievement.service.BadgeService;
 import com.example.accessingdatamysql.gamification.UserProgressionService;
+import com.example.accessingdatamysql.gamification.dto.GamificationUpdateResponse;
 import com.example.accessingdatamysql.model.challenge.service.ChallengeProgressService;
-import com.example.accessingdatamysql.picture.dto.AiIdentificationResult;
-import com.example.accessingdatamysql.picture.dto.CreatePictureRequest;
-import com.example.accessingdatamysql.picture.dto.PictureResponse;
-import com.example.accessingdatamysql.picture.dto.PictureStatsResponse;
+import com.example.accessingdatamysql.picture.dto.*;
 import com.example.accessingdatamysql.picture.entity.Picture;
 import com.example.accessingdatamysql.picture.enums.PictureCategory;
 import com.example.accessingdatamysql.picture.enums.PictureMode;
@@ -14,6 +13,7 @@ import com.example.accessingdatamysql.picture.model.enums.TargetType;
 import com.example.accessingdatamysql.picture.repository.PictureRepository;
 import com.example.accessingdatamysql.storage.service.ImageStorageService;
 import com.example.accessingdatamysql.user.entity.User;
+import com.example.accessingdatamysql.user.enums.Level;
 import com.example.accessingdatamysql.user.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
@@ -60,18 +60,20 @@ public class PictureService {
     }
 
     @Transactional
-    public PictureResponse createPicture(Integer userId, CreatePictureRequest request) {
+    public PictureCreateResultResponse createPicture(Integer userId, CreatePictureRequest request) {
         if (request == null) {
             throw new IllegalArgumentException(REQUEST_BODY_REQUIRED);
         }
 
-        String imageObjectKey = request.getImageObjectKey();
-
-        if (imageObjectKey == null || imageObjectKey.isBlank()) {
-            throw new IllegalArgumentException(IMAGE_OBJECT_KEY_REQUIRED);
+        String imageUrl = request.getImageUrl();
+        if (imageUrl == null || imageUrl.isBlank()) {
+            throw new IllegalArgumentException(IMAGE_URL_REQUIRED);
         }
 
-        User user = getUserById(userId);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND));
+
+        Level previousLevel = user.getLevel();
 
         PictureMode pictureMode = request.getPictureMode();
         if (pictureMode == null) {
@@ -83,60 +85,56 @@ public class PictureService {
             targetType = TargetType.ANIMAL;
         }
 
-        if (pictureMode == PictureMode.CHALLENGE && request.getChallengeId() == null) {
-            throw new IllegalArgumentException(CHALLENGE_ID_REQUIRED);
-        }
-
-        String signedImageUrl = imageStorageService.generateSignedReadUrl(imageObjectKey);
-
-        AiIdentificationResult aiResult = natureAiService.identifyImage(signedImageUrl, targetType);
+        AiIdentificationResult aiResult = natureAiService.identifyImage(imageUrl, targetType);
         PictureCategory pictureCategory = parseCategory(aiResult.getCategory(), targetType);
 
         Picture picture = new Picture();
         picture.setLabel(aiResult.getLabel());
         picture.setCategory(pictureCategory);
         picture.setAiConfidence(aiResult.getAiConfidence());
-        picture.setImageObjectKey(imageObjectKey);
+        picture.setImageUrl(imageUrl);
         picture.setTakenAt(LocalDateTime.now());
         picture.setPictureMode(pictureMode);
         picture.setUser(user);
 
-        int picturePoints = discoveryService.awardDiscoveryPoints(
-                user,
-                pictureCategory,
-                aiResult.getLabel(),
-                imageObjectKey
-        );
+        int picturePoints = 0;
+        if (pictureMode == PictureMode.COLLECTION) {
+            picturePoints = discoveryService.awardCollectionPoints(user, pictureCategory, aiResult.getLabel());
+        }
 
         picture.setPointsAwarded(picturePoints);
-
         Picture savedPicture = pictureRepository.save(picture);
 
-        int totalPointsToAward = picturePoints;
-
         if (picturePoints > 0) {
-            badgeService.checkAndUnlockCategoryBadges(user, pictureCategory);
+            user.setTotalPoints(user.getTotalPoints() + picturePoints);
         }
 
         if (pictureMode == PictureMode.CHALLENGE) {
-            Integer challengeId = request.getChallengeId();
-
-            if (challengeId == null) {
-                throw new IllegalArgumentException(CHALLENGE_ID_REQUIRED);
+            int challengeReward = challengeProgressService.updateProgressFromPicture(user, savedPicture);
+            if (challengeReward > 0) {
+                user.setTotalPoints(user.getTotalPoints() + challengeReward);
             }
-
-            int challengeReward = challengeProgressService.updateProgressFromPicture(
-                    user,
-                    savedPicture,
-                    challengeId
-            );
-
-            totalPointsToAward += challengeReward;
         }
 
-        userProgressionService.applyAward(user, totalPointsToAward);
+        user.setLevel(calculateLevel(user.getTotalPoints()));
+        userRepository.save(user);
 
-        return toResponse(savedPicture);
+        List<BadgeResponse> newlyUnlockedBadges = List.of();
+        if (pictureMode == PictureMode.COLLECTION && picturePoints > 0) {
+            newlyUnlockedBadges = badgeService.checkAndUnlockCategoryBadges(user, pictureCategory);
+        }
+
+        GamificationUpdateResponse gamification = new GamificationUpdateResponse(
+                user.getLevel() != previousLevel,
+                previousLevel.name(),
+                user.getLevel().name(),
+                newlyUnlockedBadges
+        );
+
+        return new PictureCreateResultResponse(
+                toResponse(savedPicture),
+                gamification
+        );
     }
 
     public List<PictureResponse> getMyPictures(Integer userId, String category, String sort) {

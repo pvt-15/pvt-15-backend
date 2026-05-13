@@ -29,10 +29,10 @@ public class PictureController {
     }
 
     @PostMapping
-    public ResponseEntity<PictureResponse> createPicture(@AuthenticationPrincipal Jwt jwt,
-                                                         @RequestBody CreatePictureRequest request) {
+    public ResponseEntity<?> createPicture(@AuthenticationPrincipal Jwt jwt,
+                                           @RequestBody CreatePictureRequest request) {
         Integer userId = Integer.valueOf(jwt.getSubject());
-        PictureResponse response = pictureService.createPicture(userId, request);
+        PictureCreateResultResponse response = pictureService.createPicture(userId, request);
         return ResponseEntity.ok(response);
     }
 

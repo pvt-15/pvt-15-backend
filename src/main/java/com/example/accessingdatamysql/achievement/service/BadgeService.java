@@ -35,24 +35,40 @@ public class BadgeService {
         this.imageStorageService = imageStorageService;
     }
 
-    public void checkAndUnlockCategoryBadges(User user, PictureCategory category) {
+    public List<BadgeResponse> checkAndUnlockCategoryBadges(User user, PictureCategory category) {
         long uniqueCount = userDiscoveryRepository.countByUserAndCategory(user, category);
-
         List<BadgeDefinition> badgeDefinitions = badgeDefinitionRepository.findByActiveTrueAndCategory(category);
+
+        List<BadgeResponse> newlyUnlocked = new ArrayList<>();
 
         for (BadgeDefinition badgeDefinition : badgeDefinitions) {
             if (uniqueCount >= badgeDefinition.getRequiredCount()) {
-                boolean alreadyUnlocked = userBadgeRepository.existsByUserAndBadgeDefinition(user, badgeDefinition);
+                boolean alreadyUnlocked =
+                        userBadgeRepository.existsByUserAndBadgeDefinition(user, badgeDefinition);
 
                 if (!alreadyUnlocked) {
                     UserBadge userBadge = new UserBadge();
                     userBadge.setUser(user);
                     userBadge.setBadgeDefinition(badgeDefinition);
                     userBadge.setUnlockedAt(LocalDateTime.now());
-                    userBadgeRepository.save(userBadge);
+                    UserBadge saved = userBadgeRepository.save(userBadge);
+
+                    newlyUnlocked.add(new BadgeResponse(
+                            saved.getId(),
+                            badgeDefinition.getCode(),
+                            badgeDefinition.getName(),
+                            badgeDefinition.getDescription(),
+                            badgeDefinition.getCategory().name(),
+                            badgeDefinition.getTier().name(),
+                            badgeDefinition.getRequiredCount(),
+                            saved.getUnlockedAt().toString(),
+                            getBadgeImageUrl(badgeDefinition)
+                    ));
                 }
             }
         }
+
+        return newlyUnlocked;
     }
 
     public List<BadgeResponse> getMyBadges(User user) {
