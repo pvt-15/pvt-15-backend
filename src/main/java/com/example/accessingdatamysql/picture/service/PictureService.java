@@ -13,6 +13,7 @@ import com.example.accessingdatamysql.picture.dto.PictureStatsResponse;
 import com.example.accessingdatamysql.picture.entity.Picture;
 import com.example.accessingdatamysql.picture.enums.PictureCategory;
 import com.example.accessingdatamysql.picture.enums.PictureMode;
+import com.example.accessingdatamysql.picture.enums.PictureRejectionReason;
 import com.example.accessingdatamysql.picture.model.enums.TargetType;
 import com.example.accessingdatamysql.picture.repository.PictureRepository;
 import com.example.accessingdatamysql.storage.service.ImageStorageService;
@@ -219,7 +220,11 @@ public class PictureService {
         User user = getUserById(userId);
         Picture picture = getPictureOwnedByUser(user, pictureId);
 
+        String imageObjectKey = picture.getImageObjectKey();
+
         pictureRepository.delete(picture);
+
+        deleteImageQuietly(imageObjectKey);
     }
 
     public PictureStatsResponse getPictureStats(Integer userId) {
@@ -276,6 +281,10 @@ public class PictureService {
     }
 
     private boolean isAcceptedForCollection(PictureCategory category, AiIdentificationResult aiResult) {
+        if (aiResult == null) {
+            return false;
+        }
+
         if (category == null || category == PictureCategory.UNKNOWN) {
             return false;
         }
@@ -285,10 +294,14 @@ public class PictureService {
     }
 
     private void deleteImageQuietly(String imageObjectKey) {
+        if (imageObjectKey == null || imageObjectKey.isBlank()) {
+            return;
+        }
+
         try {
             imageStorageService.deleteImage(imageObjectKey);
-        } catch (Exception ignored) {
-            // Optional: replace with logging if you have a logger in this class.
+        } catch (Exception e) {
+            System.err.println("Failed to delete image from storage: " + imageObjectKey);
         }
     }
 
@@ -342,26 +355,6 @@ public class PictureService {
         if (sort.equalsIgnoreCase("oldest")) {
             pictures.sort(Comparator.comparing(Picture::getTakenAt));
         }
-    }
-
-    private PictureCategory parseCategory(String category, TargetType targetType) {
-        if (category == null || category.isBlank()) {
-            return defaultCategory(targetType);
-        }
-
-        try {
-            return PictureCategory.valueOf(category.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            return defaultCategory(targetType);
-        }
-    }
-
-    private PictureCategory defaultCategory(TargetType targetType) {
-        if (targetType == TargetType.PLANT) {
-            return PictureCategory.PLANT;
-        }
-
-        return PictureCategory.ANIMAL;
     }
 
     private PictureResponse toResponse(Picture picture) {
