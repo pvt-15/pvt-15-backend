@@ -18,7 +18,9 @@ import com.example.accessingdatamysql.user.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -40,6 +42,7 @@ public class ChallengeService {
     private static final String NO_RANDOM_CHALLENGE_FOUND = "No available challenge found for selected difficulty and type";
     private static final String CHALLENGE_ALREADY_COMPLETED = "Completed challenges cannot be abandoned";
     private static final String CHALLENGE_NOT_STARTED = "Challenge has not been started";
+    private static final String DAILY_CHALLENGE_ALREADY_STARTED = "You have already started a daily challenge today";
 
     private final ChallengeRepository challengeRepository;
     private final UserRepository userRepository;
@@ -108,12 +111,9 @@ public class ChallengeService {
         User user = getUserById(userId);
         Challenge challenge = getChallengeByIdInternal(challengeId);
 
-        Optional<UserChallengeProgress> existing =
-                userChallengeProgressRepository.findByUserAndChallenge(user, challenge);
-
+        Optional<UserChallengeProgress> existing = userChallengeProgressRepository.findByUserAndChallenge(user, challenge);
         if (existing.isPresent()) {
             UserChallengeProgress progress = existing.get();
-
             List<UserChallengeTaskProgress> existingTaskProgress =
                     userChallengeTaskProgressRepository.findByUserChallengeProgress(progress);
 
@@ -124,6 +124,8 @@ public class ChallengeService {
             return toChallengeResponse(challenge, progress.getStatus().name());
         }
 
+        ensureNoDailyChallengeStartedToday(user, challenge.getType());
+
         UserChallengeProgress progress = new UserChallengeProgress();
         progress.setUser(user);
         progress.setChallenge(challenge);
@@ -132,7 +134,6 @@ public class ChallengeService {
         progress.setRewardClaimed(false);
 
         UserChallengeProgress savedProgress = userChallengeProgressRepository.save(progress);
-
         createTaskProgress(challenge, savedProgress);
 
         return toChallengeResponse(challenge, ChallengeStatus.IN_PROGRESS.name());
@@ -229,48 +230,35 @@ public class ChallengeService {
         if (request == null) {
             throw new IllegalArgumentException(EMPTY_RANDOM_CHALLENGE_REQUEST);
         }
-
         if (request.getChallengeDifficulty() == null || request.getChallengeDifficulty().isBlank()) {
             throw new IllegalArgumentException(EMPTY_RANDOM_CHALLENGE_DIFFICULTY);
         }
-
         if (request.getChallengeType() == null || request.getChallengeType().isBlank()) {
             throw new IllegalArgumentException(EMPTY_RANDOM_CHALLENGE_TYPE);
         }
 
-        ChallengeDifficulty difficulty = ChallengeDifficulty.valueOf(
-                request.getChallengeDifficulty().toUpperCase()
-        );
+        ChallengeDifficulty difficulty =
+                ChallengeDifficulty.valueOf(request.getChallengeDifficulty().toUpperCase());
+        ChallengeType type =
+                ChallengeType.valueOf(request.getChallengeType().toUpperCase());
 
-        ChallengeType type = ChallengeType.valueOf(
-                request.getChallengeType().toUpperCase()
-        );
+        ensureNoDailyChallengeStartedToday(user, type);
 
         PictureCategory category = null;
-
         if (request.getChallengeCategory() != null && !request.getChallengeCategory().isBlank()) {
-            category = PictureCategory.valueOf(
-                    request.getChallengeCategory().toUpperCase()
-            );
+            category = PictureCategory.valueOf(request.getChallengeCategory().toUpperCase());
         }
 
         List<Challenge> matchingChallenges;
-
         if (category == null) {
-            matchingChallenges = challengeRepository.findByActiveTrueAndDifficultyAndType(
-                    difficulty,
-                    type
-            );
+            matchingChallenges = challengeRepository.findByActiveTrueAndDifficultyAndType(difficulty, type);
         } else {
             matchingChallenges = challengeRepository.findByActiveTrueAndDifficultyAndTypeAndCategory(
-                    difficulty,
-                    type,
-                    category
+                    difficulty, type, category
             );
         }
 
         List<Challenge> availableChallenges = new ArrayList<>();
-
         for (Challenge challenge : matchingChallenges) {
             Optional<UserChallengeProgress> existingProgress =
                     userChallengeProgressRepository.findByUserAndChallenge(user, challenge);
@@ -285,7 +273,6 @@ public class ChallengeService {
         }
 
         Collections.shuffle(availableChallenges);
-
         Challenge selectedChallenge = availableChallenges.get(0);
 
         return startChallenge(userId, selectedChallenge.getId());
@@ -390,6 +377,29 @@ public class ChallengeService {
         }
 
         return responses;
+    }
+
+    private void ensureNoDailyChallengeStartedToday(User user, ChallengeType type) {
+        if (type != ChallengeType.DAILY) {
+            return;
+        }
+
+        ZoneId zoneId = ZoneId.of("Europe/Stockholm");
+        LocalDate today = LocalDate.now(zoneId);
+        LocalDateTime startOfDay = today.atStartOfDay();
+        LocalDateTime startOfNextDay = today.plusDays(1).atStartOfDay();
+
+        boolean alreadyStartedToday =
+                userChallengeProgressRepository.existsByUserAndChallenge_TypeAndStartedAtBetween(
+                        user,
+                        ChallengeType.DAILY,
+                        startOfDay,
+                        startOfNextDay
+                );
+
+        if (alreadyStartedToday) {
+            throw new IllegalArgumentException(DAILY_CHALLENGE_ALREADY_STARTED);
+        }
     }
 
     private User getUserById(Integer userId) {

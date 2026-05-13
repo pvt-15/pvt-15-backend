@@ -127,9 +127,8 @@ public class PictureService {
             userProgressionService.applyAward(user, collectionPoints);
         }
 
-        int challengeReward = 0;
         if (pictureMode == PictureMode.CHALLENGE) {
-            challengeReward = challengeProgressService.updateProgressFromPicture(
+            int challengeReward = challengeProgressService.updateProgressFromPicture(
                     user,
                     savedPicture,
                     challengeId
