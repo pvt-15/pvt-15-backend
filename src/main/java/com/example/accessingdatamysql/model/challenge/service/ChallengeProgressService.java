@@ -2,6 +2,7 @@ package com.example.accessingdatamysql.model.challenge.service;
 
 import com.example.accessingdatamysql.model.challenge.entity.UserChallengePictureMatch;
 import com.example.accessingdatamysql.model.challenge.repository.UserChallengePictureMatchRepository;
+import com.example.accessingdatamysql.picture.enums.PictureCategory;
 import com.example.accessingdatamysql.user.entity.User;
 import com.example.accessingdatamysql.model.challenge.entity.ChallengeTask;
 import com.example.accessingdatamysql.model.challenge.entity.UserChallengeProgress;
@@ -118,6 +119,41 @@ public class ChallengeProgressService {
         }
 
         return 0;
+    }
+
+    @Transactional
+    public boolean matchesAnyTask(User user, Integer challengeId, PictureCategory category, String label) {
+        if (challengeId == null) {
+            throw new IllegalArgumentException("Challenge id is required");
+        }
+
+        UserChallengeProgress progress = userChallengeProgressRepository
+                .findByUserAndChallenge_Id(user, challengeId)
+                .orElseThrow(() -> new IllegalArgumentException("Challenge has not been started"));
+
+        if (progress.getStatus() != ChallengeStatus.IN_PROGRESS) {
+            throw new IllegalArgumentException("Challenge is not in progress");
+        }
+
+        List<UserChallengeTaskProgress> taskProgressList =
+                userChallengeTaskProgressRepository.findByUserChallengeProgress(progress);
+
+        Picture candidate = new Picture();
+        candidate.setCategory(category);
+        candidate.setLabel(label);
+
+        for (UserChallengeTaskProgress taskProgress : taskProgressList) {
+            if (taskProgress.isCompleted()) {
+                continue;
+            }
+
+            ChallengeTask task = taskProgress.getChallengeTask();
+            if (pictureMatchesTask(candidate, task)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private boolean pictureMatchesTask(Picture picture, ChallengeTask task){

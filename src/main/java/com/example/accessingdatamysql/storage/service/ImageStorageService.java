@@ -8,4 +8,6 @@ public interface ImageStorageService {
     ImageUploadResponse uploadImage(MultipartFile file, StorageFolder folder, Integer userId);
 
     String generateSignedReadUrl(String objectKey);
+
+    void deleteImage(String objectKey);
 }

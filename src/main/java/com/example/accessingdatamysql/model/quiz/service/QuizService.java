@@ -1,5 +1,7 @@
 package com.example.accessingdatamysql.model.quiz.service;
 
+import com.example.accessingdatamysql.gamification.UserProgressionService;
+import com.example.accessingdatamysql.gamification.dto.GamificationUpdateResponse;
 import com.example.accessingdatamysql.user.enums.Level;
 import com.example.accessingdatamysql.model.quiz.dto.*;
 import com.example.accessingdatamysql.model.quiz.entity.QuizOption;
@@ -40,17 +42,20 @@ public class QuizService {
     private final UserQuizAttemptRepository userQuizAttemptRepository;
     private final UserQuizAnswerRepository userQuizAnswerRepository;
     private final UserRepository userRepository;
+    private final UserProgressionService userProgressionService;
 
     public QuizService(QuizQuestionRepository quizQuestionRepository,
                        QuizOptionRepository quizOptionRepository,
                        UserQuizAttemptRepository userQuizAttemptRepository,
                        UserQuizAnswerRepository userQuizAnswerRepository,
-                       UserRepository userRepository) {
+                       UserRepository userRepository,
+                       UserProgressionService userProgressionService) {
         this.quizQuestionRepository = quizQuestionRepository;
         this.quizOptionRepository = quizOptionRepository;
         this.userQuizAttemptRepository = userQuizAttemptRepository;
         this.userQuizAnswerRepository = userQuizAnswerRepository;
         this.userRepository = userRepository;
+        this.userProgressionService = userProgressionService;
     }
 
     @Transactional
@@ -107,19 +112,22 @@ public class QuizService {
     }
 
     @Transactional
-    public QuizSubmitResponse submitQuiz(Integer userId, QuizSubmitRequest request){
+    public QuizSubmitResultResponse submitQuiz(Integer userId, QuizSubmitRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND));
 
-        User user = userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND));
-
-        UserQuizAttempt attempt = userQuizAttemptRepository.findById(request.getAttemptId()).orElseThrow(() -> new IllegalArgumentException(QUIZ_ATTEMPT_NOT_FOUND));
+        UserQuizAttempt attempt = userQuizAttemptRepository.findById(request.getAttemptId())
+                .orElseThrow(() -> new IllegalArgumentException(QUIZ_ATTEMPT_NOT_FOUND));
 
         if (!attempt.getUser().getId().equals(user.getId())) {
             throw new IllegalArgumentException(QUIZ_ATTEMPT_NOT_FOUND);
         }
 
+        Level previousLevel = user.getLevel();
+
         int score = 0;
 
-        for(QuizSubmitRequest.AnswerRequest answerRequest : request.getAnswers()){
+        for (QuizSubmitRequest.AnswerRequest answerRequest : request.getAnswers()) {
             QuizQuestion question = quizQuestionRepository.findById(answerRequest.getQuestionId())
                     .orElseThrow(() -> new IllegalArgumentException(QUIZ_QUESTION_MOT_FOUND));
 
@@ -127,7 +135,7 @@ public class QuizService {
                     .orElseThrow(() -> new IllegalArgumentException(QUIZ_OPTION_NOT_FOUND));
 
             boolean correct = selectedOption.isCorrect();
-            if(correct){
+            if (correct) {
                 score++;
             }
 
@@ -136,7 +144,6 @@ public class QuizService {
             userQuizAnswer.setQuizQuestion(question);
             userQuizAnswer.setSelectedOption(selectedOption);
             userQuizAnswer.setCorrect(correct);
-
             userQuizAnswerRepository.save(userQuizAnswer);
         }
 
@@ -147,17 +154,24 @@ public class QuizService {
         attempt.setCompletedAt(LocalDateTime.now());
         userQuizAttemptRepository.save(attempt);
 
-        user.setTotalPoints(user.getTotalPoints() + pointsAwarded);
-        user.setLevel(calculateLevel(user.getTotalPoints()));
-        userRepository.save(user);
+        userProgressionService.applyAward(user, pointsAwarded);
 
-        return new QuizSubmitResponse(
+        QuizSubmitResponse quizResponse = new QuizSubmitResponse(
                 attempt.getId(),
                 score,
                 attempt.getTotalQuestions(),
                 pointsAwarded,
                 attempt.getCompletedAt().toString()
         );
+
+        GamificationUpdateResponse gamification = new GamificationUpdateResponse(
+                user.getLevel() != previousLevel,
+                previousLevel.name(),
+                user.getLevel().name(),
+                List.of()
+        );
+
+        return new QuizSubmitResultResponse(quizResponse, gamification);
     }
 
     @Transactional
@@ -302,15 +316,5 @@ public class QuizService {
         if (ratio >= RATIO_FOR_FULL_POINTS) return POINTS_AWARDED_HARD;
         if (ratio >= RATIO_FOR_HALF_POINTS) return POINTS_AWARDED_HARD / 2;
         return 0;
-    }
-
-    private Level calculateLevel(int totalPoints){
-        if (totalPoints >= 300) {
-            return Level.LEVEL_3;
-        }
-        if (totalPoints >= 150) {
-            return Level.LEVEL_2;
-        }
-        return Level.LEVEL_1;
     }
 }

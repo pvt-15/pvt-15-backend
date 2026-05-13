@@ -94,12 +94,43 @@ public class PictureService {
             targetType = TargetType.ANIMAL;
         }
 
-        // AI services still work with a readable URL, so generate a signed URL
-        // from the stored object key before calling AI.
         String signedImageUrl = imageStorageService.generateSignedReadUrl(imageObjectKey);
 
         AiIdentificationResult aiResult = natureAiService.identifyImage(signedImageUrl, targetType);
-        PictureCategory pictureCategory = parseCategory(aiResult.getCategory(), targetType);
+        PictureCategory pictureCategory = parseCategory(aiResult.getCategory());
+
+        if (isLowConfidence(aiResult)) {
+            deleteImageQuietly(imageObjectKey);
+            return PictureCreateResultResponse.rejected(
+                    PictureRejectionReason.LOW_CONFIDENCE,
+                    "The image quality was too low. Please retake the picture."
+            );
+        }
+
+        if (pictureMode == PictureMode.COLLECTION && !isAcceptedForCollection(pictureCategory, aiResult)) {
+            deleteImageQuietly(imageObjectKey);
+            return PictureCreateResultResponse.rejected(
+                    PictureRejectionReason.COLLECTION_NOT_RELEVANT,
+                    "The picture could not be identified as a relevant animal or plant."
+            );
+        }
+
+        if (pictureMode == PictureMode.CHALLENGE) {
+            boolean matchesChallenge = challengeProgressService.matchesAnyTask(
+                    user,
+                    challengeId,
+                    pictureCategory,
+                    aiResult.getLabel()
+            );
+
+            if (!matchesChallenge) {
+                deleteImageQuietly(imageObjectKey);
+                return PictureCreateResultResponse.rejected(
+                        PictureRejectionReason.CHALLENGE_NO_MATCH,
+                        "The picture did not match any active challenge task."
+                );
+            }
+        }
 
         Picture picture = new Picture();
         picture.setLabel(aiResult.getLabel());
@@ -151,7 +182,7 @@ public class PictureService {
                 newlyUnlockedBadges
         );
 
-        return new PictureCreateResultResponse(
+        return PictureCreateResultResponse.accepted(
                 toResponse(savedPicture),
                 gamification
         );
@@ -236,6 +267,41 @@ public class PictureService {
                 totalInsects,
                 totalPoints
         );
+    }
+
+    private static final double MIN_AI_CONFIDENCE = 0.60;
+
+    private boolean isLowConfidence(AiIdentificationResult aiResult) {
+        return aiResult == null || aiResult.getAiConfidence() < MIN_AI_CONFIDENCE;
+    }
+
+    private boolean isAcceptedForCollection(PictureCategory category, AiIdentificationResult aiResult) {
+        if (category == null || category == PictureCategory.UNKNOWN) {
+            return false;
+        }
+
+        String label = aiResult.getLabel();
+        return label != null && !label.isBlank();
+    }
+
+    private void deleteImageQuietly(String imageObjectKey) {
+        try {
+            imageStorageService.deleteImage(imageObjectKey);
+        } catch (Exception ignored) {
+            // Optional: replace with logging if you have a logger in this class.
+        }
+    }
+
+    private PictureCategory parseCategory(String category) {
+        if (category == null || category.isBlank()) {
+            return PictureCategory.UNKNOWN;
+        }
+
+        try {
+            return PictureCategory.valueOf(category.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return PictureCategory.UNKNOWN;
+        }
     }
 
     private User getUserById(Integer userId) {
