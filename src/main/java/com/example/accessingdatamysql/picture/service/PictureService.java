@@ -5,7 +5,11 @@ import com.example.accessingdatamysql.achievement.service.BadgeService;
 import com.example.accessingdatamysql.gamification.UserProgressionService;
 import com.example.accessingdatamysql.gamification.dto.GamificationUpdateResponse;
 import com.example.accessingdatamysql.model.challenge.service.ChallengeProgressService;
-import com.example.accessingdatamysql.picture.dto.*;
+import com.example.accessingdatamysql.picture.dto.AiIdentificationResult;
+import com.example.accessingdatamysql.picture.dto.CreatePictureRequest;
+import com.example.accessingdatamysql.picture.dto.PictureCreateResultResponse;
+import com.example.accessingdatamysql.picture.dto.PictureResponse;
+import com.example.accessingdatamysql.picture.dto.PictureStatsResponse;
 import com.example.accessingdatamysql.picture.entity.Picture;
 import com.example.accessingdatamysql.picture.enums.PictureCategory;
 import com.example.accessingdatamysql.picture.enums.PictureMode;
@@ -65,9 +69,9 @@ public class PictureService {
             throw new IllegalArgumentException(REQUEST_BODY_REQUIRED);
         }
 
-        String imageUrl = request.getImageUrl();
-        if (imageUrl == null || imageUrl.isBlank()) {
-            throw new IllegalArgumentException(IMAGE_URL_REQUIRED);
+        String imageObjectKey = request.getImageObjectKey();
+        if (imageObjectKey == null || imageObjectKey.isBlank()) {
+            throw new IllegalArgumentException(IMAGE_OBJECT_KEY_REQUIRED);
         }
 
         User user = userRepository.findById(userId)
@@ -80,47 +84,64 @@ public class PictureService {
             pictureMode = PictureMode.COLLECTION;
         }
 
+        Integer challengeId = request.getChallengeId();
+        if (pictureMode == PictureMode.CHALLENGE && challengeId == null) {
+            throw new IllegalArgumentException(CHALLENGE_ID_REQUIRED);
+        }
+
         TargetType targetType = request.getTargetType();
         if (targetType == null) {
             targetType = TargetType.ANIMAL;
         }
 
-        AiIdentificationResult aiResult = natureAiService.identifyImage(imageUrl, targetType);
+        // AI services still work with a readable URL, so generate a signed URL
+        // from the stored object key before calling AI.
+        String signedImageUrl = imageStorageService.generateSignedReadUrl(imageObjectKey);
+
+        AiIdentificationResult aiResult = natureAiService.identifyImage(signedImageUrl, targetType);
         PictureCategory pictureCategory = parseCategory(aiResult.getCategory(), targetType);
 
         Picture picture = new Picture();
         picture.setLabel(aiResult.getLabel());
         picture.setCategory(pictureCategory);
         picture.setAiConfidence(aiResult.getAiConfidence());
-        picture.setImageUrl(imageUrl);
+        picture.setImageObjectKey(imageObjectKey);
         picture.setTakenAt(LocalDateTime.now());
         picture.setPictureMode(pictureMode);
         picture.setUser(user);
 
-        int picturePoints = 0;
+        int collectionPoints = 0;
         if (pictureMode == PictureMode.COLLECTION) {
-            picturePoints = discoveryService.awardCollectionPoints(user, pictureCategory, aiResult.getLabel());
+            collectionPoints = discoveryService.awardDiscoveryPoints(
+                    user,
+                    pictureCategory,
+                    aiResult.getLabel(),
+                    imageObjectKey
+            );
         }
 
-        picture.setPointsAwarded(picturePoints);
+        picture.setPointsAwarded(collectionPoints);
         Picture savedPicture = pictureRepository.save(picture);
 
-        if (picturePoints > 0) {
-            user.setTotalPoints(user.getTotalPoints() + picturePoints);
+        if (collectionPoints > 0) {
+            userProgressionService.applyAward(user, collectionPoints);
         }
 
+        int challengeReward = 0;
         if (pictureMode == PictureMode.CHALLENGE) {
-            int challengeReward = challengeProgressService.updateProgressFromPicture(user, savedPicture);
+            challengeReward = challengeProgressService.updateProgressFromPicture(
+                    user,
+                    savedPicture,
+                    challengeId
+            );
+
             if (challengeReward > 0) {
-                user.setTotalPoints(user.getTotalPoints() + challengeReward);
+                userProgressionService.applyAward(user, challengeReward);
             }
         }
 
-        user.setLevel(calculateLevel(user.getTotalPoints()));
-        userRepository.save(user);
-
         List<BadgeResponse> newlyUnlockedBadges = List.of();
-        if (pictureMode == PictureMode.COLLECTION && picturePoints > 0) {
+        if (pictureMode == PictureMode.COLLECTION && collectionPoints > 0) {
             newlyUnlockedBadges = badgeService.checkAndUnlockCategoryBadges(user, pictureCategory);
         }
 
