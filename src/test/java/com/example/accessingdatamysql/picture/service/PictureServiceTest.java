@@ -1,11 +1,12 @@
 package com.example.accessingdatamysql.picture.service;
 
+import com.example.accessingdatamysql.achievement.dto.BadgeResponse;
 import com.example.accessingdatamysql.achievement.service.BadgeService;
 import com.example.accessingdatamysql.gamification.UserProgressionService;
 import com.example.accessingdatamysql.model.challenge.service.ChallengeProgressService;
 import com.example.accessingdatamysql.picture.dto.AiIdentificationResult;
 import com.example.accessingdatamysql.picture.dto.CreatePictureRequest;
-import com.example.accessingdatamysql.picture.dto.PictureResponse;
+import com.example.accessingdatamysql.picture.dto.PictureCreateResultResponse;
 import com.example.accessingdatamysql.picture.entity.Picture;
 import com.example.accessingdatamysql.picture.enums.PictureCategory;
 import com.example.accessingdatamysql.picture.enums.PictureMode;
@@ -22,11 +23,14 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
@@ -61,7 +65,7 @@ class PictureServiceTest {
     private PictureService pictureService;
 
     @Test
-    void createPicture_challengeMode_shouldAwardDiscoveryPointsAndChallengeReward() {
+    void createPicture_challengeMode_shouldAwardChallengeRewardOnly() {
         User user = new User();
         user.setId(1);
         user.setTotalPoints(60);
@@ -85,43 +89,33 @@ class PictureServiceTest {
         when(imageStorageService.generateSignedReadUrl(objectKey)).thenReturn(signedUrl);
         when(natureAiService.identifyImage(signedUrl, TargetType.PLANT)).thenReturn(aiResult);
 
-        when(discoveryService.awardDiscoveryPoints(
-                eq(user),
-                eq(PictureCategory.FLOWER),
-                eq("Red clover"),
-                eq(objectKey)
-        )).thenReturn(5);
-
         when(pictureRepository.save(any(Picture.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
+                .thenAnswer(invocation -> {
+                    Picture picture = invocation.getArgument(0);
+                    picture.setId(100);
+                    return picture;
+                });
 
         when(challengeProgressService.updateProgressFromPicture(eq(user), any(Picture.class), eq(22)))
                 .thenReturn(100);
 
-        PictureResponse response = pictureService.createPicture(1, request);
+        PictureCreateResultResponse response = pictureService.createPicture(1, request);
 
-        assertEquals(5, response.getPointsAwarded());
-        assertEquals(PictureMode.CHALLENGE, response.getPictureMode());
-        assertEquals(signedUrl, response.getImageUrl());
+        assertEquals(0, response.getPicture().getPointsAwarded());
+        assertEquals(PictureMode.CHALLENGE, response.getPicture().getPictureMode());
+        assertEquals(signedUrl, response.getPicture().getImageUrl());
+        assertFalse(response.getGamification().isLeveledUp());
+        assertEquals(0, response.getGamification().getNewlyUnlockedBadges().size());
 
-        verify(natureAiService).identifyImage(signedUrl, TargetType.PLANT);
-
-        verify(discoveryService).awardDiscoveryPoints(
-                user,
-                PictureCategory.FLOWER,
-                "Red clover",
-                objectKey
-        );
-
-        verify(badgeService).checkAndUnlockCategoryBadges(user, PictureCategory.FLOWER);
+        verify(discoveryService, never()).awardDiscoveryPoints(any(), any(), any(), any());
+        verify(badgeService, never()).checkAndUnlockCategoryBadges(any(), any());
         verify(challengeProgressService).updateProgressFromPicture(eq(user), any(Picture.class), eq(22));
-        verify(userProgressionService).applyAward(user, 105);
+        verify(userProgressionService).applyAward(user, 100);
 
         ArgumentCaptor<Picture> pictureCaptor = ArgumentCaptor.forClass(Picture.class);
         verify(pictureRepository).save(pictureCaptor.capture());
 
         Picture savedPicture = pictureCaptor.getValue();
-
         assertEquals("Red clover", savedPicture.getLabel());
         assertEquals(PictureCategory.FLOWER, savedPicture.getCategory());
         assertEquals(objectKey, savedPicture.getImageObjectKey());
@@ -160,19 +154,24 @@ class PictureServiceTest {
         )).thenReturn(0);
 
         when(pictureRepository.save(any(Picture.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
+                .thenAnswer(invocation -> {
+                    Picture picture = invocation.getArgument(0);
+                    picture.setId(101);
+                    return picture;
+                });
 
-        PictureResponse response = pictureService.createPicture(1, request);
+        PictureCreateResultResponse response = pictureService.createPicture(1, request);
 
-        assertEquals(0, response.getPointsAwarded());
-        assertEquals(PictureMode.COLLECTION, response.getPictureMode());
-        assertEquals(signedUrl, response.getImageUrl());
+        assertEquals(0, response.getPicture().getPointsAwarded());
+        assertEquals(PictureMode.COLLECTION, response.getPicture().getPictureMode());
+        assertEquals(signedUrl, response.getPicture().getImageUrl());
+        assertFalse(response.getGamification().isLeveledUp());
+        assertEquals(0, response.getGamification().getNewlyUnlockedBadges().size());
 
         assertEquals(25, user.getTotalPoints());
         assertEquals(Level.LEVEL_1, user.getLevel());
 
         verify(natureAiService).identifyImage(signedUrl, TargetType.PLANT);
-
         verify(discoveryService).awardDiscoveryPoints(
                 user,
                 PictureCategory.TREE,
@@ -180,9 +179,9 @@ class PictureServiceTest {
                 objectKey
         );
 
-        verify(challengeProgressService, never()).updateProgressFromPicture(any(), any(), any());
+        verify(challengeProgressService, never()).updateProgressFromPicture(any(), any(), anyInt());
         verify(badgeService, never()).checkAndUnlockCategoryBadges(any(), any());
-        verify(userProgressionService).applyAward(user, 0);
+        verify(userProgressionService, never()).applyAward(any(), anyInt());
         verify(userRepository, never()).save(user);
     }
 
@@ -206,6 +205,18 @@ class PictureServiceTest {
         when(aiResult.getCategory()).thenReturn("TREE");
         when(aiResult.getAiConfidence()).thenReturn(0.88);
 
+        BadgeResponse badgeResponse = new BadgeResponse(
+                1,
+                "TREE_BRONZE",
+                "Tree Beginner",
+                "Discover 5 unique trees",
+                "TREE",
+                "BRONZE",
+                5,
+                "2026-05-13T12:00:00",
+                "https://example.com/tree-badge.png"
+        );
+
         when(userRepository.findById(1)).thenReturn(Optional.of(user));
         when(imageStorageService.generateSignedReadUrl(objectKey)).thenReturn(signedUrl);
         when(natureAiService.identifyImage(signedUrl, TargetType.PLANT)).thenReturn(aiResult);
@@ -218,28 +229,33 @@ class PictureServiceTest {
         )).thenReturn(5);
 
         when(pictureRepository.save(any(Picture.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
+                .thenAnswer(invocation -> {
+                    Picture picture = invocation.getArgument(0);
+                    picture.setId(102);
+                    return picture;
+                });
 
-        PictureResponse response = pictureService.createPicture(1, request);
+        when(badgeService.checkAndUnlockCategoryBadges(user, PictureCategory.TREE))
+                .thenReturn(List.of(badgeResponse));
 
-        assertEquals(5, response.getPointsAwarded());
-        assertEquals(PictureMode.COLLECTION, response.getPictureMode());
-        assertEquals(signedUrl, response.getImageUrl());
+        PictureCreateResultResponse response = pictureService.createPicture(1, request);
 
-        assertEquals(95, user.getTotalPoints());
-        assertEquals(Level.LEVEL_1, user.getLevel());
+        assertEquals(5, response.getPicture().getPointsAwarded());
+        assertEquals(PictureMode.COLLECTION, response.getPicture().getPictureMode());
+        assertEquals(signedUrl, response.getPicture().getImageUrl());
+        assertEquals(1, response.getGamification().getNewlyUnlockedBadges().size());
+        assertEquals("TREE_BRONZE",
+                response.getGamification().getNewlyUnlockedBadges().get(0).getCode());
 
         verify(natureAiService).identifyImage(signedUrl, TargetType.PLANT);
-
         verify(discoveryService).awardDiscoveryPoints(
                 user,
                 PictureCategory.TREE,
                 "Birch",
                 objectKey
         );
-
         verify(badgeService).checkAndUnlockCategoryBadges(user, PictureCategory.TREE);
-        verify(challengeProgressService, never()).updateProgressFromPicture(any(), any(), any());
+        verify(challengeProgressService, never()).updateProgressFromPicture(any(), any(), anyInt());
         verify(userProgressionService).applyAward(user, 5);
         verify(userRepository, never()).save(user);
     }

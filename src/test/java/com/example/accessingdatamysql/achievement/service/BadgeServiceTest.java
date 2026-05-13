@@ -55,6 +55,13 @@ class BadgeServiceTest {
         badgeDefinition.setRequiredCount(10);
         badgeDefinition.setActive(true);
 
+        when(userBadgeRepository.save(any(UserBadge.class)))
+                .thenAnswer(invocation -> {
+                    UserBadge saved = invocation.getArgument(0);
+                    saved.setId(123);
+                    return saved;
+                });
+
         when(userDiscoveryRepository.countByUserAndCategory(user, PictureCategory.FLOWER)).thenReturn(10L);
         when(badgeDefinitionRepository.findByActiveTrueAndCategory(PictureCategory.FLOWER))
                 .thenReturn(List.of(badgeDefinition));
