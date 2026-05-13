@@ -83,11 +83,18 @@ class PictureServiceTest {
         AiIdentificationResult aiResult = mock(AiIdentificationResult.class);
         when(aiResult.getLabel()).thenReturn("Red clover");
         when(aiResult.getCategory()).thenReturn("FLOWER");
-        when(aiResult.getAiConfidence()).thenReturn(0.48);
+        when(aiResult.getAiConfidence()).thenReturn(0.88);
 
         when(userRepository.findById(1)).thenReturn(Optional.of(user));
         when(imageStorageService.generateSignedReadUrl(objectKey)).thenReturn(signedUrl);
         when(natureAiService.identifyImage(signedUrl, TargetType.PLANT)).thenReturn(aiResult);
+
+        when(challengeProgressService.matchesAnyTask(
+                eq(user),
+                eq(22),
+                eq(PictureCategory.FLOWER),
+                eq("Red clover")
+        )).thenReturn(true);
 
         when(pictureRepository.save(any(Picture.class)))
                 .thenAnswer(invocation -> {
@@ -109,6 +116,12 @@ class PictureServiceTest {
 
         verify(discoveryService, never()).awardDiscoveryPoints(any(), any(), any(), any());
         verify(badgeService, never()).checkAndUnlockCategoryBadges(any(), any());
+        verify(challengeProgressService).matchesAnyTask(
+                eq(user),
+                eq(22),
+                eq(PictureCategory.FLOWER),
+                eq("Red clover")
+        );
         verify(challengeProgressService).updateProgressFromPicture(eq(user), any(Picture.class), eq(22));
         verify(userProgressionService).applyAward(user, 100);
 

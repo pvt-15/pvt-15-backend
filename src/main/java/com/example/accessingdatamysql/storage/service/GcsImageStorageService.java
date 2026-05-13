@@ -44,7 +44,6 @@ public class GcsImageStorageService implements ImageStorageService {
             storage.create(blobInfo, file.getBytes());
 
             String signedUrl = generateSignedReadUrl(objectKey);
-
             return new ImageUploadResponse(signedUrl, objectKey);
 
         } catch (StorageException e) {
@@ -77,6 +76,25 @@ public class GcsImageStorageService implements ImageStorageService {
         ).toString();
     }
 
+    @Override
+    public void deleteImage(String objectKey) {
+        if (objectKey == null || objectKey.isBlank()) {
+            throw new IllegalArgumentException("Object key is required");
+        }
+
+        try {
+            BlobId blobId = BlobId.of(storageProperties.getBucketName(), objectKey);
+            storage.delete(blobId);
+        } catch (StorageException e) {
+            throw new IllegalStateException(
+                    "GCS delete failed. Code: " + e.getCode() + ", Message: " + e.getMessage(),
+                    e
+            );
+        } catch (Exception e) {
+            throw new IllegalStateException("Unexpected delete error: " + e.getMessage(), e);
+        }
+    }
+
     private String buildObjectKey(StorageFolder folder, Integer userId, String extension) {
         String folderName = switch (folder) {
             case PROFILE_IMAGES -> "profile-images";
@@ -95,7 +113,6 @@ public class GcsImageStorageService implements ImageStorageService {
         }
 
         String extension = filename.substring(filename.lastIndexOf(".")).toLowerCase();
-
         if (extension.length() > 10) {
             return ".jpg";
         }
