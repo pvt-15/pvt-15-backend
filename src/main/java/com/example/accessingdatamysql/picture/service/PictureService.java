@@ -31,11 +31,17 @@ import java.util.List;
 @Service
 public class PictureService {
 
+    private static final double MIN_AI_CONFIDENCE = 0.60;
+
     private static final String USER_NOT_FOUND = "User not found";
     private static final String PICTURE_NOT_FOUND = "Picture not found";
     private static final String REQUEST_BODY_REQUIRED = "Request body is required";
     private static final String IMAGE_OBJECT_KEY_REQUIRED = "Image object key is required";
     private static final String CHALLENGE_ID_REQUIRED = "Challenge id is required when pictureMode is CHALLENGE";
+    private static final String LOW_CONFIDENCE_ERROR = "The image quality was too low. Please retake the picture.";
+    private static final String COLLECTION_NOT_RELEVANT_ERROR = "The picture could not be identified as a relevant animal or plant.";
+    private static final String CHALLENGE_NO_MATCH_ERROR = "The picture did not match any active challenge task.";
+
 
     private final PictureRepository pictureRepository;
     private final UserRepository userRepository;
@@ -102,18 +108,12 @@ public class PictureService {
 
         if (isLowConfidence(aiResult)) {
             deleteImageQuietly(imageObjectKey);
-            return PictureCreateResultResponse.rejected(
-                    PictureRejectionReason.LOW_CONFIDENCE,
-                    "The image quality was too low. Please retake the picture."
-            );
+            return PictureCreateResultResponse.rejected(PictureRejectionReason.LOW_CONFIDENCE, LOW_CONFIDENCE_ERROR);
         }
 
         if (pictureMode == PictureMode.COLLECTION && !isAcceptedForCollection(pictureCategory, aiResult)) {
             deleteImageQuietly(imageObjectKey);
-            return PictureCreateResultResponse.rejected(
-                    PictureRejectionReason.COLLECTION_NOT_RELEVANT,
-                    "The picture could not be identified as a relevant animal or plant."
-            );
+            return PictureCreateResultResponse.rejected(PictureRejectionReason.COLLECTION_NOT_RELEVANT, COLLECTION_NOT_RELEVANT_ERROR);
         }
 
         if (pictureMode == PictureMode.CHALLENGE) {
@@ -126,10 +126,7 @@ public class PictureService {
 
             if (!matchesChallenge) {
                 deleteImageQuietly(imageObjectKey);
-                return PictureCreateResultResponse.rejected(
-                        PictureRejectionReason.CHALLENGE_NO_MATCH,
-                        "The picture did not match any active challenge task."
-                );
+                return PictureCreateResultResponse.rejected(PictureRejectionReason.CHALLENGE_NO_MATCH, CHALLENGE_NO_MATCH_ERROR);
             }
         }
 
@@ -273,8 +270,6 @@ public class PictureService {
                 totalPoints
         );
     }
-
-    private static final double MIN_AI_CONFIDENCE = 0.60;
 
     private boolean isLowConfidence(AiIdentificationResult aiResult) {
         return aiResult == null || aiResult.getAiConfidence() < MIN_AI_CONFIDENCE;
