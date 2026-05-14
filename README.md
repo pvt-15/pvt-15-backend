@@ -1,94 +1,81 @@
 # PVT-15 Backend
 
-Spring Boot backend for the PVT-15 project.
+Backend for **Skogsjakten**, built with **Spring Boot** and **Java 17**.
 
-## Requirements
+## Tech stack
+- Java 17
+- Spring Boot
+- Maven
+- MariaDB
+- JWT-based authentication
 
-Before starting, make sure you have:
+## Getting started
 
-- IntelliJ IDEA installed
-- Git installed
-- Java 17 installed
+### 1. Clone the repository
+```bash
+git clone git@github.com:pvt-15/pvt-15-backend.git
+cd pvt-15-backend
+```
 
-## 1. Clone the repository
+### 2. Configure environment variables
+Create a run configuration or environment file with the variables needed by the application, for example:
 
-Open a terminal and run:
+```bash
+DB_URL=jdbc:mariadb://mysql.dsv.su.se:3306/YOUR_DATABASE
+DB_USER=YOUR_USERNAME
+DB_PASS=YOUR_PASSWORD
+JWT_SECRET=YOUR_SECRET
+```
 
-    git clone git@github.com:pvt-15/pvt-15-backend.git
+Add any other required variables depending on which integrations you are using.
 
-Then move into the project folder:
+### 3. Run the application
+Using Maven wrapper:
 
-    cd pvt-15-backend
+```bash
+./mvnw spring-boot:run
+```
 
-## 2. Open the project in IntelliJ
+On Windows:
 
-1. Open IntelliJ IDEA
-2. Press **Open**
-3. Select the `pvt-15-backend` folder
-4. Wait for IntelliJ to load the project
+```bash
+mvnw.cmd spring-boot:run
+```
 
-If IntelliJ asks about Maven, open it as a Maven project.
+You can also run the main application class directly from IntelliJ.
 
-## 3. Reload Maven dependencies
+## Project structure
+- `src/main/java` - application source code
+- `src/test/java` - tests
+- `pom.xml` - Maven configuration
+- `compose.yaml` - local container setup
 
-When the project is open:
+## Main features
+- Authentication with local login and Google login
+- User management
+- Image upload and picture handling
+- AI-based picture validation and categorization
+- Challenges, quizzes and badges
+- Gamification with points and levels
 
-1. Open the **Maven** tool window in IntelliJ
-2. Click **Reload All Maven Projects**
+## Notes
+- Protected endpoints require a backend JWT in:
+  `Authorization: Bearer <token>`
+- Uploaded images use an `objectKey` flow. Frontend should send `imageObjectKey` to `/pictures`, not a signed image URL.
+- Admin endpoints use `ADMIN-KEY` and should not be exposed in the normal frontend app.
 
-This makes IntelliJ download and load all dependencies from `pom.xml`.
+## Testing
+Run tests with:
 
-## 4. Set environment variables
+```bash
+./mvnw test
+```
 
-The application needs database credentials to start.
+On Windows:
 
-In IntelliJ:
+```bash
+mvnw.cmd test
+```
 
-1. Click the run configuration dropdown at the top
-2. Select **Edit Configurations**
-3. Open the configuration for `AccessingDataMysqlApplication`
-4. Find the field **Environment variables**
-5. Add:
-
-    DB_URL=jdbc:mariadb://mysql.dsv.su.se:3306/YOUR_DATABASE;DB_USER=YOUR_USERNAME;DB_PASS=YOUR_PASSWORD
-
-Replace:
-
-- `YOUR_DATABASE` with your database name
-- `YOUR_USERNAME` with your database username
-- `YOUR_PASSWORD` with your database password
-
-These are currently located in our discord server/backend sent from ludvig
-
-## 5. Run the application
-
-Open the file:
-
-`src/main/java/com/example/accessingdatamysql/AccessingDataMysqlApplication.java`
-
-Then press the green **Run** button next to the `main` method.
-
-If everything works, IntelliJ should show that Spring Boot has started.
-
-## 6. Verify that it works
-
-When the application is running, open this in your browser:
-
-    http://localhost:8080
-
-    http://localhost:8080/hello
-
-## Common issues
-
-### Red imports in IntelliJ
-Reload the Maven project again.
-
-### MariaDB dependency is red
-Run this in the terminal:
-
-    mvnw -U clean package
-
-Then reload the Maven project in IntelliJ.
-
-### Database login fails
-Double-check your `DB_URL`, `DB_USER`, and `DB_PASS`.
+## API documentation
+See the project API documentation for endpoint details, request bodies and expected flows.
