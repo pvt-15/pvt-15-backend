@@ -1,21 +1,22 @@
 package com.example.accessingdatamysql.picture.dto;
 
+import com.example.accessingdatamysql.picture.enums.AiProvider;
+
 public class AiIdentificationResult {
 
     private String label;
     private String category;
     private double aiConfidence;
-
-    public AiIdentificationResult() {
-
-    }
+    private AiProvider aiProvider;
 
     public AiIdentificationResult(String label,
                                   String category,
-                                  double aiConfidence) {
+                                  double aiConfidence,
+                                  AiProvider aiProvider) {
         this.label = label;
         this.category = category;
         this.aiConfidence = aiConfidence;
+        this.aiProvider = aiProvider;
     }
 
     public String getLabel() {
@@ -30,15 +31,7 @@ public class AiIdentificationResult {
         return aiConfidence;
     }
 
-    public void setLabel(String label) {
-        this.label = label;
-    }
-
-    public void setCategory(String category) {
-        this.category = category;
-    }
-
-    public void setAiConfidence(double aiConfidence) {
-        this.aiConfidence = aiConfidence;
+    public AiProvider getAiProvider() {
+        return aiProvider;
     }
 }

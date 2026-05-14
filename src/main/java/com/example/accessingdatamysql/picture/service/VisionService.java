@@ -1,6 +1,7 @@
 package com.example.accessingdatamysql.picture.service;
 
 import com.example.accessingdatamysql.picture.dto.AiIdentificationResult;
+import com.example.accessingdatamysql.picture.enums.AiProvider;
 import com.example.accessingdatamysql.picture.model.enums.TargetType;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -129,10 +130,10 @@ public class VisionService {
                 continue;
             }
             if (isSpecificTree(text)) {
-                return new AiIdentificationResult(cleanLabel(label.description()), "TREE", label.score());
+                return new AiIdentificationResult(cleanLabel(label.description()), "TREE", label.score(), AiProvider.GOOGLE_VISION);
             }
             if (isSpecificFlower(text)) {
-                return new AiIdentificationResult(cleanLabel(label.description()), "FLOWER", label.score());
+                return new AiIdentificationResult(cleanLabel(label.description()), "FLOWER", label.score(), AiProvider.GOOGLE_VISION);
             }
         }
 
@@ -144,14 +145,14 @@ public class VisionService {
             }
             String category = mapPlantCategory(text);
             if (!category.equals("UNKNOWN")) {
-                return new AiIdentificationResult(cleanLabel(label.description()), category, label.score());
+                return new AiIdentificationResult(cleanLabel(label.description()), category, label.score(), AiProvider.GOOGLE_VISION);
             }
         }
 
         for (VisionLabel label : labels) {
             String text = normalize(label.description());
             if (!isPlantNoise(text)) {
-                return new AiIdentificationResult(cleanLabel(label.description()), "PLANT", label.score());
+                return new AiIdentificationResult(cleanLabel(label.description()), "PLANT", label.score(), AiProvider.GOOGLE_VISION);
             }
         }
         return unknownResult(TargetType.PLANT);
@@ -165,13 +166,13 @@ public class VisionService {
                 continue;
             }
             if (isSpecificBird(text)) {
-                return new AiIdentificationResult(cleanLabel(label.description()), "BIRD", label.score());
+                return new AiIdentificationResult(cleanLabel(label.description()), "BIRD", label.score(), AiProvider.GOOGLE_VISION);
             }
             if (isSpecificInsect(text)) {
-                return new AiIdentificationResult(cleanLabel(label.description()), "INSECT", label.score());
+                return new AiIdentificationResult(cleanLabel(label.description()), "INSECT", label.score(), AiProvider.GOOGLE_VISION);
             }
             if (isSpecificAnimal(text)) {
-                return new AiIdentificationResult(cleanLabel(label.description()), "ANIMAL", label.score());
+                return new AiIdentificationResult(cleanLabel(label.description()), "ANIMAL", label.score(), AiProvider.GOOGLE_VISION);
             }
         }
 
@@ -183,14 +184,14 @@ public class VisionService {
             }
             String category = mapAnimalCategory(text);
             if (!category.equals("UNKNOWN")) {
-                return new AiIdentificationResult(cleanLabel(label.description()), category, label.score());
+                return new AiIdentificationResult(cleanLabel(label.description()), category, label.score(), AiProvider.GOOGLE_VISION);
             }
         }
 
         for (VisionLabel label : labels) {
             String text = normalize(label.description());
             if (!isAnimalNoise(text)) {
-                return new AiIdentificationResult(cleanLabel(label.description()), "ANIMAL", label.score());
+                return new AiIdentificationResult(cleanLabel(label.description()), "ANIMAL", label.score(), AiProvider.GOOGLE_VISION);
             }
         }
 
@@ -199,9 +200,9 @@ public class VisionService {
 
     private AiIdentificationResult unknownResult(TargetType targetType) {
         if (targetType == TargetType.PLANT) {
-            return new AiIdentificationResult("Unknown Plant", "UNKNOWN", 0.0);
+            return new AiIdentificationResult("Unknown Plant", "UNKNOWN", 0.0, AiProvider.GOOGLE_VISION);
         }
-        return new AiIdentificationResult("Unknown Animal", "UNKNOWN", 0.0);
+        return new AiIdentificationResult("Unknown Animal", "UNKNOWN", 0.0, AiProvider.GOOGLE_VISION);
     }
 
     private String mapPlantCategory(String text) {

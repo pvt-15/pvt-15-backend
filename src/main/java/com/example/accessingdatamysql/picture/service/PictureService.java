@@ -31,7 +31,8 @@ import java.util.List;
 @Service
 public class PictureService {
 
-    private static final double MIN_AI_CONFIDENCE = 0.60;
+    private static final double MIN_VISION_CONFIDENCE = 0.80;
+    private static final double MIN_PLANTNET_CONFIDENCE = 0.35;
 
     private static final String USER_NOT_FOUND = "User not found";
     private static final String PICTURE_NOT_FOUND = "Picture not found";
@@ -272,7 +273,18 @@ public class PictureService {
     }
 
     private boolean isLowConfidence(AiIdentificationResult aiResult) {
-        return aiResult == null || aiResult.getAiConfidence() < MIN_AI_CONFIDENCE;
+        if (aiResult == null) {
+            return true;
+        }
+
+        if (aiResult.getAiProvider() == null) {
+            return true;
+        }
+
+        return switch (aiResult.getAiProvider()) {
+            case GOOGLE_VISION -> aiResult.getAiConfidence() < MIN_VISION_CONFIDENCE;
+            case PLANTNET -> aiResult.getAiConfidence() < MIN_PLANTNET_CONFIDENCE;
+        };
     }
 
     private boolean isAcceptedForCollection(PictureCategory category, AiIdentificationResult aiResult) {

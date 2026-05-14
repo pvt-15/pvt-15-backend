@@ -1,6 +1,7 @@
 package com.example.accessingdatamysql.picture.service;
 
 import com.example.accessingdatamysql.picture.dto.AiIdentificationResult;
+import com.example.accessingdatamysql.picture.enums.AiProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import tools.jackson.databind.JsonNode;
@@ -145,7 +146,7 @@ public class PlantNetService {
         JsonNode results = root.path("results");
 
         if (!results.isArray() || results.isEmpty()) {
-            return new AiIdentificationResult("Unknown Plant", "UNKNOWN", 0.0);
+            return new AiIdentificationResult("Unknown Plant", "UNKNOWN", 0.0, AiProvider.PLANTNET);
         }
         JsonNode bestResult = results.path(0);
         JsonNode species = bestResult.path("species");
@@ -173,7 +174,7 @@ public class PlantNetService {
         String label = commonName.isBlank() ? scientificName : commonName;
         String category = mapPlantCategory(label, scientificName, familyName, predictedOrgan);
 
-        return new AiIdentificationResult(label, category, confidence);
+        return new AiIdentificationResult(label, category, confidence, AiProvider.PLANTNET);
     }
 
     private String mapPlantCategory(String label,
