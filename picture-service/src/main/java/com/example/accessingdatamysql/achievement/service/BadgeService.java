@@ -7,7 +7,7 @@ import com.example.accessingdatamysql.achievement.entity.UserBadge;
 import com.example.accessingdatamysql.achievement.repository.BadgeDefinitionRepository;
 import com.example.accessingdatamysql.achievement.repository.UserBadgeRepository;
 import com.example.accessingdatamysql.picture.enums.PictureCategory;
-import com.example.accessingdatamysql.storage.service.ImageStorageService;
+import com.example.accessingdatamysql.storage.client.StorageClient;
 import com.example.accessingdatamysql.user.entity.User;
 import com.example.accessingdatamysql.user.repository.UserDiscoveryRepository;
 import org.springframework.stereotype.Service;
@@ -23,16 +23,16 @@ public class BadgeService {
     private final BadgeDefinitionRepository badgeDefinitionRepository;
     private final UserBadgeRepository userBadgeRepository;
     private final UserDiscoveryRepository userDiscoveryRepository;
-    private final ImageStorageService imageStorageService;
+    private final StorageClient storageClient;
 
     public BadgeService(BadgeDefinitionRepository badgeDefinitionRepository,
                         UserBadgeRepository userBadgeRepository,
                         UserDiscoveryRepository userDiscoveryRepository,
-                        ImageStorageService imageStorageService) {
+                        StorageClient storageClient) {
         this.badgeDefinitionRepository = badgeDefinitionRepository;
         this.userBadgeRepository = userBadgeRepository;
         this.userDiscoveryRepository = userDiscoveryRepository;
-        this.imageStorageService = imageStorageService;
+        this.storageClient = storageClient;
     }
 
     public List<BadgeResponse> checkAndUnlockCategoryBadges(User user, PictureCategory category) {
@@ -169,6 +169,6 @@ public class BadgeService {
         }
 
         String objectKey = BADGE_ICON_FOLDER + badge.getCode() + ".png";
-        return imageStorageService.generateSignedReadUrl(objectKey);
+        return storageClient.generateSignedReadUrl(objectKey);
     }
 }

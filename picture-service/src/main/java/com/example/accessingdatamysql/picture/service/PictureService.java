@@ -16,7 +16,7 @@ import com.example.accessingdatamysql.picture.enums.PictureMode;
 import com.example.accessingdatamysql.picture.enums.PictureRejectionReason;
 import com.example.accessingdatamysql.picture.model.enums.TargetType;
 import com.example.accessingdatamysql.picture.repository.PictureRepository;
-import com.example.accessingdatamysql.storage.service.ImageStorageService;
+import com.example.accessingdatamysql.storage.client.StorageClient;
 import com.example.accessingdatamysql.user.entity.User;
 import com.example.accessingdatamysql.user.enums.Level;
 import com.example.accessingdatamysql.user.repository.UserRepository;
@@ -51,7 +51,7 @@ public class PictureService {
     private final ChallengeProgressService challengeProgressService;
     private final BadgeService badgeService;
     private final UserProgressionService userProgressionService;
-    private final ImageStorageService imageStorageService;
+    private final StorageClient storageClient;
 
     public PictureService(PictureRepository pictureRepository,
                           UserRepository userRepository,
@@ -60,7 +60,7 @@ public class PictureService {
                           ChallengeProgressService challengeProgressService,
                           BadgeService badgeService,
                           UserProgressionService userProgressionService,
-                          ImageStorageService imageStorageService) {
+                          StorageClient storageClient) {
         this.pictureRepository = pictureRepository;
         this.userRepository = userRepository;
         this.natureAiService = natureAiService;
@@ -68,7 +68,7 @@ public class PictureService {
         this.challengeProgressService = challengeProgressService;
         this.badgeService = badgeService;
         this.userProgressionService = userProgressionService;
-        this.imageStorageService = imageStorageService;
+        this.storageClient = storageClient;
     }
 
     @Transactional
@@ -102,7 +102,7 @@ public class PictureService {
             targetType = TargetType.ANIMAL;
         }
 
-        String signedImageUrl = imageStorageService.generateSignedReadUrl(imageObjectKey);
+        String signedImageUrl = storageClient.generateSignedReadUrl(imageObjectKey);
 
         AiIdentificationResult aiResult = natureAiService.identifyImage(signedImageUrl, targetType);
         PictureCategory pictureCategory = parseCategory(aiResult.getCategory());
@@ -306,7 +306,7 @@ public class PictureService {
         }
 
         try {
-            imageStorageService.deleteImage(imageObjectKey);
+            storageClient.deleteImage(imageObjectKey);
         } catch (Exception e) {
             System.err.println("Failed to delete image from storage: " + imageObjectKey);
         }
@@ -388,7 +388,7 @@ public class PictureService {
         String imageObjectKey = picture.getImageObjectKey();
 
         if (imageObjectKey != null && !imageObjectKey.isBlank()) {
-            return imageStorageService.generateSignedReadUrl(imageObjectKey);
+            return storageClient.generateSignedReadUrl(imageObjectKey);
         }
 
         return picture.getImageUrl();
