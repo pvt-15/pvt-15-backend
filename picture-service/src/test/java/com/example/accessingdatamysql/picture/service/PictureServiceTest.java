@@ -12,9 +12,7 @@ import com.example.accessingdatamysql.picture.enums.PictureCategory;
 import com.example.accessingdatamysql.picture.enums.PictureMode;
 import com.example.accessingdatamysql.picture.model.enums.TargetType;
 import com.example.accessingdatamysql.picture.repository.PictureRepository;
-import com.example.accessingdatamysql.picture.service.DiscoveryService;
-import com.example.accessingdatamysql.picture.service.NatureAiService;
-import com.example.accessingdatamysql.picture.service.PictureService;
+import com.example.accessingdatamysql.picture.enums.AiProvider;
 import com.example.accessingdatamysql.storage.client.StorageClient;
 import com.example.accessingdatamysql.user.entity.User;
 import com.example.accessingdatamysql.user.enums.Level;
@@ -87,6 +85,7 @@ class PictureServiceTest {
         when(aiResult.getLabel()).thenReturn("Red clover");
         when(aiResult.getCategory()).thenReturn("FLOWER");
         when(aiResult.getAiConfidence()).thenReturn(0.88);
+        when(aiResult.getAiProvider()).thenReturn(AiProvider.GOOGLE_VISION);
 
         when(userRepository.findById(1)).thenReturn(Optional.of(user));
         when(storageClient.generateSignedReadUrl(objectKey)).thenReturn(signedUrl);
@@ -157,6 +156,7 @@ class PictureServiceTest {
         when(aiResult.getLabel()).thenReturn("Oak");
         when(aiResult.getCategory()).thenReturn("TREE");
         when(aiResult.getAiConfidence()).thenReturn(0.91);
+        when(aiResult.getAiProvider()).thenReturn(AiProvider.GOOGLE_VISION);
 
         when(userRepository.findById(1)).thenReturn(Optional.of(user));
         when(storageClient.generateSignedReadUrl(objectKey)).thenReturn(signedUrl);
@@ -220,6 +220,7 @@ class PictureServiceTest {
         when(aiResult.getLabel()).thenReturn("Birch");
         when(aiResult.getCategory()).thenReturn("TREE");
         when(aiResult.getAiConfidence()).thenReturn(0.88);
+        when(aiResult.getAiProvider()).thenReturn(AiProvider.GOOGLE_VISION);
 
         BadgeResponse badgeResponse = new BadgeResponse(
                 1,
