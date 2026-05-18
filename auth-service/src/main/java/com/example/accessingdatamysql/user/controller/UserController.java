@@ -1,6 +1,5 @@
 package com.example.accessingdatamysql.user.controller;
 
-import com.example.accessingdatamysql.storage.service.ImageStorageService;
 import com.example.accessingdatamysql.user.dto.ProfileImageOptionResponse;
 import com.example.accessingdatamysql.user.dto.UpdateProfileImageRequest;
 import com.example.accessingdatamysql.user.dto.UserResponse;
@@ -25,16 +24,13 @@ public class UserController {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final UserService userService;
-    private final ImageStorageService imageStorageService;
 
     public UserController(UserRepository userRepository,
                           UserMapper userMapper,
-                          UserService userService,
-                          ImageStorageService imageStorageService) {
+                          UserService userService) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
         this.userService = userService;
-        this.imageStorageService = imageStorageService;
     }
 
     @GetMapping("/me")

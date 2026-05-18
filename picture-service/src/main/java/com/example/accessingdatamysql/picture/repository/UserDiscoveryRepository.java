@@ -1,4 +1,4 @@
-package com.example.accessingdatamysql.user.repository;
+package com.example.accessingdatamysql.picture.repository;
 
 import com.example.accessingdatamysql.user.entity.User;
 import com.example.accessingdatamysql.picture.enums.PictureCategory;

@@ -14,12 +14,6 @@ import org.springframework.stereotype.Component;
 @Component
 public class UserMapper {
 
-    private final ImageStorageService imageStorageService;
-
-    public UserMapper(ImageStorageService imageStorageService) {
-        this.imageStorageService = imageStorageService;
-    }
-
     /**
      * Converts a {@code User}-entity to a {@code UserResponse}-object
      *
@@ -32,8 +26,6 @@ public class UserMapper {
             return null;
         }
 
-        String profileImageUrl = getProfileImageUrl(user);
-
         return new UserResponse(
                 user.getId(),
                 user.getName(),
@@ -42,17 +34,7 @@ public class UserMapper {
                 user.getProviderUserId(),
                 user.getTotalPoints(),
                 user.getLevel().getDisplayName(),
-                profileImageUrl
+                user.getProfileImageUrl()
         );
-    }
-
-    private String getProfileImageUrl(User user) {
-        String objectKey = user.getProfileImageObjectKey();
-
-        if (objectKey != null && !objectKey.isBlank()) {
-            return imageStorageService.generateSignedReadUrl(objectKey);
-        }
-
-        return user.getProfileImageUrl();
     }
 }
