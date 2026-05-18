@@ -45,6 +45,7 @@ public class UserController {
         }
     }
 
+    /*
     @GetMapping("/profile-images/options")
     public ResponseEntity<List<ProfileImageOptionResponse>> getProfileImageOptions() {
         List<ProfileImageOptionResponse> responses = new ArrayList<>();
@@ -61,6 +62,8 @@ public class UserController {
 
         return ResponseEntity.ok(responses);
     }
+
+     */
 
     @PatchMapping("/me/profile-image")
     public ResponseEntity<?> updateProfileImage(@AuthenticationPrincipal Jwt jwt,
