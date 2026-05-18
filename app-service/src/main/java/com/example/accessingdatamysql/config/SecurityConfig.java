@@ -7,17 +7,10 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 public class SecurityConfig {
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -27,15 +20,14 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/ping").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/auth/register").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/auth/google").permitAll()
 
-                        .requestMatchers(HttpMethod.GET, "/auth/me").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/users/me").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/users/profile-images/options").authenticated()
-                        .requestMatchers(HttpMethod.PATCH, "/users/me/profile-image").authenticated()
-                        .requestMatchers(HttpMethod.DELETE, "/users/me").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/challenges/admin").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/quiz/admin").permitAll()
+
+                        .requestMatchers("/pictures/**").authenticated()
+                        .requestMatchers("/challenges/**").authenticated()
+                        .requestMatchers("/quiz/**").authenticated()
+                        .requestMatchers("/badges/**").authenticated()
 
                         .anyRequest().authenticated()
                 )
