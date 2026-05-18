@@ -33,7 +33,7 @@ public class QuizController {
 
     @PostMapping("/submit")
     public ResponseEntity<QuizSubmitResultResponse> submitQuiz(@AuthenticationPrincipal Jwt jwt,
-                                     @RequestBody QuizSubmitRequest request) {
+                                                               @RequestBody QuizSubmitRequest request) {
         Integer userId = Integer.valueOf(jwt.getSubject());
         return ResponseEntity.ok(quizService.submitQuiz(userId, request));
     }

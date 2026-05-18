@@ -35,6 +35,5 @@
 		<module>auth-service</module>
 		<module>storage-service</module>
 		<module>picture-service</module>
-		<module>core-service</module>
 	</modules>
 </project>
