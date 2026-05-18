@@ -15,7 +15,7 @@ import com.example.accessingdatamysql.picture.repository.PictureRepository;
 import com.example.accessingdatamysql.picture.service.DiscoveryService;
 import com.example.accessingdatamysql.picture.service.NatureAiService;
 import com.example.accessingdatamysql.picture.service.PictureService;
-import com.example.accessingdatamysql.storage.service.ImageStorageService;
+import com.example.accessingdatamysql.storage.client.StorageClient;
 import com.example.accessingdatamysql.user.entity.User;
 import com.example.accessingdatamysql.user.enums.Level;
 import com.example.accessingdatamysql.user.repository.UserRepository;
@@ -62,7 +62,7 @@ class PictureServiceTest {
     private UserProgressionService userProgressionService;
 
     @Mock
-    private ImageStorageService imageStorageService;
+    private StorageClient storageClient;
 
     @InjectMocks
     private PictureService pictureService;
@@ -89,7 +89,7 @@ class PictureServiceTest {
         when(aiResult.getAiConfidence()).thenReturn(0.88);
 
         when(userRepository.findById(1)).thenReturn(Optional.of(user));
-        when(imageStorageService.generateSignedReadUrl(objectKey)).thenReturn(signedUrl);
+        when(storageClient.generateSignedReadUrl(objectKey)).thenReturn(signedUrl);
         when(natureAiService.identifyImage(signedUrl, TargetType.PLANT)).thenReturn(aiResult);
 
         when(challengeProgressService.matchesAnyTask(
@@ -159,7 +159,7 @@ class PictureServiceTest {
         when(aiResult.getAiConfidence()).thenReturn(0.91);
 
         when(userRepository.findById(1)).thenReturn(Optional.of(user));
-        when(imageStorageService.generateSignedReadUrl(objectKey)).thenReturn(signedUrl);
+        when(storageClient.generateSignedReadUrl(objectKey)).thenReturn(signedUrl);
         when(natureAiService.identifyImage(signedUrl, TargetType.PLANT)).thenReturn(aiResult);
 
         when(discoveryService.awardDiscoveryPoints(
@@ -234,7 +234,7 @@ class PictureServiceTest {
         );
 
         when(userRepository.findById(1)).thenReturn(Optional.of(user));
-        when(imageStorageService.generateSignedReadUrl(objectKey)).thenReturn(signedUrl);
+        when(storageClient.generateSignedReadUrl(objectKey)).thenReturn(signedUrl);
         when(natureAiService.identifyImage(signedUrl, TargetType.PLANT)).thenReturn(aiResult);
 
         when(discoveryService.awardDiscoveryPoints(

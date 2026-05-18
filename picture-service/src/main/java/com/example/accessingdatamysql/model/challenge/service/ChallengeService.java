@@ -12,7 +12,6 @@ import com.example.accessingdatamysql.model.challenge.repository.UserChallengePr
 import com.example.accessingdatamysql.model.challenge.repository.UserChallengeTaskProgressRepository;
 import com.example.accessingdatamysql.picture.entity.Picture;
 import com.example.accessingdatamysql.picture.enums.PictureCategory;
-import com.example.accessingdatamysql.storage.service.ImageStorageService;
 import com.example.accessingdatamysql.user.entity.User;
 import com.example.accessingdatamysql.user.repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -49,20 +48,17 @@ public class ChallengeService {
     private final UserChallengeProgressRepository userChallengeProgressRepository;
     private final UserChallengeTaskProgressRepository userChallengeTaskProgressRepository;
     private final UserChallengePictureMatchRepository userChallengePictureMatchRepository;
-    private final ImageStorageService imageStorageService;
 
     public ChallengeService(ChallengeRepository challengeRepository,
                             UserRepository userRepository,
                             UserChallengeProgressRepository userChallengeProgressRepository,
                             UserChallengeTaskProgressRepository userChallengeTaskProgressRepository,
-                            UserChallengePictureMatchRepository userChallengePictureMatchRepository,
-                            ImageStorageService imageStorageService) {
+                            UserChallengePictureMatchRepository userChallengePictureMatchRepository) {
         this.challengeRepository = challengeRepository;
         this.userRepository = userRepository;
         this.userChallengeProgressRepository = userChallengeProgressRepository;
         this.userChallengeTaskProgressRepository = userChallengeTaskProgressRepository;
         this.userChallengePictureMatchRepository = userChallengePictureMatchRepository;
-        this.imageStorageService = imageStorageService;
     }
 
     public List<ChallengeResponse> getActiveChallenges(Integer userId) {
@@ -309,7 +305,7 @@ public class ChallengeService {
                         picture.getId(),
                         picture.getLabel(),
                         picture.getCategory() == null ? null : picture.getCategory().name(),
-                        getSignedUrlOrFallback(picture),
+                        picture.getImageUrl(),
                         picture.getTakenAt() == null ? null : picture.getTakenAt().toString()
                 ));
             }
@@ -439,14 +435,6 @@ public class ChallengeService {
                 status,
                 categoryNameOrNull(challenge)
         );
-    }
-
-    private String getSignedUrlOrFallback(Picture picture) {
-        if (picture.getImageObjectKey() != null && !picture.getImageObjectKey().isBlank()) {
-            return imageStorageService.generateSignedReadUrl(picture.getImageObjectKey());
-        }
-
-        return picture.getImageUrl();
     }
 
     private void createTaskProgress(Challenge challenge, UserChallengeProgress savedProgress) {

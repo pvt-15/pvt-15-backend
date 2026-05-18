@@ -7,7 +7,7 @@ import com.example.accessingdatamysql.achievement.enums.BadgeTier;
 import com.example.accessingdatamysql.achievement.repository.BadgeDefinitionRepository;
 import com.example.accessingdatamysql.achievement.repository.UserBadgeRepository;
 import com.example.accessingdatamysql.picture.enums.PictureCategory;
-import com.example.accessingdatamysql.storage.service.ImageStorageService;
+import com.example.accessingdatamysql.storage.client.StorageClient;
 import com.example.accessingdatamysql.user.entity.User;
 import com.example.accessingdatamysql.user.repository.UserDiscoveryRepository;
 import org.junit.jupiter.api.Test;
@@ -35,7 +35,7 @@ class BadgeServiceTest {
     private UserDiscoveryRepository userDiscoveryRepository;
 
     @Mock
-    private ImageStorageService imageStorageService;
+    private StorageClient storageClient;
 
     @InjectMocks
     private BadgeService badgeService;
@@ -138,10 +138,10 @@ class BadgeServiceTest {
         when(userDiscoveryRepository.countByUserAndCategory(user, PictureCategory.TREE))
                 .thenReturn(12L);
 
-        when(imageStorageService.generateSignedReadUrl("badge-icons/TREE_BRONZE.png"))
+        when(storageClient.generateSignedReadUrl("badge-icons/TREE_BRONZE.png"))
                 .thenReturn("https://signed-url.test/TREE_BRONZE.png");
 
-        when(imageStorageService.generateSignedReadUrl("badge-icons/TREE_SILVER.png"))
+        when(storageClient.generateSignedReadUrl("badge-icons/TREE_SILVER.png"))
                 .thenReturn("https://signed-url.test/TREE_SILVER.png");
 
         List<BadgeProgressResponse> responses = badgeService.getAllBadgesForUser(user);

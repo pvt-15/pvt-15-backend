@@ -6,9 +6,10 @@ import com.example.accessingdatamysql.picture.dto.DiscoveryStatsResponse;
 import com.example.accessingdatamysql.picture.dto.LibraryItemResponse;
 import com.example.accessingdatamysql.picture.entity.UserDiscovery;
 import com.example.accessingdatamysql.picture.enums.PictureCategory;
-import com.example.accessingdatamysql.storage.service.ImageStorageService;
-import com.example.accessingdatamysql.user.entity.User;
 import com.example.accessingdatamysql.user.repository.UserDiscoveryRepository;
+import com.example.accessingdatamysql.storage.client.StorageClient;
+import com.example.accessingdatamysql.user.entity.User;
+
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -19,12 +20,12 @@ import java.util.List;
 public class DiscoveryService {
 
     private final UserDiscoveryRepository userDiscoveryRepository;
-    private final ImageStorageService imageStorageService;
+    private final StorageClient storageClient;
 
     public DiscoveryService(UserDiscoveryRepository userDiscoveryRepository,
-                            ImageStorageService imageStorageService) {
+                            StorageClient storageClient) {
         this.userDiscoveryRepository = userDiscoveryRepository;
-        this.imageStorageService = imageStorageService;
+        this.storageClient = storageClient;
     }
 
     public int awardDiscoveryPoints(User user,
@@ -112,7 +113,7 @@ public class DiscoveryService {
         String imageObjectKey = discovery.getImageObjectKey();
 
         if (imageObjectKey != null && !imageObjectKey.isBlank()) {
-            return imageStorageService.generateSignedReadUrl(imageObjectKey);
+            return storageClient.generateSignedReadUrl(imageObjectKey);
         }
 
         return discovery.getImageUrl();

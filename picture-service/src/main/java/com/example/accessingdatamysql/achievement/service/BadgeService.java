@@ -7,9 +7,9 @@ import com.example.accessingdatamysql.achievement.entity.UserBadge;
 import com.example.accessingdatamysql.achievement.repository.BadgeDefinitionRepository;
 import com.example.accessingdatamysql.achievement.repository.UserBadgeRepository;
 import com.example.accessingdatamysql.picture.enums.PictureCategory;
+import com.example.accessingdatamysql.user.repository.UserDiscoveryRepository;
 import com.example.accessingdatamysql.storage.client.StorageClient;
 import com.example.accessingdatamysql.user.entity.User;
-import com.example.accessingdatamysql.user.repository.UserDiscoveryRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
