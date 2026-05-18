@@ -3,6 +3,7 @@ package com.example.accessingdatamysql.storage.service;
 import com.example.accessingdatamysql.storage.config.StorageProperties;
 import com.example.accessingdatamysql.storage.dto.ImageUploadResponse;
 import com.example.accessingdatamysql.storage.enums.StorageFolder;
+import com.example.accessingdatamysql.storage.service.GcsImageStorageService;
 import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.Storage;
 import org.junit.jupiter.api.BeforeEach;

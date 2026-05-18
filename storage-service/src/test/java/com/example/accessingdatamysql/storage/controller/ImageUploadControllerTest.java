@@ -1,5 +1,6 @@
 package com.example.accessingdatamysql.storage.controller;
 
+import com.example.accessingdatamysql.storage.controller.ImageUploadController;
 import com.example.accessingdatamysql.storage.dto.ImageUploadResponse;
 import com.example.accessingdatamysql.storage.enums.StorageFolder;
 import com.example.accessingdatamysql.storage.service.ImageStorageService;
