@@ -34,6 +34,6 @@
 	<modules>
 		<module>auth-service</module>
 		<module>storage-service</module>
-		<module>picture-service</module>
+		<module>app-service</module>
 	</modules>
 </project>

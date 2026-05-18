@@ -9,7 +9,7 @@
         <version>0.0.1-SNAPSHOT</version>
     </parent>
 
-    <artifactId>picture-service</artifactId>
+    <artifactId>app-service</artifactId>
     <packaging>jar</packaging>
 
     <dependencies>
