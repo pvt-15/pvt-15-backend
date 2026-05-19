@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.UUID;
 
 /**
  * Service class which generates a JWT-token for authenticated users.
@@ -68,6 +69,7 @@ public class JwtService {
                 .issuedAt(now)
                 .expiresAt(now.plus(expirationHours, ChronoUnit.HOURS))
                 .subject(user.getId().toString())
+                .claim("jti", UUID.randomUUID().toString())
                 .claim("email", user.getEmail())
                 .claim("name", user.getName())
                 .claim("provider", user.getProvider().name())

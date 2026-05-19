@@ -5,6 +5,7 @@ import com.example.accessingdatamysql.auth.dto.GoogleLoginRequest;
 import com.example.accessingdatamysql.auth.dto.LoginRequest;
 import com.example.accessingdatamysql.auth.dto.RegisterRequest;
 import com.example.accessingdatamysql.auth.service.AuthService;
+import com.example.accessingdatamysql.auth.service.TokenRevocationService;
 import com.example.accessingdatamysql.user.dto.UserResponse;
 import com.example.accessingdatamysql.user.service.UserService;
 import org.springframework.http.HttpStatus;
@@ -19,10 +20,14 @@ public class AuthController {
 
     private final AuthService authService;
     private final UserService userService;
+    private final TokenRevocationService tokenRevocationService;
 
-    public AuthController(AuthService authService, UserService userService) {
+    public AuthController(AuthService authService,
+                          UserService userService,
+                          TokenRevocationService tokenRevocationService) {
         this.authService = authService;
         this.userService = userService;
+        this.tokenRevocationService = tokenRevocationService;
     }
 
     @PostMapping("/register")
@@ -66,5 +71,11 @@ public class AuthController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.notFound().build();
         }
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(@AuthenticationPrincipal Jwt jwt) {
+        tokenRevocationService.revoke(jwt);
+        return ResponseEntity.noContent().build();
     }
 }
