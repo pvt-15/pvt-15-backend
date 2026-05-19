@@ -3,6 +3,7 @@ package com.example.accessingdatamysql.auth.controller;
 import com.example.accessingdatamysql.auth.dto.AuthResponse;
 import com.example.accessingdatamysql.auth.dto.RegisterRequest;
 import com.example.accessingdatamysql.auth.service.AuthService;
+import com.example.accessingdatamysql.auth.service.TokenRevocationService;
 import com.example.accessingdatamysql.user.mapper.UserMapper;
 import com.example.accessingdatamysql.user.repository.UserRepository;
 import com.example.accessingdatamysql.user.service.UserService;
@@ -46,6 +47,9 @@ class AuthControllerTest {
 
     @MockitoBean
     private UserMapper userMapper;
+
+    @MockitoBean
+    private TokenRevocationService tokenRevocationService;
 
     @Test
     void register_shouldReturnCreatedAndAuthResponse() throws Exception {

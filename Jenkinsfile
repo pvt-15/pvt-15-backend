@@ -19,38 +19,52 @@ pipeline {
 
         stage('Build') {
             steps {
-                script {
-                    if (isUnix()) {
-                        sh '''
-                            chmod +x mvnw
-                            ./mvnw clean verify \
-                              -DDB_URL="$DB_URL" \
-                              -DDB_USERNAME="$DB_USERNAME" \
-                              -DDB_PASSWORD="$DB_PASSWORD" \
-                              -DJWT_SECRET="$JWT_SECRET" \
-                              -DGOOGLE_CLIENT_ID="$GOOGLE_CLIENT_ID" \
-                              -DVISION_API_KEY="$VISION_API_KEY" \
-                              -DPLANTNET_API_KEY="$PLANTNET_API_KEY" \
-                              -DGCS_BUCKET_NAME="$GCS_BUCKET_NAME" \
-                              -DGCP_PROJECT_ID="$GCP_PROJECT_ID" \
-                              -DGCS_CREDENTIALS_B64="$GCS_CREDENTIALS_B64" \
-                              -DADMIN_KEY="$ADMIN_KEY"
-                        '''
-                    } else {
-                        bat """
-                            mvnw.cmd clean verify ^
-                              -DDB_URL=%DB_URL% ^
-                              -DDB_USERNAME=%DB_USERNAME% ^
-                              -DDB_PASSWORD=%DB_PASSWORD% ^
-                              -DJWT_SECRET=%JWT_SECRET% ^
-                              -DGOOGLE_CLIENT_ID=%GOOGLE_CLIENT_ID% ^
-                              -DVISION_API_KEY=%VISION_API_KEY% ^
-                              -DPLANTNET_API_KEY=%PLANTNET_API_KEY% ^
-                              -DGCS_BUCKET_NAME=%GCS_BUCKET_NAME% ^
-                              -DGCP_PROJECT_ID=%GCP_PROJECT_ID% ^
-                              -DGCS_CREDENTIALS_B64=%GCS_CREDENTIALS_B64% ^
-                              -DADMIN_KEY=%ADMIN_KEY%
-                        """
+                withCredentials([
+                    string(credentialsId: 'db.url', variable: 'DB_URL'),
+                    string(credentialsId: 'db.username', variable: 'DB_USERNAME'),
+                    string(credentialsId: 'db.password', variable: 'DB_PASSWORD'),
+                    string(credentialsId: 'jwt.secret', variable: 'JWT_SECRET'),
+                    string(credentialsId: 'google.client.id', variable: 'GOOGLE_CLIENT_ID'),
+                    string(credentialsId: 'vision.api.key', variable: 'VISION_API_KEY'),
+                    string(credentialsId: 'plantnet.api.key', variable: 'PLANTNET_API_KEY'),
+                    string(credentialsId: 'admin.key', variable: 'ADMIN_KEY'),
+                    string(credentialsId: 'GCS_BUCKET_NAME', variable: 'GCS_BUCKET_NAME'),
+                    string(credentialsId: 'GCS_CREDENTIALS_B64', variable: 'GCS_CREDENTIALS_B64'),
+                    string(credentialsId: 'GCP_PROJECT_ID', variable: 'GCP_PROJECT_ID')
+                ]) {
+                    script {
+                        if (isUnix()) {
+                            sh '''
+                                chmod +x mvnw
+                                ./mvnw clean verify \
+                                  -DDB_URL="$DB_URL" \
+                                  -DDB_USERNAME="$DB_USERNAME" \
+                                  -DDB_PASSWORD="$DB_PASSWORD" \
+                                  -DJWT_SECRET="$JWT_SECRET" \
+                                  -DGOOGLE_CLIENT_ID="$GOOGLE_CLIENT_ID" \
+                                  -DVISION_API_KEY="$VISION_API_KEY" \
+                                  -DPLANTNET_API_KEY="$PLANTNET_API_KEY" \
+                                  -DGCS_BUCKET_NAME="$GCS_BUCKET_NAME" \
+                                  -DGCP_PROJECT_ID="$GCP_PROJECT_ID" \
+                                  -DGCS_CREDENTIALS_B64="$GCS_CREDENTIALS_B64" \
+                                  -DADMIN_KEY="$ADMIN_KEY"
+                            '''
+                        } else {
+                            bat """
+                                mvnw.cmd clean verify ^
+                                  -DDB_URL=%DB_URL% ^
+                                  -DDB_USERNAME=%DB_USERNAME% ^
+                                  -DDB_PASSWORD=%DB_PASSWORD% ^
+                                  -DJWT_SECRET=%JWT_SECRET% ^
+                                  -DGOOGLE_CLIENT_ID=%GOOGLE_CLIENT_ID% ^
+                                  -DVISION_API_KEY=%VISION_API_KEY% ^
+                                  -DPLANTNET_API_KEY=%PLANTNET_API_KEY% ^
+                                  -DGCS_BUCKET_NAME=%GCS_BUCKET_NAME% ^
+                                  -DGCP_PROJECT_ID=%GCP_PROJECT_ID% ^
+                                  -DGCS_CREDENTIALS_B64=%GCS_CREDENTIALS_B64% ^
+                                  -DADMIN_KEY=%ADMIN_KEY%
+                            """
+                        }
                     }
                 }
             }
@@ -65,7 +79,7 @@ pipeline {
         stage('Deploy to Tomcat') {
             steps {
                 withCredentials([usernamePassword(
-                    credentialsId: 'tomcat deploy credentials',
+                    credentialsId: 'tomcat.deploy.credentials',
                     usernameVariable: 'TOMCAT_USER',
                     passwordVariable: 'TOMCAT_PASS'
                 )]) {
