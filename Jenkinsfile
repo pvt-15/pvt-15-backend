@@ -7,19 +7,6 @@ pipeline {
     }
 
     environment {
-        // Secret text credentials in Jenkins
-        DB_URL = credentials('DB_URL')
-        DB_USERNAME = credentials('DB_USERNAME')
-        DB_PASSWORD = credentials('DB_PASSWORD')
-        JWT_SECRET = credentials('JWT_SECRET')
-        GOOGLE_CLIENT_ID = credentials('GOOGLE_CLIENT_ID')
-        VISION_API_KEY = credentials('VISION_API_KEY')
-        PLANTNET_API_KEY = credentials('PLANTNET_API_KEY')
-        GCS_BUCKET_NAME = credentials('GCS_BUCKET_NAME')
-        GCP_PROJECT_ID = credentials('GCP_PROJECT_ID')
-        GCS_CREDENTIALS_B64 = credentials('GCS_CREDENTIALS_B64')
-        ADMIN_KEY = credentials('ADMIN_KEY')
-
         TOMCAT_MANAGER_URL = 'https://group-6-15.pvt.dsv.su.se/manager/text'
     }
 
@@ -78,7 +65,7 @@ pipeline {
         stage('Deploy to Tomcat') {
             steps {
                 withCredentials([usernamePassword(
-                    credentialsId: 'tomcat-deploy-credentials',
+                    credentialsId: 'tomcat deploy credentials',
                     usernameVariable: 'TOMCAT_USER',
                     passwordVariable: 'TOMCAT_PASS'
                 )]) {
@@ -116,9 +103,6 @@ pipeline {
         }
         failure {
             echo 'Build or deployment failed.'
-        }
-        always {
-            cleanWs()
         }
     }
 }
