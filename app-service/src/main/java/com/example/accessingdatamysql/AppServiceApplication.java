@@ -6,14 +6,14 @@ import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 
 @SpringBootApplication
-public class StorageServiceApplication extends SpringBootServletInitializer {
+public class AppServiceApplication extends SpringBootServletInitializer {
 
     @Override
     protected SpringApplicationBuilder configure(SpringApplicationBuilder application) {
-        return application.sources(StorageServiceApplication.class);
+        return application.sources(AppServiceApplication.class);
     }
 
     public static void main(String[] args) {
-        SpringApplication.run(StorageServiceApplication.class, args);
+        SpringApplication.run(AppServiceApplication.class, args);
     }
 }
