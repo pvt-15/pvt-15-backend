@@ -79,7 +79,7 @@ pipeline {
         stage('Deploy to Tomcat') {
             steps {
                 withCredentials([usernamePassword(
-                    credentialsId: 'tomcat.deploy.credentials',
+                    credentialsId: 'b538eb18-1f66-4a28-872c-9dbe9d6fe167',
                     usernameVariable: 'TOMCAT_USER',
                     passwordVariable: 'TOMCAT_PASS'
                 )]) {
