@@ -19,12 +19,8 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/ping").permitAll()
-
                         .requestMatchers("/uploads/**").authenticated()
-
-                        // Simple solution for now, if app goes to production, needs to be further protected
-                        .requestMatchers("/internal/storage/**").permitAll()
-
+                        .requestMatchers("/internal/storage/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))

@@ -1,5 +1,9 @@
 package com.example.accessingdatamysql.storage.client;
 
+import org.springframework.http.HttpHeaders;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
@@ -21,6 +25,7 @@ public class StorageHttpClient implements StorageClient {
                         .path("/internal/storage/signed-url")
                         .queryParam("objectKey", objectKey)
                         .build())
+                .headers(headers -> addBearerToken(headers))
                 .retrieve()
                 .body(SignedUrlResponse.class);
 
@@ -34,7 +39,19 @@ public class StorageHttpClient implements StorageClient {
                         .path("/internal/storage/object")
                         .queryParam("objectKey", objectKey)
                         .build())
+                .headers(headers -> addBearerToken(headers))
                 .retrieve()
                 .toBodilessEntity();
+    }
+
+    private void addBearerToken(HttpHeaders headers) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication instanceof JwtAuthenticationToken jwtAuthenticationToken) {
+            headers.setBearerAuth(jwtAuthenticationToken.getToken().getTokenValue());
+            return;
+        }
+
+        throw new IllegalStateException("No JWT available for internal storage call");
     }
 }
