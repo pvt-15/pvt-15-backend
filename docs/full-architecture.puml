@@ -1,0 +1,126 @@
+@startuml
+title Skogsjakten backend - Övergripande UML-komponentdiagram
+
+skinparam componentStyle rectangle
+skinparam packageStyle rectangle
+skinparam shadowing false
+
+actor "Användare" as User
+
+rectangle "Flutter Frontend" as Flutter {
+  component "Auth UI" as AuthUI
+  component "Bild-upload UI" as UploadUI
+  component "Challenges / Quiz / Library UI" as AppUI
+}
+
+node "Tomcat / DSV-server\nhttps://group-6-15.pvt.dsv.su.se" as Tomcat {
+
+  package "auth-service\n/auth-service" as AuthService {
+    component "AuthController\n/auth/register\n/auth/login\n/auth/google\n/auth/me\n/auth/logout" as AuthController
+    component "AuthService" as AuthLogic
+    component "GoogleTokenVerifierService" as GoogleVerifier
+    component "JwtService" as JwtService
+    component "UserRepository" as AuthUserRepo
+  }
+
+  package "storage-service\n/storage-service" as StorageService {
+    component "ImageUploadController\n/uploads/profile-image\n/uploads/picture\n/uploads/challenge-image" as UploadController
+    component "InternalStorageController\n/internal/storage/signed-url\n/internal/storage/object" as InternalStorageController
+    component "ImageStorageService" as ImageStorageService
+    component "GcsImageStorageService" as GcsStorage
+  }
+
+  package "app-service\n/" as AppService {
+    component "PictureController\n/pictures" as PictureController
+    component "ChallengeController\n/challenges" as ChallengeController
+    component "QuizController\n/quiz" as QuizController
+    component "Badge / Achievement endpoints" as BadgeController
+
+    component "PictureService" as PictureService
+    component "NatureAiService" as NatureAiService
+    component "VisionService" as VisionService
+    component "PlantNetService" as PlantNetService
+    component "DiscoveryService" as DiscoveryService
+    component "ChallengeProgressService" as ChallengeProgressService
+    component "BadgeService" as BadgeService
+    component "UserProgressionService" as ProgressionService
+
+    component "StorageHttpClient" as StorageHttpClient
+    component "Repositories\nPicture/User/Challenge/Badge/etc." as AppRepos
+  }
+}
+
+database "MariaDB\nDSV database" as MariaDB
+
+cloud "Google Cloud Storage\nGCS bucket" as GCS
+cloud "Google Vision API" as GoogleVision
+cloud "PlantNet API" as PlantNet
+cloud "Google Identity / OAuth\nGoogle ID Token verification" as GoogleIdentity
+
+rectangle "CI/CD" as CICD {
+  component "GitHub repo\npvt-15-backend" as GitHub
+  component "Jenkins Pipeline" as Jenkins
+  component "Tomcat Manager Deploy" as TomcatManager
+}
+
+User --> Flutter
+
+Flutter --> AuthController : login/register/google login
+AuthController --> AuthLogic
+AuthLogic --> AuthUserRepo
+AuthUserRepo --> MariaDB
+AuthLogic --> GoogleVerifier : verify Google ID token
+GoogleVerifier --> GoogleIdentity
+AuthLogic --> JwtService : skapa backend-JWT
+JwtService --> Flutter : JWT tillbaka
+
+Flutter --> UploadController : multipart image + JWT
+UploadController --> ImageStorageService
+ImageStorageService --> GcsStorage
+GcsStorage --> GCS : upload image
+GcsStorage --> Flutter : imageUrl + objectKey
+
+Flutter --> PictureController : POST /pictures\nimageObjectKey + targetType + mode + challengeId
+PictureController --> PictureService
+PictureService --> StorageHttpClient : generateSignedReadUrl(objectKey)
+StorageHttpClient --> InternalStorageController : internal HTTP call + JWT
+InternalStorageController --> ImageStorageService
+ImageStorageService --> GcsStorage
+GcsStorage --> GCS : skapa signed read URL
+StorageHttpClient --> PictureService : signed URL
+
+PictureService --> NatureAiService : identifyImage(signedUrl, targetType)
+
+NatureAiService --> PlantNetService : om targetType = PLANT
+PlantNetService --> PlantNet : artigenkänning växter
+
+NatureAiService --> VisionService : fallback / djur / generell analys
+VisionService --> GoogleVision : label detection
+
+PictureService --> DiscoveryService : collection points
+PictureService --> ChallengeProgressService : challenge progress
+PictureService --> BadgeService : unlock badges
+PictureService --> ProgressionService : points / level
+PictureService --> AppRepos
+ChallengeProgressService --> AppRepos
+DiscoveryService --> AppRepos
+BadgeService --> AppRepos
+ProgressionService --> AppRepos
+AppRepos --> MariaDB
+
+Flutter --> ChallengeController : starta/hämta challenges
+ChallengeController --> ChallengeProgressService
+ChallengeController --> AppRepos
+AppRepos --> MariaDB
+
+Flutter --> QuizController : quiz-flöde
+QuizController --> AppRepos
+QuizController --> ProgressionService
+ProgressionService --> MariaDB
+
+GitHub --> Jenkins : checkout
+Jenkins --> Jenkins : ./mvnw clean verify
+Jenkins --> TomcatManager : deploy WAR-filer
+TomcatManager --> Tomcat : ROOT.war,\nauth-service.war,\nstorage-service.war
+
+@enduml
