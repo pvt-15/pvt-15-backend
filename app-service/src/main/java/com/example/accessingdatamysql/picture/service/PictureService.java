@@ -32,7 +32,7 @@ import java.util.List;
 public class PictureService {
 
     private static final double MIN_VISION_CONFIDENCE = 0.80;
-    private static final double MIN_PLANTNET_CONFIDENCE = 0.35;
+    private static final double MIN_PLANTNET_CONFIDENCE = 0.15;
 
     private static final String USER_NOT_FOUND = "User not found";
     private static final String PICTURE_NOT_FOUND = "Picture not found";
