@@ -1,0 +1,64 @@
+@startuml
+title Skogsjakten Image Upload Flow
+
+left to right direction
+
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam componentStyle rectangle
+skinparam backgroundColor white
+
+skinparam package {
+  BackgroundColor white
+  BorderColor black
+  BorderStyle dashed
+}
+
+actor "User" as User
+rectangle "Flutter App\n[Frontend]" as Flutter
+
+cloud "Google Cloud Storage\n[Image Bucket]" as GCS
+cloud "Google Vision API\n[Animal / General AI]" as Vision
+cloud "PlantNet API\n[Plant AI]" as PlantNet
+database "MariaDB\n[Picture + Progress Data]" as MariaDB
+
+package "DSV / Tomcat Server\n[Backend]" as Backend {
+
+  rectangle "storage-service\n[Upload Image]" as StorageService
+  rectangle "app-service\n[Picture + Challenge Logic]" as AppService
+  rectangle "NatureAiService\n[Chooses AI Provider]" as NatureAI
+  rectangle "ChallengeProgressService\n[Updates Tasks]" as ChallengeProgress
+  rectangle "GamificationService\n[Points, Levels, Badges]" as Gamification
+
+}
+
+User --> Flutter : takes picture
+
+Flutter --> StorageService : upload image file
+StorageService --> GCS : store image
+StorageService --> Flutter : returns objectKey
+
+Flutter --> AppService : send objectKey + mode
+
+AppService --> StorageService : request signed read URL
+StorageService --> GCS : generate temporary URL
+StorageService --> AppService : signed URL
+
+AppService --> NatureAI : identify image
+
+NatureAI --> PlantNet : if targetType = PLANT
+NatureAI --> Vision : if targetType = ANIMAL or fallback
+
+NatureAI --> AppService : label, category, confidence
+
+AppService --> MariaDB : save Picture
+
+AppService --> ChallengeProgress : if pictureMode = CHALLENGE
+ChallengeProgress --> MariaDB : update task progress
+
+AppService --> Gamification : award points / badges
+Gamification --> MariaDB : update user
+
+AppService --> Flutter : response with picture + gamification result
+
+@enduml

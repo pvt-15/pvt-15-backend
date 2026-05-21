@@ -1,0 +1,48 @@
+@startuml
+title Daily Challenge Photo Proof Flow
+
+left to right direction
+
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam componentStyle rectangle
+skinparam backgroundColor white
+
+skinparam package {
+  BackgroundColor white
+  BorderColor black
+  BorderStyle dashed
+}
+
+actor "User" as User
+rectangle "Flutter App\n[Frontend]" as Flutter
+
+cloud "Google Cloud Storage\n[Image Bucket]" as GCS
+database "MariaDB\n[Challenge + Picture Data]" as MariaDB
+
+package "DSV / Tomcat Server\n[Backend]" as Backend {
+
+  rectangle "storage-service\n[Image Upload]" as StorageService
+  rectangle "app-service\n[Daily Challenge Logic]" as AppService
+  rectangle "ChallengeProgressService\n[Photo Proof Task]" as ChallengeProgress
+  rectangle "GamificationService\n[Reward Points]" as Gamification
+
+}
+
+User --> Flutter : completes daily task
+Flutter --> StorageService : upload proof image
+StorageService --> GCS : store image
+StorageService --> Flutter : objectKey
+
+Flutter --> AppService : POST /challenges/{id}/daily-picture\nobjectKey
+
+AppService --> MariaDB : save Picture\nmode = DAILY_CHALLENGE
+AppService --> ChallengeProgress : complete PHOTO_PROOF task
+ChallengeProgress --> MariaDB : update progress
+
+AppService --> Gamification : if challenge completed
+Gamification --> MariaDB : update points / level
+
+AppService --> Flutter : success response
+
+@enduml

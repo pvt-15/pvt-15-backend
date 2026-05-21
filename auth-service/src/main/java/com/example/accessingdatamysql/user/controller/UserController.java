@@ -1,6 +1,5 @@
 package com.example.accessingdatamysql.user.controller;
 
-import com.example.accessingdatamysql.user.dto.ProfileImageOptionResponse;
 import com.example.accessingdatamysql.user.dto.UpdateProfileImageRequest;
 import com.example.accessingdatamysql.user.dto.UserResponse;
 import com.example.accessingdatamysql.user.entity.User;
@@ -13,8 +12,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -44,26 +41,6 @@ public class UserController {
             return ResponseEntity.notFound().build();
         }
     }
-
-    /*
-    @GetMapping("/profile-images/options")
-    public ResponseEntity<List<ProfileImageOptionResponse>> getProfileImageOptions() {
-        List<ProfileImageOptionResponse> responses = new ArrayList<>();
-
-        for (ProfileImagePreset preset : ProfileImagePreset.values()) {
-            String signedUrl = imageStorageService.generateSignedReadUrl(preset.getObjectKey());
-
-            responses.add(new ProfileImageOptionResponse(
-                    preset.getAvatarId(),
-                    preset.getObjectKey(),
-                    signedUrl
-            ));
-        }
-
-        return ResponseEntity.ok(responses);
-    }
-
-     */
 
     @PatchMapping("/me/profile-image")
     public ResponseEntity<?> updateProfileImage(@AuthenticationPrincipal Jwt jwt,
