@@ -122,6 +122,71 @@ public class ChallengeProgressService {
     }
 
     @Transactional
+    public int updateProgressFromDailyPicture(
+            User user,
+            Picture picture,
+            Integer challengeId,
+            Integer taskId
+    ) {
+        if (challengeId == null) {
+            throw new IllegalArgumentException("Challenge id is required");
+        }
+
+        UserChallengeProgress progress = userChallengeProgressRepository
+                .findByUserAndChallenge_Id(user, challengeId)
+                .orElseThrow(() -> new IllegalArgumentException("Challenge has not been started"));
+
+        if (progress.getStatus() != ChallengeStatus.IN_PROGRESS) {
+            throw new IllegalArgumentException("Challenge is not in progress");
+        }
+
+        List<UserChallengeTaskProgress> taskProgressList =
+                userChallengeTaskProgressRepository.findByUserChallengeProgress(progress);
+
+        UserChallengeTaskProgress taskProgress =
+                findPhotoProofTaskProgress(taskProgressList, taskId);
+
+        ChallengeTask task = taskProgress.getChallengeTask();
+
+        UserChallengePictureMatch pictureMatch = new UserChallengePictureMatch();
+        pictureMatch.setTaskProgress(taskProgress);
+        pictureMatch.setPicture(picture);
+        pictureMatch.setMatchedAt(LocalDateTime.now());
+        userChallengePictureMatchRepository.save(pictureMatch);
+
+        int currentCount = taskProgress.getCurrentCount() == null
+                ? 0
+                : taskProgress.getCurrentCount();
+
+        taskProgress.setCurrentCount(currentCount + 1);
+
+        int requiredCount = task.getRequiredCount() == null
+                ? 1
+                : task.getRequiredCount();
+
+        if (taskProgress.getCurrentCount() >= requiredCount) {
+            taskProgress.setCompleted(true);
+        }
+
+        userChallengeTaskProgressRepository.save(taskProgress);
+
+        if (allTasksCompleted(taskProgressList) && !progress.isRewardClaimed()) {
+            progress.setStatus(ChallengeStatus.COMPLETED);
+            progress.setCompletedAt(LocalDateTime.now());
+            progress.setRewardClaimed(true);
+            userChallengeProgressRepository.save(progress);
+
+            Integer reward = progress.getChallenge().getRewardPoints();
+
+            if (reward != null) {
+                return reward;
+            }
+        }
+
+        return 0;
+    }
+
+    @Transactional
     public boolean matchesAnyTask(User user, Integer challengeId, PictureCategory category, String label) {
         if (challengeId == null) {
             throw new IllegalArgumentException("Challenge id is required");
@@ -164,6 +229,31 @@ public class ChallengeProgressService {
             return labelsMatch(picture.getLabel(), task.getRequiredLabel());
         }
         return false;
+    }
+
+    private UserChallengeTaskProgress findPhotoProofTaskProgress(
+            List<UserChallengeTaskProgress> taskProgressList,
+            Integer taskId
+    ) {
+        for (UserChallengeTaskProgress taskProgress : taskProgressList) {
+            if (taskProgress.isCompleted()) {
+                continue;
+            }
+
+            ChallengeTask task = taskProgress.getChallengeTask();
+
+            if (task == null || task.getTaskType() != TaskType.PHOTO_PROOF) {
+                continue;
+            }
+
+            if (taskId != null && !taskId.equals(task.getId())) {
+                continue;
+            }
+
+            return taskProgress;
+        }
+
+        throw new IllegalArgumentException("No active photo proof task found for this challenge");
     }
 
     private boolean labelsMatch(String actualLabel, String requiredLabel){

@@ -2,5 +2,6 @@ package com.example.accessingdatamysql.model.challenge.enums;
 
 public enum TaskType {
     CATEGORY,
-    LABEL
+    LABEL,
+    PHOTO_PROOF
 }

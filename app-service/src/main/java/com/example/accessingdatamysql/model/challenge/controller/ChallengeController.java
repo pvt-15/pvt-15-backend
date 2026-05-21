@@ -2,6 +2,8 @@ package com.example.accessingdatamysql.model.challenge.controller;
 
 import com.example.accessingdatamysql.model.challenge.dto.*;
 import com.example.accessingdatamysql.model.challenge.service.ChallengeService;
+import com.example.accessingdatamysql.picture.dto.PictureCreateResultResponse;
+import com.example.accessingdatamysql.picture.service.PictureService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -18,10 +20,14 @@ public class ChallengeController {
 
     private final ChallengeService challengeService;
     private final String adminKey;
+    private final PictureService pictureService;
 
-    public ChallengeController(ChallengeService challengeService,
-                               @Value("${challenge.admin.key:}") String adminKey) {
+    public ChallengeController(
+            ChallengeService challengeService,
+            PictureService pictureService,
+            @Value("${challenge.admin.key:}") String adminKey) {
         this.challengeService = challengeService;
+        this.pictureService = pictureService;
         this.adminKey = adminKey;
     }
 
@@ -64,6 +70,20 @@ public class ChallengeController {
                                                               @PathVariable Integer id) {
         Integer userId = Integer.valueOf(jwt.getSubject());
         return ResponseEntity.ok(challengeService.abandonChallenge(userId, id));
+    }
+
+    @PostMapping("/{id}/daily-picture")
+    public ResponseEntity<PictureCreateResultResponse> uploadDailyChallengePicture(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable Integer id,
+            @RequestBody DailyChallengePictureRequest request
+    ) {
+        Integer userId = Integer.valueOf(jwt.getSubject());
+
+        PictureCreateResultResponse response =
+                pictureService.createDailyChallengePicture(userId, id, request);
+
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/me")

@@ -4,6 +4,7 @@ import com.example.accessingdatamysql.achievement.dto.BadgeResponse;
 import com.example.accessingdatamysql.achievement.service.BadgeService;
 import com.example.accessingdatamysql.gamification.UserProgressionService;
 import com.example.accessingdatamysql.gamification.dto.GamificationUpdateResponse;
+import com.example.accessingdatamysql.model.challenge.dto.DailyChallengePictureRequest;
 import com.example.accessingdatamysql.model.challenge.service.ChallengeProgressService;
 import com.example.accessingdatamysql.picture.dto.AiIdentificationResult;
 import com.example.accessingdatamysql.picture.dto.CreatePictureRequest;
@@ -179,6 +180,67 @@ public class PictureService {
                 previousLevel.name(),
                 user.getLevel().name(),
                 newlyUnlockedBadges
+        );
+
+        return PictureCreateResultResponse.accepted(
+                toResponse(savedPicture),
+                gamification
+        );
+    }
+
+    @Transactional
+    public PictureCreateResultResponse createDailyChallengePicture(
+            Integer userId,
+            Integer challengeId,
+            DailyChallengePictureRequest request
+    ) {
+        if (request == null) {
+            throw new IllegalArgumentException(REQUEST_BODY_REQUIRED);
+        }
+
+        String imageObjectKey = request.getImageObjectKey();
+
+        if (imageObjectKey == null || imageObjectKey.isBlank()) {
+            throw new IllegalArgumentException(IMAGE_OBJECT_KEY_REQUIRED);
+        }
+
+        if (challengeId == null) {
+            throw new IllegalArgumentException("Challenge id is required");
+        }
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND));
+
+        Level previousLevel = user.getLevel();
+
+        Picture picture = new Picture();
+        picture.setLabel("Daily challenge submission");
+        picture.setCategory(PictureCategory.UNKNOWN);
+        picture.setAiConfidence(0.0);
+        picture.setPointsAwarded(0);
+        picture.setImageObjectKey(imageObjectKey);
+        picture.setTakenAt(LocalDateTime.now());
+        picture.setPictureMode(PictureMode.DAILY_CHALLENGE);
+        picture.setUser(user);
+
+        Picture savedPicture = pictureRepository.save(picture);
+
+        int challengeReward = challengeProgressService.updateProgressFromDailyPicture(
+                user,
+                savedPicture,
+                challengeId,
+                request.getTaskId()
+        );
+
+        if (challengeReward > 0) {
+            userProgressionService.applyAward(user, challengeReward);
+        }
+
+        GamificationUpdateResponse gamification = new GamificationUpdateResponse(
+                user.getLevel() != previousLevel,
+                previousLevel.name(),
+                user.getLevel().name(),
+                List.of()
         );
 
         return PictureCreateResultResponse.accepted(
