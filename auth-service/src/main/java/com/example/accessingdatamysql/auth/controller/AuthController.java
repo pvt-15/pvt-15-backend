@@ -64,7 +64,7 @@ public class AuthController {
     public ResponseEntity<?> getCurrentUser(@AuthenticationPrincipal Jwt jwt) {
         try {
             Integer userId = Integer.valueOf(jwt.getSubject());
-            UserResponse response = userService.getCurrentUser(userId);
+            UserResponse response = userService.getCurrentUser(userId, jwt.getTokenValue());
             return ResponseEntity.ok(response);
         } catch (NumberFormatException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
