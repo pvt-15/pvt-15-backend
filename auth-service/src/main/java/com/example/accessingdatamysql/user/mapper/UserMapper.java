@@ -8,6 +8,10 @@ import org.springframework.stereotype.Component;
 public class UserMapper {
 
     public UserResponse toUserResponse(User user) {
+        return toUserResponse(user, user.getProfileImageUrl());
+    }
+
+    public UserResponse toUserResponse(User user, String profileImageUrl) {
         if (user == null) {
             return null;
         }
@@ -20,7 +24,7 @@ public class UserMapper {
                 user.getProviderUserId(),
                 user.getTotalPoints(),
                 user.getLevel().getDisplayName(),
-                user.getProfileImageUrl(),
+                profileImageUrl,
                 user.getProfileImageObjectKey()
         );
     }
