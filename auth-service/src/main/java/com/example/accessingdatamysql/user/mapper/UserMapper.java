@@ -20,7 +20,8 @@ public class UserMapper {
                 user.getProviderUserId(),
                 user.getTotalPoints(),
                 user.getLevel().getDisplayName(),
-                user.getProfileImageUrl()
+                user.getProfileImageUrl(),
+                user.getProfileImageObjectKey()
         );
     }
 }

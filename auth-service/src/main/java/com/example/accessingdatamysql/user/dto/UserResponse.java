@@ -29,6 +29,7 @@ public class UserResponse {
     private int totalPoints;
     private String level;
     private String profileImageUrl;
+    private String profileImageObjectKey;
 
     public UserResponse(Integer id,
                         String name,
@@ -37,7 +38,8 @@ public class UserResponse {
                         String providerUserId,
                         int totalPoints,
                         String level,
-                        String profileImageUrl) {
+                        String profileImageUrl,
+                        String profileImageObjectKey) {
         this.id = id;
         this.name = name;
         this.email = email;
@@ -46,6 +48,7 @@ public class UserResponse {
         this.totalPoints = totalPoints;
         this.level = level;
         this.profileImageUrl = profileImageUrl;
+        this.profileImageObjectKey = profileImageObjectKey;
     }
 
     public Integer getId() {
@@ -78,5 +81,9 @@ public class UserResponse {
 
     public String getProfileImageUrl() {
         return profileImageUrl;
+    }
+
+    public String getProfileImageObjectKey() {
+        return profileImageObjectKey;
     }
 }
