@@ -47,7 +47,8 @@ pipeline {
                                   -DGCS_BUCKET_NAME="$GCS_BUCKET_NAME" \
                                   -DGCP_PROJECT_ID="$GCP_PROJECT_ID" \
                                   -DGCS_CREDENTIALS_B64="$GCS_CREDENTIALS_B64" \
-                                  -DADMIN_KEY="$ADMIN_KEY"
+                                  -DADMIN_KEY="$ADMIN_KEY" \
+                                  -DSTORAGE_SERVICE_BASE_URL="https://group-6-15.pvt.dsv.su.se/storage-service"
                             '''
                         } else {
                             bat """
@@ -62,7 +63,8 @@ pipeline {
                                   -DGCS_BUCKET_NAME=%GCS_BUCKET_NAME% ^
                                   -DGCP_PROJECT_ID=%GCP_PROJECT_ID% ^
                                   -DGCS_CREDENTIALS_B64=%GCS_CREDENTIALS_B64% ^
-                                  -DADMIN_KEY=%ADMIN_KEY%
+                                  -DADMIN_KEY=%ADMIN_KEY% ^
+                                  -DSTORAGE_SERVICE_BASE_URL="https://group-6-15.pvt.dsv.su.se/storage-service"
                             """
                         }
                     }

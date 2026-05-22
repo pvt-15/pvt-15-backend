@@ -1,5 +1,7 @@
 package com.example.accessingdatamysql.storage;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Component;
@@ -10,6 +12,8 @@ import java.util.Map;
 
 @Component
 public class StorageServiceClient {
+
+    private static final Logger logger = LoggerFactory.getLogger(StorageServiceClient.class);
 
     private final RestClient restClient;
 
@@ -42,6 +46,7 @@ public class StorageServiceClient {
             return response.get("imageUrl");
 
         } catch (RestClientException e) {
+            logger.warn("Could not generate signed profile image URL for objectKey={}", objectKey, e);
             return null;
         }
     }
