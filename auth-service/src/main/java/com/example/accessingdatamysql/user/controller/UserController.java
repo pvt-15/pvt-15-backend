@@ -1,5 +1,6 @@
 package com.example.accessingdatamysql.user.controller;
 
+import com.example.accessingdatamysql.auth.dto.ChangePasswordRequest;
 import com.example.accessingdatamysql.storage.StorageServiceClient;
 import com.example.accessingdatamysql.user.dto.UpdateProfileImageRequest;
 import com.example.accessingdatamysql.user.dto.UserResponse;
@@ -79,6 +80,24 @@ public class UserController {
 
         UserResponse response = userMapper.toUserResponse(user, signedProfileImageUrl);
         return ResponseEntity.ok(response);
+    }
+
+    @PatchMapping("/me/password")
+    public ResponseEntity<?> changePassword(@AuthenticationPrincipal Jwt jwt,
+                                            @RequestBody ChangePasswordRequest request) {
+        if (request == null) {
+            return ResponseEntity.badRequest().body("Request body is required");
+        }
+
+        try {
+            Integer userId = Integer.valueOf(jwt.getSubject());
+            userService.changePassword(userId, request.getOldPassword(), request.getNewPassword());
+            return ResponseEntity.noContent().build();
+        } catch (NumberFormatException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     @DeleteMapping("/me")
