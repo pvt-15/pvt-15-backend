@@ -192,8 +192,7 @@ public class PictureService {
     public PictureCreateResultResponse createDailyChallengePicture(
             Integer userId,
             Integer challengeId,
-            DailyChallengePictureRequest request
-    ) {
+            DailyChallengePictureRequest request) {
         if (request == null) {
             throw new IllegalArgumentException(REQUEST_BODY_REQUIRED);
         }

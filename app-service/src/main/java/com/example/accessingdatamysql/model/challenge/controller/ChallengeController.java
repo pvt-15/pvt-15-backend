@@ -76,8 +76,7 @@ public class ChallengeController {
     public ResponseEntity<PictureCreateResultResponse> uploadDailyChallengePicture(
             @AuthenticationPrincipal Jwt jwt,
             @PathVariable Integer id,
-            @RequestBody DailyChallengePictureRequest request
-    ) {
+            @RequestBody DailyChallengePictureRequest request) {
         Integer userId = Integer.valueOf(jwt.getSubject());
 
         PictureCreateResultResponse response =
