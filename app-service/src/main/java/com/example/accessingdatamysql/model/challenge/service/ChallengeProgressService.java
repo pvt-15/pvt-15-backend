@@ -59,7 +59,7 @@ public class ChallengeProgressService {
 
             ChallengeTask task = taskProgress.getChallengeTask();
 
-            if (!pictureMatchesTask(picture, task)) {
+            if (!canPictureBeAddedToTask(picture, taskProgress, task)) {
                 continue;
             }
 
@@ -68,17 +68,8 @@ public class ChallengeProgressService {
             }
 
             if (task.isMustBeUnique()) {
-                String normalizedPictureLabel = normalize(picture.getLabel());
-
-                if (normalizedPictureLabel.isBlank()) {
-                    continue;
-                }
-
-                if (alreadyMatched(taskProgress, normalizedPictureLabel)) {
-                    continue;
-                }
-
-                addMatchedLabel(taskProgress, normalizedPictureLabel);
+                String uniquenessKey = getUniquenessKey(picture, task);
+                addMatchedLabel(taskProgress, uniquenessKey);
             }
 
             UserChallengePictureMatch pictureMatch = new UserChallengePictureMatch();
@@ -213,7 +204,8 @@ public class ChallengeProgressService {
             }
 
             ChallengeTask task = taskProgress.getChallengeTask();
-            if (pictureMatchesTask(candidate, task)) {
+
+            if (canPictureBeAddedToTask(candidate, taskProgress, task)) {
                 return true;
             }
         }
@@ -315,5 +307,37 @@ public class ChallengeProgressService {
         }
 
         return normalized;
+    }
+
+    private boolean canPictureBeAddedToTask(
+            Picture picture,
+            UserChallengeTaskProgress taskProgress,
+            ChallengeTask task
+    ) {
+        if (!pictureMatchesTask(picture, task)) {
+            return false;
+        }
+
+        if (!task.isMustBeUnique()) {
+            return true;
+        }
+
+        String uniquenessKey = getUniquenessKey(picture, task);
+
+        if (uniquenessKey.isBlank()) {
+            return false;
+        }
+
+        return !alreadyMatched(taskProgress, uniquenessKey);
+    }
+
+    private String getUniquenessKey(Picture picture, ChallengeTask task) {
+        if (task.getTaskType() == TaskType.LABEL &&
+                task.getRequiredLabel() != null &&
+                !task.getRequiredLabel().isBlank()) {
+            return normalize(task.getRequiredLabel());
+        }
+
+        return normalize(picture.getLabel());
     }
 }
