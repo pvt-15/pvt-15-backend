@@ -12,6 +12,7 @@ import com.example.accessingdatamysql.model.challenge.repository.UserChallengePr
 import com.example.accessingdatamysql.model.challenge.repository.UserChallengeTaskProgressRepository;
 import com.example.accessingdatamysql.picture.entity.Picture;
 import com.example.accessingdatamysql.picture.enums.PictureCategory;
+import com.example.accessingdatamysql.storage.client.StorageClient;
 import com.example.accessingdatamysql.user.entity.User;
 import com.example.accessingdatamysql.user.repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -48,17 +49,20 @@ public class ChallengeService {
     private final UserChallengeProgressRepository userChallengeProgressRepository;
     private final UserChallengeTaskProgressRepository userChallengeTaskProgressRepository;
     private final UserChallengePictureMatchRepository userChallengePictureMatchRepository;
+    private final StorageClient storageClient;
 
     public ChallengeService(ChallengeRepository challengeRepository,
                             UserRepository userRepository,
                             UserChallengeProgressRepository userChallengeProgressRepository,
                             UserChallengeTaskProgressRepository userChallengeTaskProgressRepository,
-                            UserChallengePictureMatchRepository userChallengePictureMatchRepository) {
+                            UserChallengePictureMatchRepository userChallengePictureMatchRepository,
+                            StorageClient storageClient) {
         this.challengeRepository = challengeRepository;
         this.userRepository = userRepository;
         this.userChallengeProgressRepository = userChallengeProgressRepository;
         this.userChallengeTaskProgressRepository = userChallengeTaskProgressRepository;
         this.userChallengePictureMatchRepository = userChallengePictureMatchRepository;
+        this.storageClient = storageClient;
     }
 
     public List<ChallengeResponse> getActiveChallenges(Integer userId) {
@@ -301,11 +305,17 @@ public class ChallengeService {
 
                 Picture picture = match.getPicture();
 
+                String signedImageUrl = null;
+
+                if (picture.getImageObjectKey() != null && !picture.getImageObjectKey().isBlank()) {
+                    signedImageUrl = storageClient.generateSignedReadUrl(picture.getImageObjectKey());
+                }
+
                 pictureResponses.add(new ChallengeMatchedPictureResponse(
                         picture.getId(),
                         picture.getLabel(),
                         picture.getCategory() == null ? null : picture.getCategory().name(),
-                        picture.getImageUrl(),
+                        signedImageUrl,
                         picture.getTakenAt() == null ? null : picture.getTakenAt().toString()
                 ));
             }

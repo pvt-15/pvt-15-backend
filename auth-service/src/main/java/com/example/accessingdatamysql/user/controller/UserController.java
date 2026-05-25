@@ -1,5 +1,6 @@
 package com.example.accessingdatamysql.user.controller;
 
+import com.example.accessingdatamysql.storage.StorageServiceClient;
 import com.example.accessingdatamysql.user.dto.UpdateProfileImageRequest;
 import com.example.accessingdatamysql.user.dto.UserResponse;
 import com.example.accessingdatamysql.user.entity.User;
@@ -21,20 +22,23 @@ public class UserController {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final UserService userService;
+    private final StorageServiceClient storageServiceClient;
 
     public UserController(UserRepository userRepository,
                           UserMapper userMapper,
-                          UserService userService) {
+                          UserService userService,
+                          StorageServiceClient storageServiceClient) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
         this.userService = userService;
+        this.storageServiceClient = storageServiceClient;
     }
 
     @GetMapping("/me")
     public ResponseEntity<?> getCurrentUser(@AuthenticationPrincipal Jwt jwt) {
         try {
             Integer userId = Integer.valueOf(jwt.getSubject());
-            return ResponseEntity.ok(userService.getCurrentUser(userId));
+            return ResponseEntity.ok(userService.getCurrentUser(userId, jwt.getTokenValue()));
         } catch (NumberFormatException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         } catch (IllegalArgumentException e) {
@@ -68,8 +72,12 @@ public class UserController {
         user.setProfileImageUrl(null);
         userRepository.save(user);
 
-        UserResponse response = userMapper.toUserResponse(user);
+        String signedProfileImageUrl = storageServiceClient.generateSignedReadUrl(
+                user.getProfileImageObjectKey(),
+                jwt.getTokenValue()
+        );
 
+        UserResponse response = userMapper.toUserResponse(user, signedProfileImageUrl);
         return ResponseEntity.ok(response);
     }
 
