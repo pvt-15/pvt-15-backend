@@ -40,6 +40,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/users/me").authenticated()
                         .requestMatchers(HttpMethod.GET, "/users/profile-images/options").authenticated()
                         .requestMatchers(HttpMethod.PATCH, "/users/me/profile-image").authenticated()
+                        .requestMatchers(HttpMethod.PATCH, "/users/me/password").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/users/me").authenticated()
 
                         .anyRequest().authenticated()
