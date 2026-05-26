@@ -227,8 +227,7 @@ public class PictureService {
         int challengeReward = challengeProgressService.updateProgressFromDailyPicture(
                 user,
                 savedPicture,
-                challengeId,
-                request.getTaskId()
+                challengeId
         );
 
         if (challengeReward > 0) {

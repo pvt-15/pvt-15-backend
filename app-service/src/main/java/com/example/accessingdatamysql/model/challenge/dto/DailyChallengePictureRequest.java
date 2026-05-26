@@ -4,15 +4,11 @@ public class DailyChallengePictureRequest {
 
     private String imageObjectKey;
 
-    //Only used if a daily challenge has multiple tasks
-    private Integer taskId;
-
     public DailyChallengePictureRequest() {
     }
 
-    public DailyChallengePictureRequest(String imageObjectKey, Integer taskId) {
+    public DailyChallengePictureRequest(String imageObjectKey) {
         this.imageObjectKey = imageObjectKey;
-        this.taskId = taskId;
     }
 
     public String getImageObjectKey() {
@@ -21,13 +17,5 @@ public class DailyChallengePictureRequest {
 
     public void setImageObjectKey(String imageObjectKey) {
         this.imageObjectKey = imageObjectKey;
-    }
-
-    public Integer getTaskId() {
-        return taskId;
-    }
-
-    public void setTaskId(Integer taskId) {
-        this.taskId = taskId;
     }
 }

@@ -116,8 +116,7 @@ public class ChallengeProgressService {
     public int updateProgressFromDailyPicture(
             User user,
             Picture picture,
-            Integer challengeId,
-            Integer taskId
+            Integer challengeId
     ) {
         if (challengeId == null) {
             throw new IllegalArgumentException("Challenge id is required");
@@ -135,7 +134,7 @@ public class ChallengeProgressService {
                 userChallengeTaskProgressRepository.findByUserChallengeProgress(progress);
 
         UserChallengeTaskProgress taskProgress =
-                findPhotoProofTaskProgress(taskProgressList, taskId);
+                findPhotoProofTaskProgress(taskProgressList);
 
         ChallengeTask task = taskProgress.getChallengeTask();
 
@@ -224,9 +223,10 @@ public class ChallengeProgressService {
     }
 
     private UserChallengeTaskProgress findPhotoProofTaskProgress(
-            List<UserChallengeTaskProgress> taskProgressList,
-            Integer taskId
+            List<UserChallengeTaskProgress> taskProgressList
     ) {
+        UserChallengeTaskProgress foundTaskProgress = null;
+
         for (UserChallengeTaskProgress taskProgress : taskProgressList) {
             if (taskProgress.isCompleted()) {
                 continue;
@@ -238,14 +238,22 @@ public class ChallengeProgressService {
                 continue;
             }
 
-            if (taskId != null && !taskId.equals(task.getId())) {
-                continue;
+            if (foundTaskProgress != null) {
+                throw new IllegalArgumentException(
+                        "Daily challenge has more than one active photo proof task"
+                );
             }
 
-            return taskProgress;
+            foundTaskProgress = taskProgress;
         }
 
-        throw new IllegalArgumentException("No active photo proof task found for this challenge");
+        if (foundTaskProgress == null) {
+            throw new IllegalArgumentException(
+                    "No active photo proof task found for this challenge"
+            );
+        }
+
+        return foundTaskProgress;
     }
 
     private boolean labelsMatch(String actualLabel, String requiredLabel){
