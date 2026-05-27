@@ -48,7 +48,9 @@ pipeline {
                                   -DGCP_PROJECT_ID="$GCP_PROJECT_ID" \
                                   -DGCS_CREDENTIALS_B64="$GCS_CREDENTIALS_B64" \
                                   -DADMIN_KEY="$ADMIN_KEY" \
-                                  -DSTORAGE_SERVICE_BASE_URL="https://group-6-15.pvt.dsv.su.se/storage-service"
+                                  -DSTORAGE_SERVICE_BASE_URL="https://group-6-15.pvt.dsv.su.se/storage-service" \
+                                  -Dservices.auth.base-url="https://group-6-15.pvt.dsv.su.se/auth-service" \
+                                  -Dservices.storage.base-url="https://group-6-15.pvt.dsv.su.se/storage-service" \
                             '''
                         } else {
                             bat """

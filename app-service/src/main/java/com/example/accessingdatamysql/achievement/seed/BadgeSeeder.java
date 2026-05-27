@@ -34,37 +34,37 @@ public class BadgeSeeder implements CommandLineRunner {
         saveBadge(
                 category.name() + "_BRONZE",
                 displayName + " Bronze Badge",
-                "Find 10 unique " + displayName.toLowerCase() + " discoveries.",
+                "Find 3 unique " + displayName.toLowerCase() + " discoveries.",
                 category,
                 BadgeTier.BRONZE,
-                10
+                3
         );
 
         saveBadge(
                 category.name() + "_SILVER",
                 displayName + " Silver Badge",
-                "Find 20 unique " + displayName.toLowerCase() + " discoveries.",
+                "Find 6 unique " + displayName.toLowerCase() + " discoveries.",
                 category,
                 BadgeTier.SILVER,
-                20
+                6
         );
 
         saveBadge(
                 category.name() + "_GOLD",
                 displayName + " Gold Badge",
-                "Find 30 unique " + displayName.toLowerCase() + " discoveries.",
+                "Find 9 unique " + displayName.toLowerCase() + " discoveries.",
                 category,
                 BadgeTier.GOLD,
-                30
+                9
         );
 
         saveBadge(
                 category.name() + "_PLATINUM",
                 displayName + " Platinum Badge",
-                "Find 40 unique " + displayName.toLowerCase() + " discoveries.",
+                "Find 12 unique " + displayName.toLowerCase() + " discoveries.",
                 category,
                 BadgeTier.PLATINUM,
-                40
+                12
         );
     }
 
