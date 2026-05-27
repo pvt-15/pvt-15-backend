@@ -280,8 +280,9 @@ public class PictureService {
 
         String imageObjectKey = picture.getImageObjectKey();
 
-        pictureRepository.delete(picture);
+        discoveryService.handlePictureDeleted(user, picture);
 
+        pictureRepository.delete(picture);
         deleteImageQuietly(imageObjectKey);
     }
 

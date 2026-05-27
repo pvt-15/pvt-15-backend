@@ -1,15 +1,26 @@
 package com.example.accessingdatamysql.user.repository;
 
-import com.example.accessingdatamysql.user.entity.User;
-import com.example.accessingdatamysql.picture.enums.PictureCategory;
 import com.example.accessingdatamysql.picture.entity.UserDiscovery;
+import com.example.accessingdatamysql.picture.enums.PictureCategory;
+import com.example.accessingdatamysql.user.entity.User;
 import org.springframework.data.repository.CrudRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface UserDiscoveryRepository extends CrudRepository<UserDiscovery, Integer> {
 
-    boolean existsByUserAndCategoryAndNormalizedLabel(User user, PictureCategory category, String normalizedLabel);
+    boolean existsByUserAndCategoryAndNormalizedLabel(
+            User user,
+            PictureCategory category,
+            String normalizedLabel
+    );
+
+    Optional<UserDiscovery> findByUserAndCategoryAndNormalizedLabel(
+            User user,
+            PictureCategory category,
+            String normalizedLabel
+    );
 
     long countByUserAndCategory(User user, PictureCategory category);
 

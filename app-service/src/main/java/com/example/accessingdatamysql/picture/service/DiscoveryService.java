@@ -4,27 +4,38 @@ import com.example.accessingdatamysql.gamification.ScoringRules;
 import com.example.accessingdatamysql.picture.dto.DiscoveryCategoryStatsResponse;
 import com.example.accessingdatamysql.picture.dto.DiscoveryStatsResponse;
 import com.example.accessingdatamysql.picture.dto.LibraryItemResponse;
+import com.example.accessingdatamysql.picture.entity.Picture;
 import com.example.accessingdatamysql.picture.entity.UserDiscovery;
 import com.example.accessingdatamysql.picture.enums.PictureCategory;
+import com.example.accessingdatamysql.picture.enums.PictureMode;
+import com.example.accessingdatamysql.picture.repository.PictureRepository;
 import com.example.accessingdatamysql.user.repository.UserDiscoveryRepository;
 import com.example.accessingdatamysql.storage.client.StorageClient;
 import com.example.accessingdatamysql.user.entity.User;
 
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class DiscoveryService {
 
     private final UserDiscoveryRepository userDiscoveryRepository;
+    private final PictureRepository pictureRepository;
     private final StorageClient storageClient;
 
-    public DiscoveryService(UserDiscoveryRepository userDiscoveryRepository,
-                            StorageClient storageClient) {
+    public DiscoveryService(
+            UserDiscoveryRepository userDiscoveryRepository,
+            PictureRepository pictureRepository,
+            StorageClient storageClient
+    ) {
         this.userDiscoveryRepository = userDiscoveryRepository;
+        this.pictureRepository = pictureRepository;
         this.storageClient = storageClient;
     }
 
@@ -107,6 +118,90 @@ public class DiscoveryService {
         }
 
         return responses;
+    }
+
+    @Transactional
+    public void handlePictureDeleted(User user, Picture deletedPicture) {
+        if (user == null || deletedPicture == null) {
+            return;
+        }
+
+        if (deletedPicture.getPictureMode() != PictureMode.COLLECTION) {
+            return;
+        }
+
+        PictureCategory category = deletedPicture.getCategory();
+
+        if (category == null || category == PictureCategory.UNKNOWN) {
+            return;
+        }
+
+        String normalizedLabel = normalize(deletedPicture.getLabel());
+
+        if (normalizedLabel.isBlank()) {
+            return;
+        }
+
+        Optional<UserDiscovery> optionalDiscovery =
+                userDiscoveryRepository.findByUserAndCategoryAndNormalizedLabel(
+                        user,
+                        category,
+                        normalizedLabel
+                );
+
+        if (optionalDiscovery.isEmpty()) {
+            return;
+        }
+
+        UserDiscovery discovery = optionalDiscovery.get();
+
+        Picture replacementPicture = findReplacementPicture(user, deletedPicture, category, normalizedLabel);
+
+        if (replacementPicture == null) {
+            userDiscoveryRepository.delete(discovery);
+            return;
+        }
+
+        if (discoveryPointsToDeletedPicture(discovery, deletedPicture)) {
+            discovery.setDisplayLabel(replacementPicture.getLabel());
+            discovery.setImageObjectKey(replacementPicture.getImageObjectKey());
+            discovery.setImageUrl(replacementPicture.getImageUrl());
+            userDiscoveryRepository.save(discovery);
+        }
+    }
+
+    private Picture findReplacementPicture(
+            User user,
+            Picture deletedPicture,
+            PictureCategory category,
+            String normalizedLabel
+    ) {
+        return pictureRepository.findByUser(user).stream()
+                .filter(picture -> !picture.getId().equals(deletedPicture.getId()))
+                .filter(picture -> picture.getPictureMode() == PictureMode.COLLECTION)
+                .filter(picture -> picture.getCategory() == category)
+                .filter(picture -> normalize(picture.getLabel()).equals(normalizedLabel))
+                .filter(picture -> picture.getImageObjectKey() != null && !picture.getImageObjectKey().isBlank())
+                .max(Comparator.comparing(Picture::getTakenAt))
+                .orElse(null);
+    }
+
+    private boolean discoveryPointsToDeletedPicture(UserDiscovery discovery, Picture deletedPicture) {
+        String discoveryObjectKey = discovery.getImageObjectKey();
+        String deletedObjectKey = deletedPicture.getImageObjectKey();
+
+        if (discoveryObjectKey != null && deletedObjectKey != null) {
+            return discoveryObjectKey.equals(deletedObjectKey);
+        }
+
+        String discoveryImageUrl = discovery.getImageUrl();
+        String deletedImageUrl = deletedPicture.getImageUrl();
+
+        if (discoveryImageUrl != null && deletedImageUrl != null) {
+            return discoveryImageUrl.equals(deletedImageUrl);
+        }
+
+        return discoveryObjectKey == null && discoveryImageUrl == null;
     }
 
     private String getSignedUrlOrFallback(UserDiscovery discovery) {
