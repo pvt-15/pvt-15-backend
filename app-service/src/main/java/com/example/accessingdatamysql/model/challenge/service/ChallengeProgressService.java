@@ -96,17 +96,25 @@ public class ChallengeProgressService {
             anyTaskChanged = true;
         }
 
-        if (anyTaskChanged && allTasksCompleted(taskProgressList) && !progress.isRewardClaimed()) {
+        if (anyTaskChanged && allTasksCompleted(taskProgressList)) {
             progress.setStatus(ChallengeStatus.COMPLETED);
-            progress.setCompletedAt(LocalDateTime.now());
-            progress.setRewardClaimed(true);
-            userChallengeProgressRepository.save(progress);
 
-            Integer reward = progress.getChallenge().getRewardPoints();
-
-            if (reward != null) {
-                return reward;
+            if (progress.getCompletedAt() == null) {
+                progress.setCompletedAt(LocalDateTime.now());
             }
+
+            if (!progress.isRewardClaimed()) {
+                progress.setRewardClaimed(true);
+                userChallengeProgressRepository.save(progress);
+
+                Integer reward = progress.getChallenge().getRewardPoints();
+
+                if (reward != null) {
+                    return reward;
+                }
+            }
+
+            userChallengeProgressRepository.save(progress);
         }
 
         return 0;
@@ -210,6 +218,109 @@ public class ChallengeProgressService {
         }
 
         return false;
+    }
+
+    @Transactional
+    public void handlePictureDeleted(Picture picture) {
+        if (picture == null) {
+            return;
+        }
+
+        List<UserChallengePictureMatch> matches =
+                userChallengePictureMatchRepository.findByPicture(picture);
+
+        if (matches.isEmpty()) {
+            return;
+        }
+
+        for (UserChallengePictureMatch match : matches) {
+            UserChallengeTaskProgress taskProgress = match.getTaskProgress();
+
+            if (taskProgress == null) {
+                continue;
+            }
+
+            ChallengeTask task = taskProgress.getChallengeTask();
+
+            if (task != null && task.isMustBeUnique()) {
+                String uniquenessKey = getUniquenessKey(picture, task);
+                removeMatchedLabel(taskProgress, uniquenessKey);
+            }
+
+            int currentCount = taskProgress.getCurrentCount() == null
+                    ? 0
+                    : taskProgress.getCurrentCount();
+
+            int newCount = Math.max(0, currentCount - 1);
+            taskProgress.setCurrentCount(newCount);
+
+            int requiredCount = task == null || task.getRequiredCount() == null
+                    ? 1
+                    : task.getRequiredCount();
+
+            taskProgress.setCompleted(newCount >= requiredCount);
+
+            userChallengeTaskProgressRepository.save(taskProgress);
+
+            refreshChallengeProgressAfterPictureDeletion(taskProgress.getUserChallengeProgress());
+        }
+
+        userChallengePictureMatchRepository.deleteAll(matches);
+    }
+
+    private void removeMatchedLabel(UserChallengeTaskProgress taskProgress, String normalizedLabel) {
+        if (normalizedLabel == null || normalizedLabel.isBlank()) {
+            return;
+        }
+
+        String matchedLabels = taskProgress.getMatchedLabels();
+
+        if (matchedLabels == null || matchedLabels.isBlank()) {
+            return;
+        }
+
+        StringBuilder updatedLabels = new StringBuilder();
+        String[] parts = matchedLabels.split(",");
+
+        for (String part : parts) {
+            String existingLabel = part.trim();
+
+            if (existingLabel.isBlank()) {
+                continue;
+            }
+
+            if (existingLabel.equals(normalizedLabel)) {
+                continue;
+            }
+
+            if (updatedLabels.length() > 0) {
+                updatedLabels.append(",");
+            }
+
+            updatedLabels.append(existingLabel);
+        }
+
+        taskProgress.setMatchedLabels(updatedLabels.toString());
+    }
+
+    private void refreshChallengeProgressAfterPictureDeletion(UserChallengeProgress progress) {
+        if (progress == null) {
+            return;
+        }
+
+        List<UserChallengeTaskProgress> taskProgressList =
+                userChallengeTaskProgressRepository.findByUserChallengeProgress(progress);
+
+        if (allTasksCompleted(taskProgressList)) {
+            return;
+        }
+
+        if (progress.getStatus() == ChallengeStatus.COMPLETED) {
+            progress.setStatus(ChallengeStatus.IN_PROGRESS);
+            progress.setCompletedAt(null);
+
+            userChallengeProgressRepository.save(progress);
+        }
     }
 
     private boolean pictureMatchesTask(Picture picture, ChallengeTask task){

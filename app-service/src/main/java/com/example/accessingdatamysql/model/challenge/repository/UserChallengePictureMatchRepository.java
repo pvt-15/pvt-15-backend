@@ -13,4 +13,6 @@ public interface UserChallengePictureMatchRepository extends CrudRepository<User
     boolean existsByTaskProgressAndPicture(UserChallengeTaskProgress taskProgress, Picture picture);
 
     List<UserChallengePictureMatch> findByTaskProgress_UserChallengeProgress(UserChallengeProgress progress);
+
+    List<UserChallengePictureMatch> findByPicture(Picture picture);
 }

@@ -287,6 +287,7 @@ public class PictureService {
         String imageObjectKey = picture.getImageObjectKey();
 
         discoveryService.handlePictureDeleted(user, picture);
+        challengeProgressService.handlePictureDeleted(picture);
 
         pictureRepository.delete(picture);
         deleteImageQuietly(imageObjectKey);
