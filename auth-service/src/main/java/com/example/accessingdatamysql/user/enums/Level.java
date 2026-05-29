@@ -2,9 +2,10 @@ package com.example.accessingdatamysql.user.enums;
 
 public enum Level {
     LEVEL_1(0, 1, "Skogsjägare"),
-    LEVEL_2(150, 2, "Naturspanare"),
-    LEVEL_3(300, 3, "Skogsexpert"),
-    LEVEL_4(600, 4, "Skogsmästare");
+    LEVEL_2(300, 2, "Naturspanare"),
+    LEVEL_3(1000, 3, "Skogsexpert"),
+    LEVEL_4(2000, 4, "Skogsmästare"),
+    LEVEL_5(1000000, 5, "Ludvigs världsherrevälde");
 
     private final int minPoints;
     private final int code;
