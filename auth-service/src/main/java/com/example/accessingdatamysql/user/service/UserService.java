@@ -4,12 +4,19 @@ import com.example.accessingdatamysql.auth.enums.Provider;
 import com.example.accessingdatamysql.storage.StorageServiceClient;
 import com.example.accessingdatamysql.user.dto.UserResponse;
 import com.example.accessingdatamysql.user.entity.User;
+import com.example.accessingdatamysql.user.enums.ProfileImagePreset;
 import com.example.accessingdatamysql.user.mapper.UserMapper;
 import com.example.accessingdatamysql.user.repository.UserRepository;
 import jakarta.transaction.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataAccessException;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Pattern;
 
 @Service
@@ -34,16 +41,22 @@ public class UserService {
     private final StorageServiceClient storageServiceClient;
     private final PasswordEncoder passwordEncoder;
 
+    private static final Logger logger = LoggerFactory.getLogger(UserService.class);
+
+    private final JdbcTemplate jdbcTemplate;
+
     public UserService(
             UserRepository userRepository,
             UserMapper userMapper,
             StorageServiceClient storageServiceClient,
-            PasswordEncoder passwordEncoder
+            PasswordEncoder passwordEncoder,
+            JdbcTemplate jdbcTemplate
     ) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
         this.storageServiceClient = storageServiceClient;
         this.passwordEncoder = passwordEncoder;
+        this.jdbcTemplate = jdbcTemplate;
     }
 
     public UserResponse getCurrentUser(Integer userId, String jwtToken) {
@@ -59,11 +72,17 @@ public class UserService {
     }
 
     @Transactional
-    public void deleteCurrentUser(Integer userId) {
+    public void deleteCurrentUser(Integer userId, String jwtToken) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND));
 
-        userRepository.delete(user);
+        List<String> imageObjectKeys = findUserImageObjectKeys(user);
+
+        deleteUserRelatedRows(userId);
+
+        for (String objectKey : imageObjectKeys) {
+            storageServiceClient.deleteObject(objectKey, jwtToken);
+        }
     }
 
     /**
@@ -123,6 +142,122 @@ public class UserService {
         }
         if (!DIGIT_PATTERN.matcher(password).find()) {
             throw new IllegalArgumentException(PASSWORD_MISSING_DIGIT);
+        }
+    }
+
+    private List<String> findUserImageObjectKeys(User user) {
+        List<String> imageObjectKeys = new ArrayList<>();
+
+        List<String> pictureObjectKeys = jdbcTemplate.queryForList(
+                "SELECT image_object_key FROM picture " +
+                        "WHERE `user` = ? " +
+                        "AND image_object_key IS NOT NULL " +
+                        "AND image_object_key <> ''",
+                String.class,
+                user.getId()
+        );
+
+        imageObjectKeys.addAll(pictureObjectKeys);
+
+        String profileImageObjectKey = user.getProfileImageObjectKey();
+
+        if (profileImageObjectKey != null
+                && !profileImageObjectKey.isBlank()
+                && !ProfileImagePreset.isAllowedObjectKey(profileImageObjectKey)) {
+            imageObjectKeys.add(profileImageObjectKey);
+        }
+
+        return imageObjectKeys;
+    }
+
+    private void deleteUserRelatedRows(Integer userId) {
+        /*
+         * Delete challenge-picture matches first.
+         * They can point both to user's challenge task progress and to user's pictures.
+         */
+        jdbcTemplate.update(
+                "DELETE FROM user_challenge_picture_match " +
+                        "WHERE picture_id IN (" +
+                        "SELECT id FROM picture WHERE `user` = ?" +
+                        ")",
+                userId
+        );
+
+        jdbcTemplate.update(
+                "DELETE FROM user_challenge_picture_match " +
+                        "WHERE user_challenge_task_progress_id IN (" +
+                        "SELECT uctp.id " +
+                        "FROM user_challenge_task_progress uctp " +
+                        "JOIN user_challenge_progress ucp " +
+                        "ON uctp.user_challenge_progress_id = ucp.id " +
+                        "WHERE ucp.user_id = ?" +
+                        ")",
+                userId
+        );
+
+        jdbcTemplate.update(
+                "DELETE FROM user_challenge_task_progress " +
+                        "WHERE user_challenge_progress_id IN (" +
+                        "SELECT id FROM user_challenge_progress WHERE user_id = ?" +
+                        ")",
+                userId
+        );
+
+        jdbcTemplate.update(
+                "DELETE FROM user_challenge_progress WHERE user_id = ?",
+                userId
+        );
+
+        jdbcTemplate.update(
+                "DELETE FROM user_quiz_answer " +
+                        "WHERE user_quiz_attempt_id IN (" +
+                        "SELECT id FROM user_quiz_attempt WHERE user_id = ?" +
+                        ")",
+                userId
+        );
+
+        jdbcTemplate.update(
+                "DELETE FROM user_quiz_attempt WHERE user_id = ?",
+                userId
+        );
+
+        jdbcTemplate.update(
+                "DELETE FROM user_badge WHERE user_id = ?",
+                userId
+        );
+
+        jdbcTemplate.update(
+                "DELETE FROM user_discovery WHERE user_id = ?",
+                userId
+        );
+
+        jdbcTemplate.update(
+                "DELETE FROM picture WHERE `user` = ?",
+                userId
+        );
+
+        jdbcTemplate.update(
+                "DELETE FROM revoked_tokens WHERE user_id = ?",
+                userId
+        );
+
+        deleteOptionalPasswordResetTokens(userId);
+
+        jdbcTemplate.update(
+                "DELETE FROM `user` WHERE id = ?",
+                userId
+        );
+    }
+
+    private void deleteOptionalPasswordResetTokens(Integer userId) {
+        try {
+            jdbcTemplate.update(
+                    "DELETE FROM password_reset_token WHERE user_id = ?",
+                    userId
+            );
+        } catch (DataAccessException e) {
+            logger.debug("Could not delete password reset tokens for userId={}. " +
+                    "This is ignored because the table or column may not exist in all environments.", userId);
         }
     }
 }

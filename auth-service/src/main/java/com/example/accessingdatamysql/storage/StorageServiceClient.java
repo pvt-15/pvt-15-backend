@@ -50,4 +50,24 @@ public class StorageServiceClient {
             return null;
         }
     }
+
+    public void deleteObject(String objectKey, String jwtToken) {
+        if (objectKey == null || objectKey.isBlank()) {
+            return;
+        }
+
+        try {
+            restClient.delete()
+                    .uri(uriBuilder -> uriBuilder
+                            .path("/internal/storage/object")
+                            .queryParam("objectKey", objectKey)
+                            .build())
+                    .headers(headers -> headers.setBearerAuth(jwtToken))
+                    .retrieve()
+                    .toBodilessEntity();
+
+        } catch (RestClientException e) {
+            logger.warn("Could not delete image object from storage. objectKey={}", objectKey, e);
+        }
+    }
 }

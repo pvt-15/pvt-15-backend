@@ -101,11 +101,16 @@ public class UserController {
     }
 
     @DeleteMapping("/me")
-    public ResponseEntity<Void> deleteCurrentUser(@AuthenticationPrincipal Jwt jwt) {
-        Integer userId = Integer.valueOf(jwt.getSubject());
-        userService.deleteCurrentUser(userId);
-
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<?> deleteCurrentUser(@AuthenticationPrincipal Jwt jwt) {
+        try {
+            Integer userId = Integer.valueOf(jwt.getSubject());
+            userService.deleteCurrentUser(userId, jwt.getTokenValue());
+            return ResponseEntity.noContent().build();
+        } catch (NumberFormatException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     private String resolveProfileImageObjectKey(UpdateProfileImageRequest request) {
