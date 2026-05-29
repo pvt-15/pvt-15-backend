@@ -141,9 +141,13 @@ public class PictureService {
         picture.setPictureMode(pictureMode);
         picture.setUser(user);
 
-        int collectionPoints = 0;
-        if (pictureMode == PictureMode.COLLECTION) {
-            collectionPoints = discoveryService.awardDiscoveryPoints(
+        int discoveryPoints = 0;
+
+        boolean shouldRecordDiscovery =
+                pictureMode == PictureMode.COLLECTION || pictureMode == PictureMode.CHALLENGE;
+
+        if (shouldRecordDiscovery && isAcceptedForCollection(pictureCategory, aiResult)) {
+            discoveryPoints = discoveryService.awardDiscoveryPoints(
                     user,
                     pictureCategory,
                     aiResult.getLabel(),
@@ -151,11 +155,12 @@ public class PictureService {
             );
         }
 
-        picture.setPointsAwarded(collectionPoints);
+        picture.setPointsAwarded(discoveryPoints);
+
         Picture savedPicture = pictureRepository.save(picture);
 
-        if (collectionPoints > 0) {
-            userProgressionService.applyAward(user, collectionPoints);
+        if (discoveryPoints > 0) {
+            userProgressionService.applyAward(user, discoveryPoints);
         }
 
         if (pictureMode == PictureMode.CHALLENGE) {
@@ -171,7 +176,8 @@ public class PictureService {
         }
 
         List<BadgeResponse> newlyUnlockedBadges = List.of();
-        if (pictureMode == PictureMode.COLLECTION && collectionPoints > 0) {
+
+        if (shouldRecordDiscovery && pictureCategory != PictureCategory.UNKNOWN) {
             newlyUnlockedBadges = badgeService.checkAndUnlockCategoryBadges(user, pictureCategory);
         }
 

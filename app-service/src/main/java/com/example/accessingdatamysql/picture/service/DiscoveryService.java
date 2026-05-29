@@ -126,7 +126,7 @@ public class DiscoveryService {
             return;
         }
 
-        if (deletedPicture.getPictureMode() != PictureMode.COLLECTION) {
+        if (!isDiscoveryEligiblePicture(deletedPicture)) {
             return;
         }
 
@@ -178,7 +178,7 @@ public class DiscoveryService {
     ) {
         return pictureRepository.findByUser(user).stream()
                 .filter(picture -> !picture.getId().equals(deletedPicture.getId()))
-                .filter(picture -> picture.getPictureMode() == PictureMode.COLLECTION)
+                .filter(this::isDiscoveryEligiblePicture)
                 .filter(picture -> picture.getCategory() == category)
                 .filter(picture -> normalize(picture.getLabel()).equals(normalizedLabel))
                 .filter(picture -> picture.getImageObjectKey() != null && !picture.getImageObjectKey().isBlank())
@@ -212,6 +212,15 @@ public class DiscoveryService {
         }
 
         return discovery.getImageUrl();
+    }
+
+    private boolean isDiscoveryEligiblePicture(Picture picture) {
+        if (picture == null || picture.getPictureMode() == null) {
+            return false;
+        }
+
+        return picture.getPictureMode() == PictureMode.COLLECTION
+                || picture.getPictureMode() == PictureMode.CHALLENGE;
     }
 
     private DiscoveryCategoryStatsResponse createCategoryStats(User user, PictureCategory category) {
