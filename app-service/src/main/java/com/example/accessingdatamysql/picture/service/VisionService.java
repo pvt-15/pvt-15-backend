@@ -43,13 +43,17 @@ public class VisionService {
         if (imageUrl == null || imageUrl.isBlank()) {
             throw new IllegalArgumentException(IMAGE_URL_REQUIRED);
         }
+
         if (visionApiKey == null || visionApiKey.isBlank()) {
             throw new IllegalStateException(VISION_API_KEY_MISSING);
         }
+
         TargetType actualTargetType = targetType;
+
         if (actualTargetType == null) {
             actualTargetType = TargetType.ANIMAL;
         }
+
         try {
             String requestBody = buildRequestBody(imageUrl);
 
@@ -66,7 +70,9 @@ public class VisionService {
                         VISION_API_REQUEST_FAILED + " with status " + response.statusCode() + ": " + response.body()
                 );
             }
+
             return parseVisionResponse(response.body(), actualTargetType);
+
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new IllegalStateException(VISION_API_REQUEST_FAILED, e);
@@ -100,11 +106,15 @@ public class VisionService {
         if (!errorNode.isMissingNode() && !errorNode.isEmpty()) {
             throw new IllegalStateException(VISION_API_ERROR + errorNode);
         }
+
         JsonNode labelAnnotations = firstResponse.path("labelAnnotations");
+
         if (!labelAnnotations.isArray() || labelAnnotations.isEmpty()) {
             return unknownResult(targetType);
         }
+
         List<VisionLabel> labels = new ArrayList<>();
+
         for (JsonNode labelNode : labelAnnotations) {
             String description = labelNode.path("description").asText("").trim();
             double score = labelNode.path("score").asDouble(0.0);
@@ -113,12 +123,15 @@ public class VisionService {
                 labels.add(new VisionLabel(description, score));
             }
         }
+
         if (labels.isEmpty()) {
             return unknownResult(targetType);
         }
+
         if (targetType == TargetType.PLANT) {
             return choosePlantResult(labels);
         }
+
         return chooseAnimalResult(labels);
     }
 
@@ -126,35 +139,61 @@ public class VisionService {
         for (VisionLabel label : labels) {
             String text = normalize(label.description());
 
-            if (isPlantNoise(text)) {
+            if (!isUsablePlantLabel(text)) {
                 continue;
             }
+
             if (isSpecificTree(text)) {
-                return new AiIdentificationResult(cleanLabel(label.description()), "TREE", label.score(), AiProvider.GOOGLE_VISION);
+                return new AiIdentificationResult(
+                        cleanLabel(label.description()),
+                        "TREE",
+                        label.score(),
+                        AiProvider.GOOGLE_VISION
+                );
             }
+
             if (isSpecificFlower(text)) {
-                return new AiIdentificationResult(cleanLabel(label.description()), "FLOWER", label.score(), AiProvider.GOOGLE_VISION);
+                return new AiIdentificationResult(
+                        cleanLabel(label.description()),
+                        "FLOWER",
+                        label.score(),
+                        AiProvider.GOOGLE_VISION
+                );
             }
         }
 
         for (VisionLabel label : labels) {
             String text = normalize(label.description());
 
-            if (isPlantNoise(text)) {
+            if (!isUsablePlantLabel(text)) {
                 continue;
             }
+
             String category = mapPlantCategory(text);
+
             if (!category.equals("UNKNOWN")) {
-                return new AiIdentificationResult(cleanLabel(label.description()), category, label.score(), AiProvider.GOOGLE_VISION);
+                return new AiIdentificationResult(
+                        cleanLabel(label.description()),
+                        category,
+                        label.score(),
+                        AiProvider.GOOGLE_VISION
+                );
             }
         }
 
         for (VisionLabel label : labels) {
             String text = normalize(label.description());
-            if (!isPlantNoise(text)) {
-                return new AiIdentificationResult(cleanLabel(label.description()), "PLANT", label.score(), AiProvider.GOOGLE_VISION);
+
+            if (isUsablePlantLabel(text)) {
+                return new AiIdentificationResult(
+                        cleanLabel(label.description()),
+                        "PLANT",
+                        label.score(),
+                        AiProvider.GOOGLE_VISION
+                );
             }
         }
+
         return unknownResult(TargetType.PLANT);
     }
 
@@ -162,36 +201,67 @@ public class VisionService {
         for (VisionLabel label : labels) {
             String text = normalize(label.description());
 
-            if (isAnimalNoise(text)) {
+            if (!isUsableAnimalLabel(text)) {
                 continue;
             }
+
             if (isSpecificBird(text)) {
-                return new AiIdentificationResult(cleanLabel(label.description()), "BIRD", label.score(), AiProvider.GOOGLE_VISION);
+                return new AiIdentificationResult(
+                        cleanLabel(label.description()),
+                        "BIRD",
+                        label.score(),
+                        AiProvider.GOOGLE_VISION
+                );
             }
+
             if (isSpecificInsect(text)) {
-                return new AiIdentificationResult(cleanLabel(label.description()), "INSECT", label.score(), AiProvider.GOOGLE_VISION);
+                return new AiIdentificationResult(
+                        cleanLabel(label.description()),
+                        "INSECT",
+                        label.score(),
+                        AiProvider.GOOGLE_VISION
+                );
             }
+
             if (isSpecificAnimal(text)) {
-                return new AiIdentificationResult(cleanLabel(label.description()), "ANIMAL", label.score(), AiProvider.GOOGLE_VISION);
+                return new AiIdentificationResult(
+                        cleanLabel(label.description()),
+                        "ANIMAL",
+                        label.score(),
+                        AiProvider.GOOGLE_VISION
+                );
             }
         }
 
         for (VisionLabel label : labels) {
             String text = normalize(label.description());
 
-            if (isAnimalNoise(text)) {
+            if (!isUsableAnimalLabel(text)) {
                 continue;
             }
+
             String category = mapAnimalCategory(text);
+
             if (!category.equals("UNKNOWN")) {
-                return new AiIdentificationResult(cleanLabel(label.description()), category, label.score(), AiProvider.GOOGLE_VISION);
+                return new AiIdentificationResult(
+                        cleanLabel(label.description()),
+                        category,
+                        label.score(),
+                        AiProvider.GOOGLE_VISION
+                );
             }
         }
 
         for (VisionLabel label : labels) {
             String text = normalize(label.description());
-            if (!isAnimalNoise(text)) {
-                return new AiIdentificationResult(cleanLabel(label.description()), "ANIMAL", label.score(), AiProvider.GOOGLE_VISION);
+
+            if (isUsableAnimalLabel(text)) {
+                return new AiIdentificationResult(
+                        cleanLabel(label.description()),
+                        "ANIMAL",
+                        label.score(),
+                        AiProvider.GOOGLE_VISION
+                );
             }
         }
 
@@ -202,6 +272,7 @@ public class VisionService {
         if (targetType == TargetType.PLANT) {
             return new AiIdentificationResult("Unknown Plant", "UNKNOWN", 0.0, AiProvider.GOOGLE_VISION);
         }
+
         return new AiIdentificationResult("Unknown Animal", "UNKNOWN", 0.0, AiProvider.GOOGLE_VISION);
     }
 
@@ -210,14 +281,17 @@ public class VisionService {
                 "tree", "conifer", "evergreen", "deciduous", "woody plant", "forest tree", "sapling")) {
             return "TREE";
         }
+
         if (isSpecificFlower(text) || containsAny(text,
                 "flower", "wildflower", "blossom", "petal", "bloom", "inflorescence")) {
             return "FLOWER";
         }
+
         if (containsAny(text,
                 "plant", "flora", "leaf", "branch", "foliage", "shrub", "bush", "fern", "moss", "grass", "herb")) {
             return "PLANT";
         }
+
         return "UNKNOWN";
     }
 
@@ -225,11 +299,13 @@ public class VisionService {
         if (isSpecificBird(text) || containsAny(text, "bird", "avian")) {
             return "BIRD";
         }
+
         if (isSpecificInsect(text) || containsAny(text,
                 "insect", "bee", "bumblebee", "butterfly", "moth", "ant", "beetle",
                 "dragonfly", "ladybug", "ladybird", "grasshopper", "wasp")) {
             return "INSECT";
         }
+
         if (isSpecificAnimal(text) || containsAny(text,
                 "animal", "mammal", "wildlife", "fauna", "fox", "wolf", "deer", "moose",
                 "elk", "roe deer", "squirrel", "rabbit", "hare", "hedgehog", "badger",
@@ -237,7 +313,16 @@ public class VisionService {
                 "frog", "toad", "snake", "lizard", "fish", "spider")) {
             return "ANIMAL";
         }
+
         return "UNKNOWN";
+    }
+
+    private boolean isUsablePlantLabel(String text) {
+        return !isPlantNoise(text) && !isNonNatureLabel(text);
+    }
+
+    private boolean isUsableAnimalLabel(String text) {
+        return !isAnimalNoise(text) && !isNonNatureLabel(text);
     }
 
     private boolean isPlantNoise(String text) {
@@ -251,6 +336,28 @@ public class VisionService {
                 "green", "grass", "field", "meadow", "pasture", "plant", "leaf",
                 "tree", "landscape", "vegetation", "nature reserve", "outdoor",
                 "sky", "branch", "woodland");
+    }
+
+    private boolean isNonNatureLabel(String text) {
+        return containsAny(text,
+                "interior design", "furniture", "room", "wall", "ceiling",
+                "floor", "door", "window", "table", "chair", "sofa", "bed",
+
+                "electronics", "electronic device", "computer", "laptop",
+                "mobile phone", "phone", "screen", "display", "television",
+                "monitor", "keyboard", "computer mouse",
+
+                "animation", "cartoon", "illustration", "drawing", "toy",
+
+                "vehicle", "car", "bus", "train", "bicycle", "motorcycle",
+                "road", "street", "building", "architecture", "house",
+
+                "food", "drink", "plate", "cup", "bottle",
+
+                "clothing", "shoe", "bag",
+
+                "person", "human", "face", "hand"
+        );
     }
 
     private boolean isSpecificBird(String text) {
@@ -293,6 +400,7 @@ public class VisionService {
         if (label == null || label.isBlank()) {
             return "Unknown Species";
         }
+
         return label.trim();
     }
 
@@ -300,6 +408,7 @@ public class VisionService {
         if (text == null) {
             return "";
         }
+
         return text.trim()
                 .toLowerCase(Locale.ROOT)
                 .replace('-', ' ')
@@ -312,6 +421,7 @@ public class VisionService {
                 return true;
             }
         }
+
         return false;
     }
 
