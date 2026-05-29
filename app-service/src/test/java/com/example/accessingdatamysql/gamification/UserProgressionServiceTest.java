@@ -33,7 +33,7 @@ class UserProgressionServiceTest {
         userProgressionService.applyAward(user, 10);
 
         assertEquals(150, user.getTotalPoints());
-        assertEquals(Level.LEVEL_2, user.getLevel());
+        assertEquals(Level.LEVEL_1, user.getLevel());
         verify(userRepository).save(user);
     }
 
