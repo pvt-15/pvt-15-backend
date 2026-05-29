@@ -30,7 +30,12 @@ pipeline {
                     string(credentialsId: 'admin.key', variable: 'ADMIN_KEY'),
                     string(credentialsId: 'GCS_BUCKET_NAME', variable: 'GCS_BUCKET_NAME'),
                     string(credentialsId: 'GCS_CREDENTIALS_B64', variable: 'GCS_CREDENTIALS_B64'),
-                    string(credentialsId: 'GCP_PROJECT_ID', variable: 'GCP_PROJECT_ID')
+                    string(credentialsId: 'GCP_PROJECT_ID', variable: 'GCP_PROJECT_ID'),
+                    string(credentialsId: 'mail.host', variable: 'MAIL_HOST'),
+                    string(credentialsId: 'mail.port', variable: 'MAIL_PORT'),
+                    string(credentialsId: 'mail.username', variable: 'MAIL_USERNAME'),
+                    string(credentialsId: 'mail.password', variable: 'MAIL_PASSWORD'),
+                    string(credentialsId: 'mail.from', variable: 'MAIL_FROM')
                 ]) {
                     script {
                         if (isUnix()) {
@@ -48,6 +53,11 @@ pipeline {
                                   -DGCP_PROJECT_ID="$GCP_PROJECT_ID" \
                                   -DGCS_CREDENTIALS_B64="$GCS_CREDENTIALS_B64" \
                                   -DADMIN_KEY="$ADMIN_KEY" \
+                                  -DMAIL_HOST="$MAIL_HOST" \
+                                  -DMAIL_PORT="$MAIL_PORT" \
+                                  -DMAIL_USERNAME="$MAIL_USERNAME" \
+                                  -DMAIL_PASSWORD="$MAIL_PASSWORD" \
+                                  -DMAIL_FROM="$MAIL_FROM" \
                                   -DSTORAGE_SERVICE_BASE_URL="https://group-6-15.pvt.dsv.su.se/storage-service" \
                                   -Dservices.auth.base-url="https://group-6-15.pvt.dsv.su.se/auth-service" \
                                   -Dservices.storage.base-url="https://group-6-15.pvt.dsv.su.se/storage-service" \
@@ -66,6 +76,11 @@ pipeline {
                                   -DGCP_PROJECT_ID=%GCP_PROJECT_ID% ^
                                   -DGCS_CREDENTIALS_B64=%GCS_CREDENTIALS_B64% ^
                                   -DADMIN_KEY=%ADMIN_KEY% ^
+                                  -DMAIL_HOST=%MAIL_HOST% ^
+                                  -DMAIL_PORT=%MAIL_PORT% ^
+                                  -DMAIL_USERNAME=%MAIL_USERNAME% ^
+                                  -DMAIL_PASSWORD=%MAIL_PASSWORD% ^
+                                  -DMAIL_FROM=%MAIL_FROM% ^
                                   -DSTORAGE_SERVICE_BASE_URL="https://group-6-15.pvt.dsv.su.se/storage-service"
                             """
                         }
