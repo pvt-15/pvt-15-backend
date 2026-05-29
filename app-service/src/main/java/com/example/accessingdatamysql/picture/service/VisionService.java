@@ -356,7 +356,9 @@ public class VisionService {
 
                 "clothing", "shoe", "bag",
 
-                "person", "human", "face", "hand"
+                "person", "human", "face", "hand",
+
+                "peripheral", "speaker", "audio", "light", "fixture", "gadget"
         );
     }
 
