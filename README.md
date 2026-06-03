@@ -170,12 +170,6 @@ The target is the DSV Tomcat at `https://group-6-15.pvt.dsv.su.se`. To deploy ma
 - Uploaded images use an `objectKey` flow — the frontend sends `imageObjectKey` to `/pictures`, not a signed image URL.
 - Admin endpoints are guarded by `ADMIN-KEY` and should not be exposed in the normal frontend app.
 
-## Contributing
-
-1. Create a branch for your change.
-2. Run `./mvnw test` and make sure the build is green before opening a pull request.
-3. Open a pull request describing what changed and why. For larger changes, open an issue first to discuss.
-
 ## Related
 
 - Frontend: https://github.com/pvt-15/pvt-15-frontend
